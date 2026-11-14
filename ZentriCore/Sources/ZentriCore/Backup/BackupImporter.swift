@@ -165,7 +165,8 @@ public struct BackupImporter {
     /// Accounts, checkpoints, categories, and rules are matched by identity. A transaction is skipped
     /// when its identity is stored, and a raw message is skipped when its identity or its fingerprint
     /// is stored; a skipped message's identity is still mapped onto the stored row, so a new
-    /// transaction can link to the message that is already there.
+    /// transaction can link to the message that is already there — unless that message already anchors
+    /// a transaction of its own, which the new row then leaves alone and unlinked.
     private func merge(_ document: BackupDocument, in context: ModelContext) throws -> ImportSummary {
         do {
             var accountsByID = keyed(try context.fetch(FetchDescriptor<Account>()), id: \.id)
@@ -206,9 +207,17 @@ public struct BackupImporter {
                 }
             }
 
+            // Document message identities whose stored row already anchors a transaction. Linking a
+            // new transaction to one of those would drive the inverse to-one onto the stored message
+            // and detach the transaction it already belongs to, so those links are left out below.
+            var messagesWithStoredTransaction: Set<UUID> = []
+
             for row in document.rawMessages {
                 if let stored = rawMessagesByID[row.id] ?? rawMessagesByFingerprint[row.fingerprint] {
                     rawMessagesByID[row.id] = stored
+                    if stored.transaction != nil {
+                        messagesWithStoredTransaction.insert(row.id)
+                    }
                     skipped.rawMessages += 1
                 } else {
                     let rawMessage = try makeRawMessage(row)
@@ -250,9 +259,15 @@ public struct BackupImporter {
                 if storedTransactions.contains(row.id) {
                     skipped.transactions += 1
                 } else {
+                    // The new row keeps its identity, but provenance is unlinked when its message was
+                    // skipped and already anchors a transaction: merge never touches stored rows.
+                    var linkableRow = row
+                    if let messageID = row.rawMessageID, messagesWithStoredTransaction.contains(messageID) {
+                        linkableRow.rawMessageID = nil
+                    }
                     context.insert(
                         try makeTransaction(
-                            row,
+                            linkableRow,
                             accounts: accountsByID,
                             categories: categoriesByID,
                             rawMessages: rawMessagesByID

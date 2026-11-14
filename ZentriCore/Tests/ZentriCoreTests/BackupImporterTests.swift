@@ -319,6 +319,73 @@ private func makeMergeTarget() throws -> ModelContext {
     return context
 }
 
+/// A store whose fingerprint-matching message already anchors a transaction of its own.
+///
+/// Account 1, category 31, and message 99 overlap the fixed store's backup. Message 99 carries the
+/// backup message 41's fingerprint and is already the provenance of transaction 77, so a merge that
+/// maps the document's message identity onto it must not re-point it.
+@MainActor
+private func makeAnchoredMessageTarget() throws -> ModelContext {
+    let container = try ZentriContainer.make(inMemory: true)
+    let context = ModelContext(container)
+
+    let everyday = Account(
+        id: backupID(1),
+        name: "Renamed everyday",
+        institutionName: nil,
+        sortOrder: 0,
+        createdAt: storedNow.addingTimeInterval(-999_999)
+    )
+    context.insert(everyday)
+
+    let dining = ZentriCore.Category(
+        id: backupID(31),
+        name: "Renamed dining",
+        symbolName: "bag",
+        colorToken: "amber",
+        sortOrder: 0,
+        isSystem: false
+    )
+    context.insert(dining)
+
+    let existingMessage = RawMessage(
+        id: backupID(99),
+        text: "MYBANK: RM12.50 spent at KFC",
+        sender: "MYBANK",
+        receivedAt: storedNow.addingTimeInterval(-60),
+        ingestedAt: storedNow.addingTimeInterval(-120),
+        status: .failed,
+        engine: nil,
+        matchedRuleID: nil,
+        errorDescription: "The merchant is missing.",
+        fingerprint: "fingerprint-kfc"
+    )
+    context.insert(existingMessage)
+
+    let existingTransaction = ZentriCore.Transaction(
+        id: backupID(77),
+        account: everyday,
+        amount: cents(99_900),
+        direction: .debit,
+        occurredAt: storedNow.addingTimeInterval(-999_999),
+        recordedAt: storedNow.addingTimeInterval(-999_999),
+        merchantRaw: "Already parsed",
+        merchantDisplay: "Already parsed",
+        category: dining,
+        categorySource: .manual,
+        rawMessage: existingMessage,
+        parseEngine: .manual,
+        isTransfer: false,
+        note: "Keep this transaction",
+        createdAt: storedNow.addingTimeInterval(-999_999),
+        updatedAt: storedNow.addingTimeInterval(-999_999)
+    )
+    context.insert(existingTransaction)
+
+    try context.save()
+    return context
+}
+
 /// A seeded store and the backup it exported, so the replace test restores a real install's data.
 @MainActor
 private struct SeededStore {
@@ -906,6 +973,50 @@ private func encodedCopy(of document: BackupDocument) throws -> BackupDocument {
 
     // Settings move through the document only; a merge never writes them.
     #expect(document.settings == BackupSettings(fixtureSettings()))
+}
+
+@Test @MainActor func mergeKeepsAStoredMessagesTransactionInPlace() throws {
+    let source = try makeFixedStore()
+    let document = try BackupExporter(settings: fixtureSettings()).export(context: source, appVersion: "1.4.0")
+    let target = try makeAnchoredMessageTarget()
+
+    let summary = try BackupImporter().import(document: document, into: target, mode: .merge)
+
+    // The backup's message 41 is skipped because its fingerprint is message 99's, so its transaction
+    // is still created but nothing else of its message is.
+    #expect(summary.skipped.rawMessages == 1)
+    #expect(summary.created.transactions == 3)
+    #expect(try storedRow(RawMessage.self, id: backupID(41), in: target, identifying: \.id) == nil)
+
+    // The stored message keeps the transaction it already belonged to, in both directions.
+    let storedMessage = try #require(
+        try storedRow(RawMessage.self, id: backupID(99), in: target, identifying: \.id)
+    )
+    #expect(storedMessage.transaction?.id == backupID(77))
+    let existingTransaction = try #require(
+        try storedRow(ZentriCore.Transaction.self, id: backupID(77), in: target, identifying: \.id)
+    )
+    #expect(existingTransaction.rawMessage?.id == backupID(99))
+
+    // Neither the message nor its transaction had a value updated.
+    #expect(storedMessage.status == .failed)
+    #expect(storedMessage.engine == nil)
+    #expect(storedMessage.errorDescription == "The merchant is missing.")
+    #expect(storedMessage.ingestedAt == storedNow.addingTimeInterval(-120))
+    #expect(existingTransaction.amount == cents(99_900))
+    #expect(existingTransaction.merchantDisplay == "Already parsed")
+    #expect(existingTransaction.note == "Keep this transaction")
+
+    // The incoming transaction is still created — its identity is new — but without provenance.
+    let incoming = try #require(
+        try storedRow(ZentriCore.Transaction.self, id: backupID(23), in: target, identifying: \.id)
+    )
+    #expect(incoming.rawMessage == nil)
+    #expect(incoming.account.id == backupID(1))
+    #expect(incoming.amount == cents(1_250))
+    #expect(incoming.merchantDisplay == "KFC")
+
+    #expect(try storeCounts(target).transactions == 4)
 }
 
 @Test @MainActor func mergeRollsBackWhenTheSaveThrows() throws {
