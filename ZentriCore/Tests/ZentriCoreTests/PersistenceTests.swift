@@ -138,3 +138,51 @@ import Testing
     #expect(try context.fetchCount(FetchDescriptor<Transaction>()) == 1)
     #expect(transaction.category == nil)
 }
+
+@Test @MainActor func onDiskStoreReopensWithItsSavedAccount() throws {
+    // A real SQLite store, not the in-memory configuration every other test uses: the store must
+    // survive the container that wrote it and read back through a second container at the same
+    // URL, which is what proves the versioned schema and migration plan can back a real file.
+    let directory = FileManager.default.temporaryDirectory
+        .appending(path: "zentri-store-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+
+    let storeURL = directory.appending(path: "Zentri.store")
+    let schema = Schema(versionedSchema: ZentriSchemaV1.self)
+
+    do {
+        let configuration = ModelConfiguration(
+            "ZentriOnDisk",
+            schema: schema,
+            url: storeURL,
+            cloudKitDatabase: .none
+        )
+        let container = try ModelContainer(
+            for: schema,
+            migrationPlan: ZentriMigrationPlan.self,
+            configurations: configuration
+        )
+        let context = ModelContext(container)
+        context.insert(Account(name: "Everyday", institutionName: "Bank", sortOrder: 0, createdAt: .now))
+        try context.save()
+    }
+
+    #expect(FileManager.default.fileExists(atPath: storeURL.path(percentEncoded: false)))
+
+    let configuration = ModelConfiguration(
+        "ZentriOnDisk",
+        schema: schema,
+        url: storeURL,
+        cloudKitDatabase: .none
+    )
+    let reopened = try ModelContainer(
+        for: schema,
+        migrationPlan: ZentriMigrationPlan.self,
+        configurations: configuration
+    )
+    let context = ModelContext(reopened)
+    let accounts = try context.fetch(FetchDescriptor<Account>())
+    #expect(accounts.map(\.name) == ["Everyday"])
+    #expect(accounts.first?.institutionName == "Bank")
+}

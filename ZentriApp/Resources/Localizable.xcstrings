@@ -1,0 +1,269 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Accounts, parsing, categories, and backup settings will appear here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accounts, parsing, categories, and backup settings will appear here."
+          }
+        }
+      }
+    },
+    "As of %@": {
+      "comment": "The date and time the balance was last read. %@ is a formatted date.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As of %@"
+          }
+        }
+      }
+    },
+    "Combined balance": {
+      "comment": "The heading above the combined account balance.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combined balance"
+          }
+        }
+      }
+    },
+    "Insights": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insights"
+          }
+        }
+      }
+    },
+    "Messages you capture will appear here, grouped by day.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages you capture will appear here, grouped by day."
+          }
+        }
+      }
+    },
+    "Nothing here yet": {
+      "comment": "The empty state shown in a tab before its feature is built.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing here yet"
+          }
+        }
+      }
+    },
+    "Overview": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overview"
+          }
+        }
+      }
+    },
+    "Reset Settings": {
+      "comment": "Deletes the unreadable settings file and returns to setup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset Settings"
+          }
+        }
+      }
+    },
+    "Restore Backup": {
+      "comment": "Opens the restore explanation; restoring is not available yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore Backup"
+          }
+        }
+      }
+    },
+    "Restoring a backup becomes available after you set up backup in Settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restoring a backup becomes available after you set up backup in Settings."
+          }
+        }
+      }
+    },
+    "Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "Settings need a reset": {
+      "comment": "The heading shown when the saved settings cannot be read.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings need a reset"
+          }
+        }
+      }
+    },
+    "Setup is coming next. Everything stays on this device.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup is coming next. Everything stays on this device."
+          }
+        }
+      }
+    },
+    "Spending trends, categories, and observations will appear here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spending trends, categories, and observations will appear here."
+          }
+        }
+      }
+    },
+    "Storage unavailable": {
+      "comment": "The heading shown when the local database cannot be opened.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage unavailable"
+          }
+        }
+      }
+    },
+    "Spent today": {
+      "comment": "The label before today's spending amount.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spent today"
+          }
+        }
+      }
+    },
+    "Transactions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transactions"
+          }
+        }
+      }
+    },
+    "Try Again": {
+      "comment": "Retries opening the local database.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try Again"
+          }
+        }
+      }
+    },
+    "Welcome to Zentri": {
+      "comment": "The first-run placeholder heading.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to Zentri"
+          }
+        }
+      }
+    },
+    "Your balance, monthly summary, and recent activity will appear here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your balance, monthly summary, and recent activity will appear here."
+          }
+        }
+      }
+    },
+    "Zentri could not open its database on this device.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri could not open its database on this device."
+          }
+        }
+      }
+    },
+    "Zentri could not read its saved settings. Resetting returns to setup and keeps your accounts and transactions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri could not read its saved settings. Resetting returns to setup and keeps your accounts and transactions."
+          }
+        }
+      }
+    },
+    "Zentri couldn't reset its settings file. Try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't reset its settings file. Try again."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
