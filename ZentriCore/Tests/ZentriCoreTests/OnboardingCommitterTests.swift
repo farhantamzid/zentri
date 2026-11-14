@@ -202,11 +202,21 @@ private func selectedSettings() -> AppSettings {
     #expect(try context.fetchCount(FetchDescriptor<CategorizationRule>()) == 5)
 }
 
-@Test @MainActor func failedSaveLeavesNoRowsAndRemovesTheSettingsDocument() throws {
+@Test @MainActor func failedSaveRollsBackSoARetryCommitsExactlyOneAccount() throws {
     let container = try ZentriContainer.make(inMemory: true)
     let context = ModelContext(container)
     let repository = TestSettingsRepository()
-    let committer = makeFailingCommitter(repository: repository)
+    var committer = OnboardingCommitter(settingsRepository: repository)
+
+    // Fail the first save at the instant the committer holds unsaved rows, then save for real.
+    // Both commits use the same context, so a missing rollback would leave the failed commit's
+    // rows pending and the retry would save them alongside its own: two accounts, two checkpoints.
+    var saveAttempts = 0
+    committer.saveHandler = { context in
+        saveAttempts += 1
+        if saveAttempts == 1 { throw UnwritableStore() }
+        try context.save()
+    }
 
     #expect(throws: UnwritableStore.self) {
         try committer.commit(
@@ -219,14 +229,37 @@ private func selectedSettings() -> AppSettings {
         )
     }
 
-    // A second context sees only what reached the store, so it proves the rollback wrote nothing.
-    let verification = ModelContext(container)
-    #expect(try verification.fetchCount(FetchDescriptor<Account>()) == 0)
-    #expect(try verification.fetchCount(FetchDescriptor<BalanceCheckpoint>()) == 0)
-    #expect(try verification.fetchCount(FetchDescriptor<ZentriCore.Category>()) == 0)
-    #expect(try verification.fetchCount(FetchDescriptor<CategorizationRule>()) == 0)
-    // There was no document before the commit, so the rollback removes the one it wrote.
+    // There was no document before the first commit, so the rollback removes the one it wrote.
     #expect(repository.storedSettings == nil)
+
+    let account = try committer.commit(
+        settings: selectedSettings(),
+        accountName: "Everyday",
+        institutionName: "Bank",
+        openingBalance: 1_000_000,
+        faceIDEnabled: true,
+        context: context
+    )
+
+    #expect(saveAttempts == 2)
+    let accounts = try context.fetch(FetchDescriptor<Account>())
+    #expect(accounts.count == 1)
+    #expect(accounts.first?.id == account.id)
+
+    let checkpoints = try context.fetch(FetchDescriptor<BalanceCheckpoint>())
+    #expect(checkpoints.count == 1)
+    #expect(checkpoints.first?.amount == 1_000_000)
+    #expect(checkpoints.first?.source == .opening)
+    #expect(checkpoints.first?.account.id == account.id)
+
+    #expect(try context.fetchCount(FetchDescriptor<ZentriCore.Category>()) == 12)
+    #expect(try context.fetchCount(FetchDescriptor<CategorizationRule>()) == 5)
+
+    // The retry's settings document is the one that ends up saved.
+    let stored = try #require(repository.storedSettings)
+    #expect(stored.currencyCode == "BDT")
+    #expect(stored.numberGrouping == .indian)
+    #expect(stored.faceIDEnabled)
 }
 
 @Test @MainActor func failedSaveRestoresThePreviousSettingsDocument() throws {

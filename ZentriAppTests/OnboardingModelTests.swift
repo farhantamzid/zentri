@@ -130,6 +130,42 @@ private func model(advancedBy advances: Int) -> OnboardingModel {
 }
 
 @MainActor
+@Test func aCommaDecimalLocaleReadsTheDecimalPadInputAsOneAndAHalf() {
+    // The decimal pad offers the locale's separator, so de_DE types 1,5 rather than 1.5. Reading it
+    // through a fixed `.` locale would silently turn it into fifteen.
+    let model = OnboardingModel(locale: Locale(identifier: "de_DE"))
+    model.accountName = "Everyday"
+    model.openingBalanceText = "1,5"
+
+    #expect(model.openingBalance == Decimal(string: "1.5", locale: Locale(identifier: "en_US_POSIX")))
+    #expect(model.canContinue)
+}
+
+@MainActor
+@Test func aCommaDecimalLocaleReadsAGroupedAmountCopiedFromAStatement() {
+    // de_DE groups with `.` and separates with `,`, so this is a thousand and fifty cents. Dropping
+    // the comma instead would parse 1.00050 — a thousand-fold error.
+    let model = OnboardingModel(locale: Locale(identifier: "de_DE"))
+    model.accountName = "Everyday"
+    model.openingBalanceText = "1.000,50"
+
+    #expect(model.openingBalance == Decimal(string: "1000.5", locale: Locale(identifier: "en_US_POSIX")))
+    #expect(model.canContinue)
+}
+
+@MainActor
+@Test func aCommaGroupingLocaleStillReadsIndianGroupedAmounts() {
+    // en_US groups with `,` and separates with `.`, so the Indian grouping the existing test types
+    // still parses to a million.
+    let model = OnboardingModel(locale: Locale(identifier: "en_US"))
+    model.accountName = "Everyday"
+    model.openingBalanceText = "10,00,000.00"
+
+    #expect(model.openingBalance == 1_000_000)
+    #expect(model.canContinue)
+}
+
+@MainActor
 @Test func theCurrencyListComesFromTheCatalog() {
     let model = OnboardingModel()
     #expect(model.currencyCodes == CurrencyCatalog.supportedCurrencyCodes)
