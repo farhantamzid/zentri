@@ -13,7 +13,7 @@ enum UITestSupport {
     static let modeArgument = "-UITestMode"
     /// Starts with saved fixture settings so the tabs appear instead of onboarding.
     static let skipOnboardingArgument = "-UITestSkipOnboarding"
-    /// Seeds the built-in categories and keyword rules.
+    /// Seeds the built-in categories and keyword rules, plus the dashboard's fixture rows.
     static let seedArgument = "-UITestSeed"
     /// Clears the in-memory settings and store state before the test starts.
     static let resetArgument = "-UITestReset"
@@ -29,7 +29,7 @@ enum UITestSupport {
     static var isUITestMode: Bool { arguments.contains(modeArgument) }
     /// Whether the test wants the tabs instead of onboarding.
     static var skipsOnboarding: Bool { arguments.contains(skipOnboardingArgument) }
-    /// Whether the test wants the built-in categories and rules.
+    /// Whether the test wants the built-in categories, rules, and dashboard rows.
     static var seedsStore: Bool { arguments.contains(seedArgument) }
     /// Whether the test wants an empty start.
     static var resetsState: Bool { arguments.contains(resetArgument) }
@@ -50,6 +50,7 @@ enum UITestSupport {
         }
         if seedsStore {
             try SeedData.seed(into: container.mainContext)
+            try DashboardFixture.seed(into: container.mainContext)
         }
     }
 }

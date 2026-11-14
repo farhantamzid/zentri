@@ -14,7 +14,12 @@ struct RootTabView: View {
             ForEach(AppTab.allCases) { tab in
                 Tab(tab.title, systemImage: tab.systemImage, value: tab) {
                     NavigationStack {
-                        TabPlaceholderView(tab: tab)
+                        switch tab {
+                        case .overview:
+                            OverviewView()
+                        default:
+                            TabPlaceholderView(tab: tab)
+                        }
                     }
                 }
             }

@@ -1040,6 +1040,294 @@
           }
         }
       }
+    },
+    "Finish setup": {
+      "comment": "The button on Overview's empty state; opens the settings screen where an account is added.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish setup"
+          }
+        }
+      }
+    },
+    "Finish setup to add the account Zentri should watch.": {
+      "comment": "Overview's empty state; explains what finishing setup does.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish setup to add the account Zentri should watch."
+          }
+        }
+      }
+    },
+    "Failed messages": {
+      "comment": "A label in the ingestion health card; the row shows how many messages failed to parse.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed messages"
+          }
+        }
+      }
+    },
+    "Ingestion health": {
+      "comment": "The heading of the card that reports how message ingestion has been going.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingestion health"
+          }
+        }
+      }
+    },
+    "Last message": {
+      "comment": "A label in the ingestion health card; the row shows when a bank message last arrived.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last message"
+          }
+        }
+      }
+    },
+    "Last parsed": {
+      "comment": "A label in the ingestion health card; the row shows when a bank message last parsed successfully.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last parsed"
+          }
+        }
+      }
+    },
+    "Last seven days": {
+      "comment": "The heading of the bar chart that shows each of the last seven days' spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last seven days"
+          }
+        }
+      }
+    },
+    "Never": {
+      "comment": "Shown where a time or date has not happened yet, such as when no message has arrived.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never"
+          }
+        }
+      }
+    },
+    "No account yet": {
+      "comment": "Overview's empty state; the title shown when the store has no active account.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No account yet"
+          }
+        }
+      }
+    },
+    "No spending in the last seven days": {
+      "comment": "Shown instead of the activity chart when the last seven days have no spend.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No spending in the last seven days"
+          }
+        }
+      }
+    },
+    "No spending yet this month": {
+      "comment": "Shown instead of the top categories when this month has no spend.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No spending yet this month"
+          }
+        }
+      }
+    },
+    "No transactions yet": {
+      "comment": "Shown instead of the recent activity list when the store has no transactions.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No transactions yet"
+          }
+        }
+      }
+    },
+    "Recent activity": {
+      "comment": "The heading of the card that lists the newest transactions.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent activity"
+          }
+        }
+      }
+    },
+    "Spending, last seven days": {
+      "comment": "The chart's VoiceOver label; the value reads every day and its spend like a table.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spending, last seven days"
+          }
+        }
+      }
+    },
+    "Top categories": {
+      "comment": "The heading of the card that ranks this month's spending categories.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top categories"
+          }
+        }
+      }
+    },
+    "Total %@": {
+      "comment": "%@ is a formatted money amount. The first line of the activity chart's table-style VoiceOver summary.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total %@"
+          }
+        }
+      }
+    },
+    "Net": {
+      "comment": "A label in the month summary; the row shows what came in less what went out this month.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Net"
+          }
+        }
+      }
+    },
+    "Received": {
+      "comment": "A label in the month summary; the row shows this month's income.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received"
+          }
+        }
+      }
+    },
+    "Spent": {
+      "comment": "A label in the month summary; the row shows this month's spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spent"
+          }
+        }
+      }
+    },
+    "This month": {
+      "comment": "The heading of the month summary card, which covers the current calendar month.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This month"
+          }
+        }
+      }
+    },
+    "Transfer": {
+      "comment": "Shown beside a transferred transaction's category, since transfers are left out of spend and income.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer"
+          }
+        }
+      }
+    },
+    "%@: %@": {
+      "comment": "Two interpolations: a formatted date, then a formatted money amount. One row of the activity chart's table-style VoiceOver summary.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: %@"
+          }
+        }
+      }
+    },
+    "spent %@": {
+      "comment": "A recent transaction's VoiceOver label. %@ is a formatted money amount; the row says which way the money went in words rather than relying on the amount's sign or color.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spent %@"
+          }
+        }
+      }
+    },
+    "received %@": {
+      "comment": "A recent transaction's VoiceOver label. %@ is a formatted money amount; the row says which way the money went in words rather than relying on the amount's sign or color.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "received %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
