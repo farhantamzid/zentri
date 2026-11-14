@@ -118,7 +118,8 @@ public struct ParsingRuleSpec: Sendable, Equatable, Identifiable {
     public let direction: Direction
     /// The Swift regex with the named capture groups `amount`, `merchant`, `balance`, `date`, `time`, and `reference`.
     public let pattern: String
-    /// The format used to parse a captured `date`; when absent, the receipt time is used.
+    /// The format used to parse a captured `date`; when absent, the common formats are tried
+    /// and the receipt time is the final fallback.
     public let dateFormat: String?
     public let isCaseInsensitive: Bool
     public let dotMatchesNewlines: Bool

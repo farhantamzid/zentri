@@ -151,17 +151,18 @@ public struct RegexParsingEngine: TransactionParsing, Sendable {
     /// The message date parsed with the rule's format, or the receipt time.
     ///
     /// A captured `time` group is combined with the date first, so a rule whose format
-    /// includes hours and minutes keeps the time from the message.
+    /// includes hours and minutes keeps the time from the message. A rule without a format
+    /// still reads the date: ``DateParser`` tries its common formats before the receipt time.
     private func occurredAt(
         for spec: ParsingRuleSpec,
         match: Regex<AnyRegexOutput>.Match,
         receivedAt: Date
     ) -> Date {
         guard let dateText = capture("date", in: match) else { return receivedAt }
-        let format = spec.dateFormat?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        guard !format.isEmpty else { return receivedAt }
+        let format = spec.dateFormat?.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if let timeText = capture("time", in: match),
+        if let format, !format.isEmpty,
+           let timeText = capture("time", in: match),
            let combined = DateParser.parse("\(dateText) \(timeText)", format: format) {
             return combined
         }

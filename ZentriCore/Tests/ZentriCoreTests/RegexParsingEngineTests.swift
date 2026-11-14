@@ -359,9 +359,12 @@ private func utcDate(_ year: Int, _ month: Int, _ day: Int, hour: Int = 0, minut
     let datedID = UUID()
     let fallbackID = UUID()
     let futureText = "MYBANK: RM12.50 spent at KFC on 20/11/26. Avl Bal: RM1,234.50. Ref 12345"
+    // The first rule reads the date, which is in the future, so validation fails. The second
+    // rule captures no date at all, so the receipt time keeps it valid.
+    let undatedPattern = #"RM(?<amount>[0-9,]+(?:\.[0-9]{2})?) spent at (?<merchant>.+?) on"#
     let engine = RegexParsingEngine(rules: [
         rule(id: datedID, dateFormat: "dd/MM/yy"),
-        rule(id: fallbackID, dateFormat: nil, priority: 1)
+        rule(id: fallbackID, pattern: undatedPattern, dateFormat: nil, priority: 1)
     ])
     let result = await engine.parse(input(futureText))
     guard case .transaction(let draft) = result else {
@@ -404,9 +407,86 @@ private func utcDate(_ year: Int, _ month: Int, _ day: Int, hour: Int = 0, minut
     }
 }
 
-@Test func missingDateFormatUsesReceivedAt() async {
+@Test func missingDateFormatParsesCommonFormat() async {
     let engine = RegexParsingEngine(rules: [rule(dateFormat: nil)])
     let result = await engine.parse(input())
+    guard case .transaction(let draft) = result else {
+        Issue.record("expected transaction")
+        return
+    }
+    #expect(draft.occurredAt == utcDate(2026, 11, 14))
+}
+
+@Test func missingDateFormatParsesISODate() async {
+    let text = "RM12.50 spent at KFC on 2026-11-14. Avl Bal: RM1,234.50"
+    let pattern = #"RM(?<amount>[0-9,]+(?:\.[0-9]{2})?) spent at (?<merchant>.+?) on (?<date>\d{4}-\d{2}-\d{2})\. Avl Bal: RM(?<balance>[0-9,]+(?:\.[0-9]{2})?)"#
+    let engine = RegexParsingEngine(rules: [rule(pattern: pattern, dateFormat: nil)])
+    let result = await engine.parse(input(text))
+    guard case .transaction(let draft) = result else {
+        Issue.record("expected transaction")
+        return
+    }
+    #expect(draft.occurredAt == utcDate(2026, 11, 14))
+}
+
+@Test func commonFormatsCoverLongYearsAndMonthNames() async {
+    let cases: [(dateText: String, dateGroup: String)] = [
+        ("14/11/2026", #"(?<date>\d{2}/\d{2}/\d{4})"#),
+        ("14-11-2026", #"(?<date>\d{2}-\d{2}-\d{4})"#),
+        ("14 Nov 26", #"(?<date>\d{2} [A-Za-z]{3} \d{2})"#),
+        ("14 Nov 2026", #"(?<date>\d{2} [A-Za-z]{3} \d{4})"#),
+    ]
+    for testCase in cases {
+        let text = "RM12.50 paid on \(testCase.dateText)"
+        let pattern = "RM(?<amount>[0-9]+\\.[0-9]{2}) paid on \(testCase.dateGroup)"
+        let engine = RegexParsingEngine(rules: [rule(pattern: pattern, dateFormat: nil)])
+        let result = await engine.parse(input(text))
+        guard case .transaction(let draft) = result else {
+            Issue.record("expected a transaction for \(testCase.dateText)")
+            continue
+        }
+        #expect(draft.occurredAt == utcDate(2026, 11, 14), "\(testCase.dateText)")
+    }
+}
+
+@Test func explicitDateFormatWinsOverCommonFormats() async {
+    // 03/04/26 reads as 4 March with the rule's format and as 3 April with the common formats,
+    // so the two paths are distinguishable.
+    let text = "MYBANK: RM12.50 spent at KFC on 03/04/26. Avl Bal: RM1,234.50. Ref 12345"
+    let explicit = RegexParsingEngine(rules: [rule(dateFormat: "MM/dd/yy")])
+    let explicitResult = await explicit.parse(input(text))
+    guard case .transaction(let explicitDraft) = explicitResult else {
+        Issue.record("expected a transaction with an explicit date format")
+        return
+    }
+    #expect(explicitDraft.occurredAt == utcDate(2026, 3, 4))
+
+    let common = RegexParsingEngine(rules: [rule(dateFormat: nil)])
+    let commonResult = await common.parse(input(text))
+    guard case .transaction(let commonDraft) = commonResult else {
+        Issue.record("expected a transaction with the common formats")
+        return
+    }
+    #expect(commonDraft.occurredAt == utcDate(2026, 4, 3))
+}
+
+@Test func absentDateGroupUsesReceivedAt() async {
+    // The message contains a date, but this rule does not capture it, so the receipt time stands.
+    let pattern = #"RM(?<amount>[0-9,]+(?:\.[0-9]{2})?) spent at (?<merchant>.+?) on"#
+    let engine = RegexParsingEngine(rules: [rule(pattern: pattern, dateFormat: nil)])
+    let result = await engine.parse(input())
+    guard case .transaction(let draft) = result else {
+        Issue.record("expected transaction")
+        return
+    }
+    #expect(draft.occurredAt == sampleReceivedAt)
+}
+
+@Test func unreadableDateWithoutFormatUsesReceivedAt() async {
+    let text = "RM12.50 spent at KFC on NOTADATE. Avl Bal: RM1,234.50"
+    let pattern = #"RM(?<amount>[0-9,]+(?:\.[0-9]{2})?) spent at (?<merchant>.+?) on (?<date>\S+)\. Avl Bal: RM(?<balance>[0-9,]+(?:\.[0-9]{2})?)"#
+    let engine = RegexParsingEngine(rules: [rule(pattern: pattern, dateFormat: nil)])
+    let result = await engine.parse(input(text))
     guard case .transaction(let draft) = result else {
         Issue.record("expected transaction")
         return
