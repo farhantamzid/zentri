@@ -58,26 +58,16 @@ public struct CategoryMatch: Sendable, Equatable {
 /// category name. The service never creates a category; anything it cannot resolve becomes `Other`.
 public enum CategorizationService: Sendable {
     /// The category used when no rule matches and no known suggestion is available.
-    public static let fallbackCategoryName = "Other"
+    ///
+    /// Taken from ``SeedData`` so the fallback always names a category a fresh store contains.
+    public static let fallbackCategoryName = SeedData.fallbackCategoryName
 
     /// The categories a fresh store ships with, in display order.
     ///
-    /// This mirrors the seeded categories in `SeedData`. It is only used to validate suggestions when
-    /// the caller supplies no live category list, so the names must stay in sync with the seed data.
-    public static let builtInCategoryNames: [String] = [
-        "Groceries",
-        "Dining",
-        "Transport",
-        "Shopping",
-        "Bills & Utilities",
-        "Health",
-        "Entertainment",
-        "Travel",
-        "Fees & Charges",
-        "Income",
-        "Transfers",
-        "Other",
-    ]
+    /// Taken from ``SeedData/builtInCategoryNames``, the single source of truth for the built-in names, so
+    /// the seeded rows and the names a suggestion is validated against cannot drift apart. It is only used
+    /// to validate suggestions when the caller supplies no live category list.
+    public static let builtInCategoryNames: [String] = SeedData.builtInCategoryNames
 
     /// The locale used for every comparison, so a match never depends on the device's locale.
     private static let matchingLocale = Locale(identifier: "en_US_POSIX")

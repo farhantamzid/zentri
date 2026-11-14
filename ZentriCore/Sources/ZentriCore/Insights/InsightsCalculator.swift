@@ -22,6 +22,16 @@ public enum InsightsCalculator: Sendable {
 
     /// Summarizes the transactions that belong to a period.
     ///
+    /// Totals, shares, merchants, daily spend, the six-month series, and the largest transactions work for
+    /// any period. The month-over-month fields — `CategoryTotal.previousAmount`,
+    /// `CategoryTotal.changePercent`, and the month-over-month category observations — additionally assume
+    /// the period is exactly one calendar month: it must start at the month's first instant and end inside
+    /// that month's last second (see `spansCalendarMonth(_:calendar:)`). They compare the period with the
+    /// calendar month before the one containing `period.start`, which only describes the same range as the
+    /// totals when the period is that month. For any other period the summary still reports everything
+    /// else, `previousAmount` keeps the actual previous-month figure, and `changePercent` is `nil` so no
+    /// observation claims a comparison the period does not support.
+    ///
     /// - Parameters:
     ///   - transactions: The working set to summarize, including transactions outside the period.
     ///   - period: The inclusive range of dates the period's totals cover.
@@ -50,7 +60,8 @@ public enum InsightsCalculator: Sendable {
                 startingAt: monthStart,
                 transactions: transactions,
                 calendar: calendar
-            )
+            ),
+            reportsChangeFromPreviousMonth: spansCalendarMonth(period, calendar: calendar)
         )
         let merchants = merchantTotals(spends: spends)
 
@@ -151,11 +162,13 @@ private extension InsightsCalculator {
         return accumulators.filter { $0.value.amount > 0 }
     }
 
-    /// The period's categories, highest spend first, with shares and month-over-month changes.
+    /// The period's categories, highest spend first, with shares and, for a one-month period, the
+    /// month-over-month changes.
     static func categoryTotals(
         spends: [TransactionSnapshot],
         totalSpend: Decimal,
-        previousMonthSpends: [TransactionSnapshot]
+        previousMonthSpends: [TransactionSnapshot],
+        reportsChangeFromPreviousMonth: Bool
     ) -> [CategoryTotal] {
         let current = categoryAccumulators(for: spends)
         let previous = categoryAccumulators(for: previousMonthSpends)
@@ -173,7 +186,9 @@ private extension InsightsCalculator {
                 share: shares[index],
                 transactionCount: accumulator.transactionCount,
                 previousAmount: previousAmount,
-                changePercent: changePercent(current: accumulator.amount, previous: previousAmount)
+                changePercent: reportsChangeFromPreviousMonth
+                    ? changePercent(current: accumulator.amount, previous: previousAmount)
+                    : nil
             )
         }
     }
@@ -341,6 +356,25 @@ private extension InsightsCalculator {
     static func startOfMonth(adding months: Int, to monthStart: Date, calendar: Calendar) -> Date {
         calendar.date(byAdding: .month, value: months, to: monthStart) ?? monthStart
     }
+
+    /// Whether the period is exactly the calendar month that contains its start.
+    ///
+    /// A month period starts at the month's first instant and ends inside the month's last second, which
+    /// accepts the inclusive end instants callers use for a month (`23:59:59` and its sub-second
+    /// neighbours). Anything else — a week, a rolling window, a month that starts or ends early, or a
+    /// period that runs into the next month — is not that month, so comparing its totals with the whole
+    /// previous month would describe a different range than the totals do.
+    static func spansCalendarMonth(_ period: InsightsPeriod, calendar: Calendar) -> Bool {
+        let monthStart = startOfMonth(period.start, calendar: calendar)
+        guard period.start == monthStart else { return false }
+        let nextMonthStart = startOfMonth(adding: 1, to: monthStart, calendar: calendar)
+        guard let lastSecond = calendar.date(byAdding: .second, value: -1, to: nextMonthStart),
+              lastSecond < nextMonthStart
+        else {
+            return false
+        }
+        return lastSecond <= period.end && period.end < nextMonthStart
+    }
 }
 
 // MARK: - Observations
@@ -348,9 +382,18 @@ private extension InsightsCalculator {
 private extension InsightsCalculator {
     /// The deterministic, user-facing observations about the period.
     ///
-    /// A month-over-month observation appears only when the previous month has spend in the same
-    /// category, because a change from nothing has no meaningful percentage. Dates are deliberately not
-    /// formatted here: a peak-day sentence needs a locale-aware formatter, which belongs to the UI layer.
+    /// A category observation appears only when the previous month has spend in the same category, because
+    /// a change from nothing has no meaningful percentage, and only for a one-calendar-month period,
+    /// because otherwise the comparison would describe a different range than the totals (see the
+    /// precondition documented on `summary(transactions:period:calendar:)`). A non-month period therefore
+    /// produces only the top-merchant sentence.
+    ///
+    /// The spec's peak-day observation ("You spent 3.2× your daily average on 12 Oct") is intentionally
+    /// deferred: it belongs to Task 13 and is not produced here. Only rendering the date ("12 Oct") needs a
+    /// locale-aware formatter — the peak day and the ratio (peak day spend ÷ the period's average daily
+    /// spend) are locale-free and computable from what the summary already publishes. Task 13 computes it
+    /// from `InsightsSummary.dailySpend` and `InsightsSummary.totalSpend`, or from an additive helper added
+    /// alongside them, and formats the date in the UI.
     static func observations(
         categoryTotals: [CategoryTotal],
         merchantTotals: [MerchantTotal]

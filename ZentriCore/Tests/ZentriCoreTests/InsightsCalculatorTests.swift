@@ -204,6 +204,66 @@ private func transaction(
     #expect(!withOneMonth.observations.contains { $0.contains("than last month") })
 }
 
+@Test func monthOverMonthFieldsRequireOneCalendarMonthPeriod() throws {
+    let septemberDining = transaction(
+        100, .debit, try makeDate(2026, 9, 12), merchant: "Kopitiam", category: "Dining"
+    )
+    let octoberDining = transaction(
+        20, .debit, try makeDate(2026, 10, 3), merchant: "Kopitiam", category: "Dining"
+    )
+    let transactions = [septemberDining, octoberDining]
+    let month = try monthPeriod(2026, 10)
+
+    let monthly = InsightsCalculator.summary(
+        transactions: transactions, period: month, calendar: calendar
+    )
+    let monthlyDining = try #require(monthly.categoryTotals.first)
+    #expect(monthlyDining.changePercent == -80)
+    #expect(monthly.observations.contains("Dining is 80% lower than last month."))
+
+    // A week inside October summarizes the week. Comparing those totals with the whole of September
+    // would be arithmetically correct and factually wrong, so the comparison is suppressed while every
+    // other part of the summary keeps working.
+    let week = InsightsCalculator.summary(
+        transactions: transactions,
+        period: InsightsPeriod(
+            start: try makeDate(2026, 10, 1, hour: 0),
+            end: try makeDate(2026, 10, 7, hour: 23, minute: 59)
+        ),
+        calendar: calendar
+    )
+    #expect(week.totalSpend == 20)
+    #expect(week.dailySpend.count == 7)
+    #expect(week.largestTransactions.count == 1)
+    #expect(week.monthlyIncomeExpense.count == 6)
+    let weeklyDining = try #require(week.categoryTotals.first)
+    #expect(weeklyDining.amount == 20)
+    #expect(weeklyDining.share == 100)
+    #expect(weeklyDining.previousAmount == 100)
+    #expect(weeklyDining.changePercent == nil)
+    #expect(!week.observations.contains { $0.contains("last month") })
+    #expect(week.observations == ["Kopitiam is your top merchant with 1 transaction."])
+
+    // Every other period shape is suppressed as well: a month that starts late, a month that ends early,
+    // and a period that runs into the next month's first instant are not the calendar month.
+    let otherPeriods = [
+        InsightsPeriod(start: try makeDate(2026, 10, 2, hour: 0), end: month.end),
+        InsightsPeriod(
+            start: try makeDate(2026, 10, 1, hour: 0),
+            end: try makeDate(2026, 10, 30, hour: 23, minute: 59)
+        ),
+        InsightsPeriod(start: try makeDate(2026, 10, 1, hour: 0), end: try makeDate(2026, 11, 1, hour: 0)),
+    ]
+    for period in otherPeriods {
+        let summary = InsightsCalculator.summary(
+            transactions: transactions, period: period, calendar: calendar
+        )
+        #expect(summary.totalSpend == 20)
+        #expect(summary.categoryTotals.allSatisfy { $0.changePercent == nil })
+        #expect(!summary.observations.contains { $0.contains("last month") })
+    }
+}
+
 @Test func categoryIncreaseIsReported() throws {
     let summary = InsightsCalculator.summary(
         transactions: [

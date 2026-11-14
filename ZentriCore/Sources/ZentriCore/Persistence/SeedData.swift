@@ -4,7 +4,10 @@ import SwiftData
 /// Creates the built-in categories and keyword rules a fresh store needs.
 ///
 /// Seeding is idempotent and keyed by name (categories) and keyword (rules), so re-running it never
-/// duplicates rows and never overwrites user edits.
+/// duplicates rows and never overwrites user edits. The seeds are also the single source of truth for
+/// the built-in category names and for which category is the fallback: `CategorizationService` reads
+/// them instead of keeping its own copy, so a renamed seed cannot leave the suggestion path pointing at
+/// a category that no longer exists.
 public enum SeedData {
     /// A category the app ships with.
     private struct CategorySeed {
@@ -19,6 +22,16 @@ public enum SeedData {
         let categoryName: String
     }
 
+    /// The category that collects spend no rule or suggestion could classify.
+    ///
+    /// Defined once and included in `categorySeeds` by reference, so its name, symbol, color, and
+    /// position in the display order cannot drift from the values the categorization fallback uses.
+    private static let fallbackCategorySeed = CategorySeed(
+        name: "Other",
+        symbolName: "ellipsis",
+        colorToken: "slate"
+    )
+
     /// The 12 seeded categories, in display order.
     private static let categorySeeds: [CategorySeed] = [
         CategorySeed(name: "Groceries", symbolName: "cart", colorToken: "green"),
@@ -32,8 +45,22 @@ public enum SeedData {
         CategorySeed(name: "Fees & Charges", symbolName: "banknote", colorToken: "slate"),
         CategorySeed(name: "Income", symbolName: "arrow.up.right", colorToken: "green"),
         CategorySeed(name: "Transfers", symbolName: "arrow.left.arrow.right", colorToken: "indigo"),
-        CategorySeed(name: "Other", symbolName: "ellipsis", colorToken: "slate"),
+        fallbackCategorySeed,
     ]
+
+    /// The names of the seeded categories, in display order.
+    ///
+    /// The single source of truth for the built-in category names: `CategorizationService` validates AI
+    /// suggestions against this list when the caller supplies no live catalog, so renaming a seed here
+    /// renames the seeded row and the name a suggestion is accepted for at the same time.
+    public static var builtInCategoryNames: [String] {
+        categorySeeds.map(\.name)
+    }
+
+    /// The name of the seeded category that uncategorized spend falls back to.
+    public static var fallbackCategoryName: String {
+        fallbackCategorySeed.name
+    }
 
     /// A small, editable set of common merchants.
     private static let ruleSeeds: [RuleSeed] = [

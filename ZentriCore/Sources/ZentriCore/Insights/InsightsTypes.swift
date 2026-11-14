@@ -43,8 +43,11 @@ public struct TransactionSnapshot: Sendable, Equatable, Identifiable {
 
     /// Creates a snapshot.
     ///
-    /// The category defaults mirror the seeded Other category, so a transaction the caller has not
-    /// categorized still produces a total instead of disappearing from the breakdown.
+    /// The category defaults mirror the seeded `Other` category — the name, symbol, and color token that
+    /// `SeedData` seeds and that `CategorizationService.fallbackCategoryName` names — so a transaction the
+    /// caller has not categorized still produces a total instead of disappearing from the breakdown. They
+    /// are written out rather than read from `SeedData` so the insights layer stays free of the persistence
+    /// layer; the seed-sync test in `CategorizationServiceTests` fails if they drift from the seeded category.
     public init(
         id: UUID,
         accountID: UUID,
@@ -91,12 +94,18 @@ public struct CategoryTotal: Sendable, Equatable {
     public let share: Decimal
     /// The number of spend transactions in the category.
     public let transactionCount: Int
-    /// The spend the category received in the previous month, or zero when it had none.
+    /// The spend the category received in the calendar month before the period's month, or zero when it
+    /// had none.
+    ///
+    /// This is always the actual previous-month figure, even when the period is not a calendar month. In
+    /// that case ``changePercent`` is `nil`, so there is no meaningful comparison to draw from it.
     public let previousAmount: Decimal
     /// The signed percentage change from the previous month, rounded to two decimals.
     ///
     /// Positive values are increases. The value is `nil` when the previous month has no spend in the
-    /// category, because a change from nothing has no meaningful percentage.
+    /// category, because a change from nothing has no meaningful percentage, and when the period is not
+    /// exactly one calendar month, because the comparison would then describe a different range than
+    /// ``amount`` and ``share`` do. See `InsightsCalculator.summary(transactions:period:calendar:)`.
     public let changePercent: Decimal?
 
     public init(
