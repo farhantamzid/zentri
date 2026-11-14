@@ -1,0 +1,5 @@
+.build/
+DerivedData/
+Zentri.xcodeproj/
+*.xcuserstate
+.DS_Store

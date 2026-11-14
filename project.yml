@@ -1,0 +1,138 @@
+name: Zentri
+
+options:
+  bundleIdPrefix: com.farhantamzid
+  deploymentTarget:
+    iOS: "27.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+  xcodeVersion: "27.2"
+
+packages:
+  ZentriCore:
+    path: ZentriCore
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    IPHONEOS_DEPLOYMENT_TARGET: "27.0"
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+targets:
+  ZentriApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: ZentriApp
+        excludes:
+          - Info.plist
+          - ZentriApp.entitlements
+    dependencies:
+      - package: ZentriCore
+        product: ZentriCore
+      - target: ZentriWidgets
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.farhantamzid.zentri
+        INFOPLIST_FILE: ZentriApp/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: ZentriApp/ZentriApp.entitlements
+        CODE_SIGN_STYLE: Automatic
+        IPHONEOS_DEPLOYMENT_TARGET: "27.0"
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ENABLE_PREVIEWS: YES
+
+  ZentriWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ZentriWidgets
+        excludes:
+          - Info.plist
+          - ZentriWidgets.entitlements
+    dependencies:
+      - package: ZentriCore
+        product: ZentriCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.farhantamzid.zentri.widgets
+        INFOPLIST_FILE: ZentriWidgets/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: ZentriWidgets/ZentriWidgets.entitlements
+        CODE_SIGN_STYLE: Automatic
+        IPHONEOS_DEPLOYMENT_TARGET: "27.0"
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+
+  ZentriAppTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: ZentriAppTests
+    dependencies:
+      - target: ZentriApp
+      - package: ZentriCore
+        product: ZentriCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.farhantamzid.zentri.tests
+        GENERATE_INFOPLIST_FILE: YES
+        IPHONEOS_DEPLOYMENT_TARGET: "27.0"
+        SWIFT_VERSION: "6.0"
+
+  ZentriUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: ZentriUITests
+    dependencies:
+      - target: ZentriApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.farhantamzid.zentri.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        IPHONEOS_DEPLOYMENT_TARGET: "27.0"
+        SWIFT_VERSION: "6.0"
+        TEST_TARGET_NAME: ZentriApp
+
+schemes:
+  ZentriApp:
+    build:
+      targets:
+        ZentriApp: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ZentriAppTests
+        - ZentriUITests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  ZentriWidgets:
+    build:
+      targets:
+        ZentriWidgets: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
