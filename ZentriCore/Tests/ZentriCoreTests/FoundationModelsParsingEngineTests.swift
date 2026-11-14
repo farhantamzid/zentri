@@ -65,7 +65,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
         merchant: "KFC", balance: "1,234.50", date: nil, category: "Dining"
     )
     let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
-    let result = await engine.parse(ParseInput(text: "x", accountID: nil, sender: nil, receivedAt: .now))
+    let result = await engine.parse(modelInput("Paid 12.50 at KFC"))
     guard case .transaction(let draft) = result else { Issue.record("expected transaction"); return }
     #expect(draft.amount == Decimal(string: "12.50"))
     #expect(draft.categorySuggestion == "Dining")
@@ -79,7 +79,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
     )
     let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
 
-    guard let draft = draft(from: await engine.parse(modelInput())) else {
+    guard let draft = draft(from: await engine.parse(modelInput("MYBANK: RM1,234.50 received from ACME Corp"))) else {
         Issue.record("expected a transaction")
         return
     }
@@ -118,6 +118,37 @@ enum ModelTestFailure: Error, Sendable, Equatable {
         return
     }
     #expect(draft.occurredAt == utcDate(2026, 11, 14, hour: 9, minute: 30))
+}
+
+@Test func parsesAnISO8601TimestampWithAColonOffset() async {
+    // 09:30 at +08:00 is 01:30 UTC, so the offset must be applied rather than ignored.
+    let output = ModelTransactionOutput(
+        isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC",
+        date: "2026-11-14T09:30:00+08:00"
+    )
+    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+
+    guard let draft = draft(from: await engine.parse(modelInput())) else {
+        Issue.record("expected a transaction")
+        return
+    }
+    #expect(draft.occurredAt == utcDate(2026, 11, 14, hour: 1, minute: 30))
+}
+
+@Test func parsesAnISO8601TimestampWithABasicOffset() async {
+    // ISO-8601 also spells the same offset without a colon; it must not fall back to `receivedAt`.
+    let output = ModelTransactionOutput(
+        isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC",
+        date: "2026-11-14T09:30:00+0800"
+    )
+    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+
+    guard let draft = draft(from: await engine.parse(modelInput())) else {
+        Issue.record("expected a transaction")
+        return
+    }
+    #expect(draft.occurredAt == utcDate(2026, 11, 14, hour: 1, minute: 30))
+    #expect(draft.occurredAt != modelReceivedAt)
 }
 
 @Test func unreadableModelDatesFallBackToTheReceiptTime() async {
@@ -178,11 +209,63 @@ enum ModelTestFailure: Error, Sendable, Equatable {
     #expect(diagnostic?.field == "amount")
 }
 
+@Test func hallucinatedModelAmountIsNotAccepted() async {
+    let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "999.99", merchant: "KFC")
+    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+
+    let diagnostic = firstDiagnostic(from: await engine.parse(modelInput("Paid 12.50 at KFC")))
+    #expect(diagnostic?.code == .invalidAmount)
+    #expect(diagnostic?.field == "amount")
+    #expect(diagnostic?.message == "The extracted amount does not appear in the message.")
+}
+
+@Test func modelAmountThatMatchesTheMessageIsAccepted() async {
+    let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC")
+    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+
+    guard let draft = draft(from: await engine.parse(modelInput("Paid 12.50 at KFC"))) else {
+        Issue.record("expected a transaction")
+        return
+    }
+    #expect(draft.amount == Decimal(string: "12.50"))
+}
+
+@Test func modelAmountMatchesAGroupedMessageAmount() async {
+    let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "1234.50", merchant: "KFC")
+    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+
+    guard let draft = draft(from: await engine.parse(modelInput("Paid RM 1,234.50"))) else {
+        Issue.record("expected a transaction")
+        return
+    }
+    #expect(draft.amount == Decimal(1234.5))
+}
+
+@Test func modelAmountWithoutAFractionMatchesAGroupedMessageAmount() async {
+    let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "1250", merchant: "KFC")
+    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+
+    guard let draft = draft(from: await engine.parse(modelInput("Paid 1,250"))) else {
+        Issue.record("expected a transaction")
+        return
+    }
+    #expect(draft.amount == Decimal(1250))
+}
+
+@Test func modelAmountIsComparedByValueNotByDigits() async {
+    // "1,000" contains the digits of "100", but not its value.
+    let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "100", merchant: "KFC")
+    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+
+    let diagnostic = firstDiagnostic(from: await engine.parse(modelInput("Paid 1,000 at KFC")))
+    #expect(diagnostic?.code == .invalidAmount)
+}
+
 @Test func nonPositiveModelAmountFailsValidation() async {
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "0.00", merchant: "KFC")
     let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
 
-    let diagnostic = firstDiagnostic(from: await engine.parse(modelInput()))
+    let diagnostic = firstDiagnostic(from: await engine.parse(modelInput("MYBANK: RM0.00 charge at KFC")))
     #expect(diagnostic?.code == .amountNotPositive)
     #expect(diagnostic?.field == "amount")
 }
@@ -212,6 +295,21 @@ enum ModelTestFailure: Error, Sendable, Equatable {
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput()))
     #expect(diagnostic?.code == .missingMerchant)
     #expect(diagnostic?.field == "merchant")
+}
+
+@Test func overlongModelMerchantIsTruncated() async {
+    let merchant = String(repeating: "M", count: 500)
+    let output = ModelTransactionOutput(
+        isTransaction: true, direction: "debit", amount: "12.50", merchant: merchant
+    )
+    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+
+    guard let draft = draft(from: await engine.parse(modelInput())) else {
+        Issue.record("expected a transaction")
+        return
+    }
+    #expect(draft.merchant.count == 120)
+    #expect(draft.merchant == String(merchant.prefix(120)))
 }
 
 @Test func unreadableModelBalanceIsDropped() async {
@@ -296,7 +394,29 @@ enum ModelTestFailure: Error, Sendable, Equatable {
     let engine = FoundationModelsParsingEngine(client: client)
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput()))
-    #expect(diagnostic?.code == .modelTimedOut)
+    #expect(diagnostic?.code == .cancelled)
+    #expect(diagnostic?.message == "Parsing was cancelled.")
+}
+
+@Test func cancelledParsingFailsWithoutAskingTheModel() async {
+    let counter = CallCounter()
+    let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC")
+    let engine = FoundationModelsParsingEngine(
+        client: StubModelClient(result: .success(output), counter: counter)
+    )
+
+    let task = Task { () -> ParseResult in
+        withUnsafeCurrentTask { $0?.cancel() }
+        return await engine.parse(modelInput())
+    }
+    let result = await task.value
+
+    guard case .failure(let diagnostics) = result else {
+        Issue.record("expected a failure")
+        return
+    }
+    #expect(diagnostics.map(\.code) == [.cancelled])
+    #expect(await counter.parseCalls == 0)
 }
 
 @Test func oversizedModelMessageFailsWithoutParsing() async {

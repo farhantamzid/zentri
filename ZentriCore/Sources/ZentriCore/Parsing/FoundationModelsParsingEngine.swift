@@ -3,24 +3,35 @@ import Foundation
 /// Parses messages with the on-device model, then validates its answer like any other draft.
 ///
 /// The model's output is never trusted directly: the direction must be `debit` or `credit`,
-/// the amount and balance are read by ``AmountNormalizer``, the date by the shared date
-/// parsers, and the resulting draft goes through ``TransactionValidator``. A message the
-/// model cannot read becomes a ``ParseResult/failure(_:)`` with a diagnostic, never a
-/// partially filled transaction.
+/// the amount must be a value the message itself states, the balance is read by
+/// ``AmountNormalizer``, the date by the shared date parsers, and the resulting draft goes
+/// through ``TransactionValidator``. A message the model cannot read becomes a
+/// ``ParseResult/failure(_:)`` with a diagnostic, never a partially filled transaction.
 public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
     /// The same message limit the rule engine applies, so neither engine spends work on a
     /// message the other would reject.
     private static let maximumTextLength = RegexParsingEngine.maximumTextLength
 
+    /// The longest merchant name accepted from the model, in characters.
+    ///
+    /// A generation that rambles is cut here rather than rejected: the amount and date still
+    /// describe a real transaction. Validation's whitespace collapsing runs afterwards, so the
+    /// stored name is never longer than this.
+    private static let maximumMerchantLength = 120
+
     /// The ISO-8601 spellings the model is asked for, most specific first.
     ///
-    /// Only these formats are tried: a date-only fallback list would read an ISO timestamp
-    /// as a different day, so the shape of the value decides how it is read. Every candidate
-    /// goes through ``DateParser``, which keeps the fixed locale, calendar, time zone, and
-    /// 2000–2099 year window the rest of parsing uses.
+    /// The offset is accepted both in the extended form (`+08:00`) and in the basic form
+    /// (`+0800`), with and without fractional seconds. Only these formats are tried: a
+    /// date-only fallback list would read an ISO timestamp as a different day, so the shape of
+    /// the value decides how it is read. Every candidate goes through ``DateParser``, which
+    /// keeps the fixed locale, calendar, time zone, and 2000–2099 year window the rest of
+    /// parsing uses.
     private static let iso8601Formats = [
         "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ",
         "yyyy-MM-dd'T'HH:mm:ssZZZZZ",
+        "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+        "yyyy-MM-dd'T'HH:mm:ssZ",
         "yyyy-MM-dd'T'HH:mm:ss",
         "yyyy-MM-dd'T'HH:mm",
         "yyyy-MM-dd HH:mm:ss",
@@ -35,6 +46,10 @@ public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
     }
 
     public func parse(_ input: ParseInput) async -> ParseResult {
+        // Cancellation is a caller decision, not a model failure, so it is reported as itself
+        // before any work starts.
+        guard !Task.isCancelled else { return .failure([Self.cancelledDiagnostic]) }
+
         guard input.text.count <= Self.maximumTextLength else {
             return .failure([ParseDiagnostic(
                 code: .inputTooLong,
@@ -53,14 +68,17 @@ public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
 
         do {
             let output = try await client.parse(text: input.text)
-            return result(from: output, receivedAt: input.receivedAt)
+            // A client can finish just as the caller cancels: that answer is stale, so it is
+            // reported as cancelled instead of being turned into a transaction.
+            guard !Task.isCancelled else { return .failure([Self.cancelledDiagnostic]) }
+            return result(from: output, text: input.text, receivedAt: input.receivedAt)
         } catch {
             return .failure([Self.diagnostic(for: error)])
         }
     }
 
     /// The draft the model's answer describes, or the reason it cannot become one.
-    private func result(from output: ModelTransactionOutput, receivedAt: Date) -> ParseResult {
+    private func result(from output: ModelTransactionOutput, text: String, receivedAt: Date) -> ParseResult {
         guard output.isTransaction else { return .notTransaction }
 
         guard let directionText = Self.trimmed(output.direction) else {
@@ -92,10 +110,20 @@ public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
             )])
         }
 
+        // The model may only report a value the message itself states: a hallucinated or
+        // injected number would otherwise become a transaction.
+        guard Self.messageAmounts(from: text).contains(amount) else {
+            return .failure([ParseDiagnostic(
+                code: .invalidAmount,
+                field: "amount",
+                message: "The extracted amount does not appear in the message."
+            )])
+        }
+
         let draft = TransactionDraft(
             direction: direction,
             amount: amount,
-            merchant: Self.trimmed(output.merchant) ?? "",
+            merchant: Self.truncated(Self.trimmed(output.merchant) ?? "", to: Self.maximumMerchantLength),
             balanceAfter: AmountNormalizer.decimal(from: output.balance),
             occurredAt: occurredAt(from: output.date, receivedAt: receivedAt),
             categorySuggestion: Self.trimmed(output.category)
@@ -120,26 +148,86 @@ public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
         return receivedAt
     }
 
+    /// Every amount the message itself states, read the way the rule engine reads one.
+    ///
+    /// A candidate is a run of digits and separators between other characters, and also each
+    /// whitespace-separated piece of such a run, so `1,234.50` and a space-grouped `1 234.50`
+    /// are both read. Values are compared as parsed `Decimal`s, never as text: a digit-substring
+    /// test would let `100` match `1,000`.
+    private static func messageAmounts(from text: String) -> Set<Decimal> {
+        var amounts: Set<Decimal> = []
+        for chunk in text.split(whereSeparator: { !isAmountCharacter($0) }) {
+            for candidate in [chunk[...]] + chunk.split(whereSeparator: \.isWhitespace) {
+                guard let digits = digitSpan(of: candidate),
+                      let amount = AmountNormalizer.decimal(from: String(digits)) else { continue }
+                amounts.insert(amount)
+            }
+        }
+        return amounts
+    }
+
+    /// Whether the character can appear inside an amount: a digit, a separator, or the
+    /// whitespace some messages group thousands with.
+    private static func isAmountCharacter(_ character: Character) -> Bool {
+        isASCIIDigit(character) || character == "," || character == "." || character.isWhitespace
+    }
+
+    /// Whether the character is an ASCII digit, matching ``AmountNormalizer``'s rule.
+    private static func isASCIIDigit(_ character: Character) -> Bool {
+        character.isASCII && character.isNumber
+    }
+
+    /// The part of a candidate from its first digit to its last, so surrounding punctuation is
+    /// ignored.
+    private static func digitSpan(of candidate: Substring) -> Substring? {
+        guard let first = candidate.firstIndex(where: isASCIIDigit),
+              let last = candidate.lastIndex(where: isASCIIDigit),
+              first <= last else { return nil }
+        return candidate[first...last]
+    }
+
+    /// `value` cut to at most `limit` characters, never failing.
+    private static func truncated(_ value: String, to limit: Int) -> String {
+        value.count <= limit ? value : String(value.prefix(limit))
+    }
+
     /// The diagnostic for a client failure.
     ///
     /// The underlying error is not described: a generation error can quote the message it was
     /// reading, and diagnostics never carry message text.
     private static func diagnostic(for error: any Error) -> ParseDiagnostic {
         switch error {
-        case ModelClientError.timedOut, is CancellationError:
-            ParseDiagnostic(
-                code: .modelTimedOut,
-                field: "model",
-                message: "The on-device model did not answer in time."
-            )
+        case is CancellationError:
+            cancelledDiagnostic
+        case ModelClientError.timedOut:
+            timedOutDiagnostic
         default:
-            ParseDiagnostic(
-                code: .modelFailed,
-                field: "model",
-                message: "The on-device model could not read this message."
-            )
+            // A client can surface cancellation with its own error type; a cancelled task still
+            // means "try again", not "the model failed".
+            Task.isCancelled ? cancelledDiagnostic : failedDiagnostic
         }
     }
+
+    /// The diagnostic for a parse the caller cancelled.
+    private static let cancelledDiagnostic = ParseDiagnostic(
+        code: .cancelled,
+        field: "model",
+        message: "Parsing was cancelled."
+    )
+
+    /// The diagnostic for a generation that outlived the client's time limit.
+    private static let timedOutDiagnostic = ParseDiagnostic(
+        code: .modelTimedOut,
+        field: "model",
+        message: "The on-device model did not answer in time."
+    )
+
+    /// The diagnostic for a generation that failed for any other reason.
+    private static let failedDiagnostic = ParseDiagnostic(
+        code: .modelFailed,
+        field: "model",
+        message: "The on-device model could not read this message."
+    )
 
     private static let unavailableMessage = "The on-device model is not available on this device."
 

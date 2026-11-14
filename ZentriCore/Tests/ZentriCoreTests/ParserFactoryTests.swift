@@ -52,7 +52,7 @@ private func firstDiagnostic(from result: ParseResult) -> ParseDiagnostic? {
 }
 
 @Test func factoryFoundationModelsModeReturnsTheModelEngine() async {
-    let factory = ParserFactory(modelClient: StubModelClient(result: .success(modelOutput(amount: "99.00"))))
+    let factory = ParserFactory(modelClient: StubModelClient(result: .success(modelOutput(amount: "12.50"))))
     let parser = factory.makeParser(for: .foundationModels, rules: [factoryRule()])
 
     #expect(parser is FoundationModelsParsingEngine)
@@ -60,7 +60,7 @@ private func firstDiagnostic(from result: ParseResult) -> ParseDiagnostic? {
         Issue.record("expected a transaction")
         return
     }
-    #expect(parsed.amount == Decimal(99))
+    #expect(parsed.amount == Decimal(12.5))
     #expect(parsed.merchant == "Model Merchant")
 }
 
@@ -100,13 +100,13 @@ private func firstDiagnostic(from result: ParseResult) -> ParseDiagnostic? {
 
 @Test func factoryHybridModeFallsBackToTheModel() async {
     let counter = CallCounter()
-    let client = StubModelClient(result: .success(modelOutput(amount: "99.00")), counter: counter)
+    let client = StubModelClient(result: .success(modelOutput(amount: "123456")), counter: counter)
     let parser = ParserFactory(modelClient: client).makeParser(for: .hybrid, rules: [factoryRule()])
 
     guard let parsed = draft(from: await parser.parse(factoryInput("Your one-time password is 123456."))) else {
         Issue.record("expected a transaction")
         return
     }
-    #expect(parsed.amount == Decimal(99))
+    #expect(parsed.amount == Decimal(123456))
     #expect(await counter.parseCalls == 1)
 }

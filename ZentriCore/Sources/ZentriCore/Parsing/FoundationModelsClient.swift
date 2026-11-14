@@ -14,10 +14,12 @@ import FoundationModels
 /// is compiled conditionally: the engine, the hybrid, and the factory are tested against a
 /// scripted client on every platform.
 public struct FoundationModelsClient: TransactionModelClient {
-    /// The longest a message may occupy the model before the answer is abandoned.
+    /// How long a generation may take before the race gives up on it.
     ///
-    /// A message that cannot be read in this window is reported as a timeout, so ingestion is
-    /// never left waiting on the model.
+    /// The limit is cooperative: when it passes, the generation's task is cancelled and parsing
+    /// reports a timeout, but the caller returns only once the model yields to that
+    /// cancellation. A model that ignored cancellation could still delay parsing, so this is a
+    /// bound on a well-behaved generation, not a hard deadline.
     private static let responseTimeout = Duration.seconds(15)
 
     /// The instructions that define the task and the security posture of the session.
@@ -45,19 +47,8 @@ public struct FoundationModelsClient: TransactionModelClient {
     public func parse(text: String) async throws -> ModelTransactionOutput {
         let session = LanguageModelSession(instructions: Self.instructions)
         let prompt = Self.prompt(for: text)
-        let generated = try await withThrowingTaskGroup(of: GeneratedTransaction.self) { group in
-            group.addTask {
-                try await session.respond(to: prompt, generating: GeneratedTransaction.self).content
-            }
-            group.addTask {
-                try await Task.sleep(for: Self.responseTimeout)
-                throw ModelClientError.timedOut
-            }
-            defer { group.cancelAll() }
-            guard let first = try await group.next() else {
-                throw ModelClientError.timedOut
-            }
-            return first
+        let generated = try await TimeoutRace.run(timeout: Self.responseTimeout) {
+            try await session.respond(to: prompt, generating: GeneratedTransaction.self).content
         }
         return ModelTransactionOutput(
             isTransaction: generated.isTransaction,
@@ -72,7 +63,10 @@ public struct FoundationModelsClient: TransactionModelClient {
 
     /// The prompt: the message goes between markers as data, with any marker it contains
     /// removed so it cannot end the block early.
-    private static func prompt(for text: String) -> String {
+    ///
+    /// Internal rather than private so a test can prove a payload that spells a marker still
+    /// arrives as one block of data.
+    static func prompt(for text: String) -> String {
         let data = text
             .replacing("<message>", with: " ")
             .replacing("</message>", with: " ")

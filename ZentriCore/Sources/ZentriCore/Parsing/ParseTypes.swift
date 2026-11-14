@@ -97,6 +97,8 @@ public struct ParseDiagnostic: Sendable, Equatable {
         case modelFailed
         /// The on-device model did not answer within the time limit.
         case modelTimedOut
+        /// Parsing was cancelled before an answer was produced.
+        case cancelled
     }
 
     /// The rule that produced the diagnostic, or `nil` for engine-wide and validation diagnostics.
