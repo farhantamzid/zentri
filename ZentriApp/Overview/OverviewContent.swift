@@ -2,7 +2,7 @@ import SwiftData
 import SwiftUI
 
 /// The dashboard itself: the balance hero over the data cards, or the empty state that points to
-/// setup.
+/// setup, or the failure state that offers another read.
 ///
 /// The content owns the model, so the summary survives every re-render of the tab. It refreshes when
 /// the screen appears and whenever a mutation elsewhere bumps the revision; refreshing only reads
@@ -29,16 +29,21 @@ struct OverviewContent: View {
 
     /// The store is read on the first appearance, so the blank branch is on screen for one frame at
     /// most. It has to exist: a view with no content is never asked to appear, and the read that
-    /// would fill it would never run. The empty state waits for that read too, so a store with an
-    /// account never flashes "no account" on the way in.
+    /// would fill it would never run. The empty and failure states wait for that read too, so a
+    /// store with an account never flashes "no account" on the way in.
     @ContentBuilder
     private var content: some View {
-        if let summary = model.summary {
-            cards(for: summary)
-        } else if model.hasLoaded {
-            emptyState
-        } else {
+        switch model.loadState {
+        case .loading:
             Color.clear
+        case .failed:
+            failureState
+        case .loaded:
+            if let summary = model.summary {
+                cards(for: summary)
+            } else {
+                emptyState
+            }
         }
     }
 
@@ -71,6 +76,25 @@ struct OverviewContent: View {
                 .controlSize(.large)
                 .frame(minHeight: Theme.Layout.minimumTapTarget)
                 .accessibilityIdentifier("overview.finishSetup")
+        }
+    }
+
+    /// Shown when the store could not be read, which is not the same as holding no account: setup
+    /// is already done, so pointing at it would send someone to add a second account. The wording
+    /// says only what is known — the read did not finish — and offers another attempt.
+    private var failureState: some View {
+        ContentUnavailableView {
+            Label("Can't show your overview", systemImage: "exclamationmark.triangle")
+        } description: {
+            Text("Zentri couldn't read your data just now. Try again.")
+        } actions: {
+            Button("Try Again") {
+                model.refresh()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .frame(minHeight: Theme.Layout.minimumTapTarget)
+            .accessibilityIdentifier("overview.retry")
         }
     }
 }

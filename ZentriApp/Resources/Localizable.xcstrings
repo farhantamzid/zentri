@@ -174,7 +174,7 @@
       }
     },
     "Try Again": {
-      "comment": "Retries opening the local database.",
+      "comment": "Retries a step that could not read local data: opening the database, or loading the Overview dashboard.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -215,6 +215,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zentri could not open its database on this device."
+          }
+        }
+      }
+    },
+    "Zentri couldn't read your data just now. Try again.": {
+      "comment": "Overview's failure state; says a read of the local store did not finish and asks for another attempt. It names no cause.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't read your data just now. Try again."
           }
         }
       }
@@ -348,6 +360,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Back"
+          }
+        }
+      }
+    },
+    "Can't show your overview": {
+      "comment": "Overview's failure state; the title shown when the local store could not be read.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't show your overview"
           }
         }
       }

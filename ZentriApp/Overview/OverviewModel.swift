@@ -21,10 +21,11 @@ final class OverviewModel {
 
     /// The dashboard's numbers, or `nil` when no active account exists.
     private(set) var summary: OverviewSummary?
-    /// Whether ``refresh()`` has run, so the screen can tell "no account" from "not yet read".
-    private(set) var hasLoaded = false
+    /// How far the last read got, so the screen can tell "not yet read", "read", and "could not
+    /// read" apart. A summary of `nil` only means "no active account" while this is `.loaded`.
+    private(set) var loadState = OverviewLoadState.loading
 
-    private let context: ModelContext
+    private let reads: OverviewStoreReads
     private let now: () -> Date
     private let calendar: Calendar
 
@@ -35,20 +36,48 @@ final class OverviewModel {
     ///   - now: The instant "today" and "this month" are measured from. A test passes a fixed one.
     ///   - calendar: The calendar that defines days and months. A test passes a fixed one.
     init(context: ModelContext, now: @escaping () -> Date = { .now }, calendar: Calendar = .current) {
-        self.context = context
+        self.reads = OverviewStoreReads(context: context)
+        self.now = now
+        self.calendar = calendar
+    }
+
+    /// Creates a model over supplied store reads, which is how a test makes a read throw.
+    init(reads: OverviewStoreReads, now: @escaping () -> Date = { .now }, calendar: Calendar = .current) {
+        self.reads = reads
         self.now = now
         self.calendar = calendar
     }
 
     /// Recalculates the summary from the store.
+    ///
+    /// A read the screen cannot do without becomes ``OverviewLoadState/failed`` instead of an empty
+    /// result. Both reads here carry a claim the dashboard makes — whether there is an account at
+    /// all, and whether ingestion is healthy — and an empty answer to either is not neutral: it
+    /// tells someone with accounts to finish setup, and reports a store that could not be read as
+    /// one where nothing has failed.
     func refresh() {
-        hasLoaded = true
-        let accounts = activeAccounts()
-        guard !accounts.isEmpty else {
+        do {
+            let accounts = try activeAccounts()
+            guard !accounts.isEmpty else {
+                summary = nil
+                loadState = .loaded
+                return
+            }
+            let messages = try reads.messages()
+            summary = summary(for: accounts, health: health(from: messages))
+            loadState = .loaded
+        } catch {
             summary = nil
-            return
+            loadState = .failed
         }
+    }
+}
 
+// MARK: - Summary
+
+private extension OverviewModel {
+    /// The dashboard's numbers for the accounts that were read and the health of the messages.
+    func summary(for accounts: [Account], health: IngestionHealth) -> OverviewSummary {
         let instant = now()
         let checkpoints = accounts.flatMap(\.checkpoints)
         let transactions = accounts.flatMap(\.transactions)
@@ -56,7 +85,7 @@ final class OverviewModel {
         let snapshots = transactions.map { transactionSnapshot(from: $0, fallback: fallbackCategory) }
         let month = calculateSummary(transactions: snapshots, in: monthPeriod(containing: instant))
 
-        summary = OverviewSummary(
+        return OverviewSummary(
             balance: BalanceCalculator.combined(
                 accountIDs: accounts.map(\.id),
                 checkpoints: checkpoints.map {
@@ -89,7 +118,7 @@ final class OverviewModel {
             ).dailySpend,
             topCategories: Array(month.categoryTotals.prefix(Self.topCategoryLimit)),
             recentTransactions: recentTransactions(from: snapshots),
-            health: health()
+            health: health
         )
     }
 }
@@ -98,9 +127,11 @@ final class OverviewModel {
 
 private extension OverviewModel {
     /// The non-archived accounts, in the order the app lists them.
-    func activeAccounts() -> [Account] {
-        let accounts = (try? context.fetch(FetchDescriptor<Account>())) ?? []
-        return accounts
+    ///
+    /// Throws rather than reporting no rows when the read itself fails, so the caller can tell a
+    /// store with no account from a store it could not open.
+    func activeAccounts() throws -> [Account] {
+        try reads.accounts()
             .filter { $0.archivedAt == nil }
             .sorted { lhs, rhs in
                 if lhs.sortOrder != rhs.sortOrder {
@@ -125,9 +156,8 @@ private extension OverviewModel {
     }
 
     /// The newest messages, stated the three ways the health card reports them.
-    func health() -> IngestionHealth {
-        let messages = (try? context.fetch(FetchDescriptor<RawMessage>())) ?? []
-        return IngestionHealth(
+    func health(from messages: [RawMessage]) -> IngestionHealth {
+        IngestionHealth(
             lastMessageAt: messages.map(\.receivedAt).max(),
             lastSuccessAt: messages.filter { $0.status == .parsed }.map(\.ingestedAt).max(),
             failureCount: messages.count { $0.status == .failed }
@@ -137,9 +167,12 @@ private extension OverviewModel {
     /// The live `Other` category, which an uncategorized transaction is shown as.
     ///
     /// Reading the catalog instead of `TransactionSnapshot`'s constants means a renamed or restyled
-    /// `Other` reaches the dashboard, which is the same rule the widget snapshot follows.
+    /// `Other` reaches the dashboard, which is the same rule the widget snapshot follows. A catalog
+    /// that cannot be read is not worth failing the whole screen over: this lookup only decides the
+    /// symbol and color of uncategorized rows, so it degrades to `TransactionSnapshot`'s defaults
+    /// instead of hiding the balance and totals it has already read.
     func fallbackCategory() -> ZentriCore.Category? {
-        let categories = (try? context.fetch(FetchDescriptor<ZentriCore.Category>())) ?? []
+        let categories = (try? reads.categories()) ?? []
         let name = CategorizationService.fallbackCategoryName
         return categories.first { $0.name == name }
     }

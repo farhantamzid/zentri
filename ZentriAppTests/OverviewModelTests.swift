@@ -144,6 +144,43 @@ private func makeModel(in context: ModelContext) -> OverviewModel {
     OverviewModel(context: context, now: { now }, calendar: calendar)
 }
 
+/// The failure a substituted read throws, standing in for a store a healthy test container cannot
+/// produce.
+private struct ReadFailure: Error {}
+
+/// An account read that throws until it is told the store answers again, so a retry has something
+/// to recover from.
+@MainActor
+private final class FlakyAccounts {
+    var isFailing = true
+    private let real: @MainActor () throws -> [Account]
+
+    init(real: @escaping @MainActor () throws -> [Account]) {
+        self.real = real
+    }
+
+    func accounts() throws -> [Account] {
+        guard !isFailing else { throw ReadFailure() }
+        return try real()
+    }
+}
+
+/// The real reads over a context, with any of them replaced by one that throws.
+@MainActor
+private func reads(
+    in context: ModelContext,
+    accounts: (@MainActor () throws -> [Account])? = nil,
+    messages: (@MainActor () throws -> [RawMessage])? = nil,
+    categories: (@MainActor () throws -> [ZentriCore.Category])? = nil
+) -> OverviewStoreReads {
+    let real = OverviewStoreReads(context: context)
+    return OverviewStoreReads(
+        accounts: accounts ?? real.accounts,
+        messages: messages ?? real.messages,
+        categories: categories ?? real.categories
+    )
+}
+
 @MainActor
 @Test func theBalanceAnchorsOnTheNewestCheckpointOfTheActiveAccounts() throws {
     let store = try makeStore()
@@ -431,4 +468,120 @@ private func makeModel(in context: ModelContext) -> OverviewModel {
     model.refresh()
 
     #expect(model.summary == nil)
+}
+
+@MainActor
+@Test func noActiveAccountLoadsRatherThanFailing() throws {
+    let store = try makeStore()
+    let context = store.context
+    addAccount(in: context, name: "Old", archived: true, openingBalance: 900, openingAt: date(2026, 3, 1))
+    try context.save()
+
+    let model = makeModel(in: context)
+    model.refresh()
+
+    // The distinction the screen turns on: an empty store is a finished read with nothing in it.
+    #expect(model.loadState == .loaded)
+    #expect(model.summary == nil)
+}
+
+@MainActor
+@Test func aFailedAccountReadFailsTheLoadInsteadOfReportingNoAccount() throws {
+    let store = try makeStore()
+    let context = store.context
+    addAccount(in: context, openingBalance: 1_000, openingAt: date(2026, 3, 1))
+    try context.save()
+
+    let model = OverviewModel(
+        reads: reads(in: context, accounts: { throw ReadFailure() }),
+        now: { now },
+        calendar: calendar
+    )
+    model.refresh()
+
+    // A store that could not be read must not answer with "no account": that is the state whose
+    // only action is "Finish setup", which is wrong for someone who already has an account.
+    #expect(model.loadState == .failed)
+    #expect(model.summary == nil)
+}
+
+@MainActor
+@Test func aFailedMessageReadFailsTheLoadInsteadOfReportingHealthyIngestion() throws {
+    let store = try makeStore()
+    let context = store.context
+    addAccount(in: context, openingBalance: 1_000, openingAt: date(2026, 3, 1))
+    addMessage(in: context, receivedAt: date(2026, 3, 12, hour: 8), ingestedAt: date(2026, 3, 12, hour: 9), status: .failed)
+    try context.save()
+
+    let model = OverviewModel(
+        reads: reads(in: context, messages: { throw ReadFailure() }),
+        now: { now },
+        calendar: calendar
+    )
+    model.refresh()
+
+    // An unread archive is not an idle one: the card would otherwise report "Never / Never / 0"
+    // while the store in fact holds a failure.
+    #expect(model.loadState == .failed)
+    #expect(model.summary == nil)
+}
+
+@MainActor
+@Test func aFailedCategoryReadOnlyLosesTheFallbackStyling() throws {
+    let store = try makeStore()
+    let context = store.context
+    let other = ZentriCore.Category(
+        name: CategorizationService.fallbackCategoryName,
+        symbolName: "dot.radiowaves.left.and.right",
+        colorToken: "amber",
+        sortOrder: 0,
+        isSystem: true
+    )
+    context.insert(other)
+    let account = addAccount(in: context, openingBalance: 1_000, openingAt: date(2026, 3, 1))
+    addTransaction(in: context, account: account, amount: 75, direction: .debit, occurredAt: now, merchant: "Unknown")
+    try context.save()
+
+    let model = OverviewModel(
+        reads: reads(in: context, categories: { throw ReadFailure() }),
+        now: { now },
+        calendar: calendar
+    )
+    model.refresh()
+
+    // The catalog only decides how an uncategorized row looks, so losing it costs the live styling
+    // and nothing else: the balance and totals that were read are still shown.
+    #expect(model.loadState == .loaded)
+    let summary = try #require(model.summary)
+    #expect(summary.balance == 925)
+    #expect(summary.todaySpend == 75)
+    let category = try #require(summary.topCategories.first)
+    #expect(category.categoryName == CategorizationService.fallbackCategoryName)
+    #expect(category.symbolName == "ellipsis")
+    #expect(category.colorToken == "slate")
+}
+
+@MainActor
+@Test func retryingAfterAFailedReadShowsTheDashboard() throws {
+    let store = try makeStore()
+    let context = store.context
+    addAccount(in: context, openingBalance: 1_000, openingAt: date(2026, 3, 1))
+    try context.save()
+
+    let flaky = FlakyAccounts(real: OverviewStoreReads(context: context).accounts)
+    let model = OverviewModel(
+        reads: reads(in: context, accounts: flaky.accounts),
+        now: { now },
+        calendar: calendar
+    )
+
+    model.refresh()
+    #expect(model.loadState == .failed)
+    #expect(model.summary == nil)
+
+    // The retry the failure state offers runs the same refresh against a store that now answers.
+    flaky.isFailing = false
+    model.refresh()
+    #expect(model.loadState == .loaded)
+    #expect(try #require(model.summary).balance == 1_000)
 }
