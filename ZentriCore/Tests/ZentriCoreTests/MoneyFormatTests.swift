@@ -24,6 +24,15 @@ import Testing
     #expect(f.numberString(from: 0) == "0.00")
 }
 
+@Test func negativeCurrencyLeadsWithSign() {
+    let usd = MoneyFormat(currencyCode: "USD", grouping: .western, locale: Locale(identifier: "en_US"))
+    #expect(usd.currencyString(from: -1234.5) == "-$1,234.50")
+    #expect(usd.currencyString(from: 1234.5) == "$1,234.50")
+
+    let bdt = MoneyFormat(currencyCode: "BDT", grouping: .indian, locale: Locale(identifier: "en_US"))
+    #expect(bdt.currencyString(from: -1234.5) == "-৳1,234.50")
+}
+
 @Test func largeValuesKeepGroupingExact() {
     let western = MoneyFormat(currencyCode: "USD", grouping: .western, locale: Locale(identifier: "en_US"))
     #expect(western.numberString(from: Decimal(string: "1234567890.12")!) == "1,234,567,890.12")
@@ -45,6 +54,21 @@ import Testing
     let westernInIndianLocale = MoneyFormat(currencyCode: "INR", grouping: .western, locale: indianLocale)
     #expect(westernInIndianLocale.numberString(from: Decimal(string: "1000000.00")!) == "1,000,000.00")
     #expect(westernInIndianLocale.currencyString(from: 1000) == "₹1,000.00")
+}
+
+@Test func explicitGroupingIgnoresMinimumGroupingDigitsLocales() {
+    // `es_ES` sets CLDR's minimumGroupingDigits to 2, which must not leak into
+    // an explicit grouping mode and drop the separator from a 4-digit amount.
+    let spanishWestern = MoneyFormat(currencyCode: "BDT", grouping: .western, locale: Locale(identifier: "es_ES"))
+    #expect(spanishWestern.numberString(from: 1000) == "1,000.00")
+
+    let polishIndian = MoneyFormat(currencyCode: "BDT", grouping: .indian, locale: Locale(identifier: "pl_PL"))
+    #expect(polishIndian.numberString(from: 1_000_000) == "10,00,000.00")
+    #expect(polishIndian.numberString(from: 1000) == "1,000.00")
+
+    // Explicit grouping is digit-shape independent too; only `.system` inherits.
+    let arabicWestern = MoneyFormat(currencyCode: "USD", grouping: .western, locale: Locale(identifier: "ar_EG"))
+    #expect(arabicWestern.numberString(from: 1000) == "1,000.00")
 }
 
 @Test func catalogSymbolsMatchSpecification() {
