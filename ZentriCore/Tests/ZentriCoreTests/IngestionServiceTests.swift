@@ -150,6 +150,34 @@ private final class SettingsBox {
     }
 }
 
+/// The error a ``FailingSaveScript`` throws in place of a store that cannot be written.
+private enum SaveFailure: Error {
+    case storeIsUnwritable
+}
+
+/// A save hook that fails a set number of times and then saves normally.
+///
+/// A store that is briefly unwritable is what the fallback path defends against, so the first save
+/// is made to throw while the retry is allowed to succeed: that is the only combination where a
+/// half-written row would become visible.
+@MainActor
+private final class FailingSaveScript {
+    /// The number of saves that throw before the context is allowed to write.
+    private let failures: Int
+    /// How many times the service asked the script to save.
+    private(set) var invocations = 0
+
+    init(failingTimes failures: Int) {
+        self.failures = failures
+    }
+
+    func save(_ context: ModelContext) throws {
+        invocations += 1
+        guard invocations > failures else { throw SaveFailure.storeIsUnwritable }
+        try context.save()
+    }
+}
+
 // MARK: - Fixtures
 
 @MainActor
@@ -555,6 +583,48 @@ private func fetchCheckpoints(_ context: ModelContext) throws -> [BalanceCheckpo
     #expect(try store.context.fetchCount(FetchDescriptor<Transaction>()) == 0)
     #expect(try store.context.fetchCount(FetchDescriptor<BalanceCheckpoint>()) == 0)
     #expect(try store.context.fetchCount(FetchDescriptor<RawMessage>()) == 1)
+}
+
+/// A save failure must leave the archive with one `failed` row and nothing else.
+///
+/// The parser succeeds here, so the message and its transaction are inserted before the save is
+/// made to throw. Only the rollback can remove them; if it leaves them attached, the fallback save
+/// writes the `parsed` row and its transaction alongside the `failed` one and the message is counted
+/// twice. One save after the failure is also the contract: the fallback stores the message once.
+@Test @MainActor func ingestStoresOneFailedMessageWhenTheSaveThrows() async throws {
+    let store = try makeStore()
+    let refresher = SpySnapshotRefresher()
+    let service = store.service(
+        parser: StubParser(result: .transaction(sampleDraft(balanceAfter: cents(123_450)))),
+        refresher: refresher
+    )
+    let script = FailingSaveScript(failingTimes: 1)
+    service.saveHandler = { context in try script.save(context) }
+    let request = sampleRequest(accountID: store.accounts[0].id)
+
+    let outcome = await service.ingest(request)
+
+    let expected = ParseDiagnostic(
+        code: .missingField,
+        field: "storage",
+        message: "The message could not be saved. Try again."
+    )
+    #expect(outcome == .failed([expected]))
+    #expect(script.invocations == 2)
+    let messages = try fetchMessages(store.context)
+    #expect(messages.count == 1)
+    let message = try #require(messages.first)
+    #expect(message.status == .failed)
+    #expect(message.text == request.text)
+    #expect(message.fingerprint == Dedupe.fingerprint(
+        text: request.text, sender: request.sender, accountID: store.accounts[0].id, receivedAt: request.receivedAt
+    ))
+    #expect(message.errorDescription == expected.message)
+    #expect(message.engine == nil)
+    #expect(message.transaction == nil)
+    #expect(try fetchTransactions(store.context).isEmpty)
+    #expect(try fetchCheckpoints(store.context).isEmpty)
+    #expect(await refresher.refreshCount == 1)
 }
 
 @Test @MainActor func ingestKeepsACancelledParseRetryable() async throws {

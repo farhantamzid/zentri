@@ -63,6 +63,13 @@ public final class IngestionService {
     private let now: @Sendable () -> Date
     /// Whether the store and its sidecar files have been protected since the first save.
     private var hasProtectedStoreFiles = false
+    /// The save every write goes through, replaceable so a test can make persistence fail.
+    ///
+    /// Production leaves this at `ModelContext.save()`. The seam exists because the failed-save
+    /// fallback can only be reached by making the save throw at the instant the pipeline holds an
+    /// unsaved message, which no real store can be made to do on demand. It is internal, so only
+    /// the test target can replace it; the public initializer stays the only way to build a service.
+    internal var saveHandler: @MainActor (ModelContext) throws -> Void = { try $0.save() }
 
     /// Creates the service.
     ///
@@ -374,6 +381,10 @@ public final class IngestionService {
     }
 
     /// Stores the message on its own after a failed save, so the text is never lost.
+    ///
+    /// The failed attempt has already been rolled back, which discards the message, transaction, and
+    /// checkpoint it inserted, so the row built here is the only pending insert: the archive ends up
+    /// with one `failed` row and nothing else.
     private func recordStorageFailure(
         for request: IngestionRequest,
         ingestedAt: Date,
@@ -398,7 +409,7 @@ public final class IngestionService {
     /// reapplied there; a store created before any save has nothing to protect yet.
     private func save() -> Bool {
         do {
-            try context.save()
+            try saveHandler(context)
             protectStoreFilesAfterFirstSave()
             return true
         } catch {
