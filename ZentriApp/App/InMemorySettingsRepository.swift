@@ -19,7 +19,12 @@ final class InMemorySettingsRepository: SettingsRepository, Sendable {
     }
 
     /// Clears the stored settings, matching the removal of the settings file.
-    func clear() {
+    func remove() {
         state.withLock { $0 = nil }
+    }
+
+    /// The delete action `SettingsStore` is built with, which is the same as removing the file.
+    func clear() {
+        remove()
     }
 }

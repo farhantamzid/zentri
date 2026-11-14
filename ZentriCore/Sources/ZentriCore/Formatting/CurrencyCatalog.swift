@@ -15,6 +15,12 @@ public enum CurrencyCatalog {
         "USD": "$",
     ]
 
+    /// The supported currency codes in alphabetical order.
+    ///
+    /// Derived from ``symbols`` so the picker can never offer a code the catalog has no symbol for,
+    /// and never keeps its own copy of the list.
+    public static let supportedCurrencyCodes: [String] = symbols.keys.sorted()
+
     /// The symbol for `currencyCode`, falling back to the uppercased code when unknown.
     public static func symbol(for currencyCode: String) -> String {
         let code = currencyCode.uppercased()

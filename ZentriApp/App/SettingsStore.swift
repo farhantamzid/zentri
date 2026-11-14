@@ -22,7 +22,11 @@ final class SettingsStore {
     /// The failure from the last `load()`, cleared by a successful load, save, or reset.
     private(set) var loadFailure: LoadFailure?
 
-    private let repository: any SettingsRepository
+    /// The repository the settings document is read from and written to.
+    ///
+    /// Onboarding hands it to `OnboardingCommitter`, which writes the first document itself so the
+    /// settings and the store's first account land together.
+    let repository: any SettingsRepository
     private let deleteStoredSettings: @MainActor () throws -> Void
 
     init(

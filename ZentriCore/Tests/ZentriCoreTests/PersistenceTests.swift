@@ -26,6 +26,42 @@ import Testing
     #expect(Set(categories.map(\.name)).count == 12)
 }
 
+/// `insert(into:)` exists so a caller can seed inside the same save as its own rows: it must be
+/// idempotent and must leave the store untouched until the caller saves.
+@Test @MainActor func insertIsIdempotentAndSavesNothing() throws {
+    let container = try ZentriContainer.make(inMemory: true)
+    let context = ModelContext(container)
+    let verification = ModelContext(container)
+
+    try SeedData.insert(into: context)
+
+    // The insert has not been saved, so no other context can see it.
+    #expect(try verification.fetchCount(FetchDescriptor<ZentriCore.Category>()) == 0)
+    #expect(try verification.fetchCount(FetchDescriptor<CategorizationRule>()) == 0)
+
+    // A second insert finds the pending rows and adds nothing.
+    try SeedData.insert(into: context)
+    #expect(try context.fetchCount(FetchDescriptor<ZentriCore.Category>()) == 12)
+    #expect(try context.fetchCount(FetchDescriptor<CategorizationRule>()) == 5)
+
+    try context.save()
+    #expect(try verification.fetchCount(FetchDescriptor<ZentriCore.Category>()) == 12)
+    #expect(try verification.fetchCount(FetchDescriptor<CategorizationRule>()) == 5)
+    #expect(try verification.fetchCount(FetchDescriptor<Account>()) == 0)
+}
+
+/// `seed(into:)` is the insert plus the save, so a fresh context sees the rows straight away.
+@Test @MainActor func seedSavesWhatInsertOnlyPrepares() throws {
+    let container = try ZentriContainer.make(inMemory: true)
+    let context = ModelContext(container)
+    let verification = ModelContext(container)
+
+    try SeedData.seed(into: context)
+
+    #expect(try verification.fetchCount(FetchDescriptor<ZentriCore.Category>()) == 12)
+    #expect(try verification.fetchCount(FetchDescriptor<CategorizationRule>()) == 5)
+}
+
 @Test @MainActor func seedingCreatesSpecifiedCategoriesAndRules() throws {
     let container = try ZentriContainer.make(inMemory: true)
     let context = ModelContext(container)

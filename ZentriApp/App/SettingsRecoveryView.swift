@@ -2,9 +2,12 @@ import SwiftUI
 
 /// The screen shown when saved settings exist but cannot be read.
 ///
-/// Resetting deletes the damaged settings file and returns to onboarding; accounts and
+/// Using defaults deletes the damaged settings file and returns to onboarding; accounts and
 /// transactions live in the SwiftData store, not in settings, so they are untouched. Restoring from
 /// a backup is offered here but only becomes possible once the backup folder is set up (Task 18).
+///
+/// Everything scrolls: with the largest accessibility text the explanation and both buttons need
+/// more room than one screen, and nothing may be clipped away from the person who needs it most.
 struct SettingsRecoveryView: View {
     private let store: SettingsStore
 
@@ -16,48 +19,60 @@ struct SettingsRecoveryView: View {
     }
 
     var body: some View {
-        ContentUnavailableView {
-            Label("Settings need a reset", systemImage: "exclamationmark.triangle")
-        } description: {
-            Text("Zentri could not read its saved settings. Resetting returns to setup and keeps your accounts and transactions.")
-        } actions: {
-            VStack(spacing: Theme.Spacing.sm) {
-                Button("Reset Settings", action: resetSettings)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .frame(minHeight: Theme.Layout.minimumTapTarget)
-                Button("Restore Backup") {
-                    showsRestoreExplanation = true
+        ScrollView {
+            ContentUnavailableView {
+                Label("Settings need a reset", systemImage: "exclamationmark.triangle")
+            } description: {
+                Text("Zentri could not read its saved settings. Using defaults returns to setup and keeps your accounts and transactions.")
+            } actions: {
+                VStack(spacing: Theme.Spacing.sm) {
+                    Button("Use Defaults", action: useDefaults)
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                        .frame(minHeight: Theme.Layout.minimumTapTarget)
+
+                    Button("Restore Backup", action: explainRestore)
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+                        .frame(minHeight: Theme.Layout.minimumTapTarget)
+
+                    if showsRestoreExplanation {
+                        Text("Restoring a backup becomes available after you set up backup in Settings.")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.secondaryInk)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    if resetFailed {
+                        Text("Zentri couldn't reset its settings file. Try again.")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.spending)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-                .frame(minHeight: Theme.Layout.minimumTapTarget)
-                if showsRestoreExplanation {
-                    Text("Restoring a backup becomes available after you set up backup in Settings.")
-                        .font(.footnote)
-                        .foregroundStyle(Theme.secondaryInk)
-                        .multilineTextAlignment(.center)
-                }
-                if resetFailed {
-                    Text("Zentri couldn't reset its settings file. Try again.")
-                        .font(.footnote)
-                        .foregroundStyle(Theme.spending)
-                        .multilineTextAlignment(.center)
-                }
+                .padding(.horizontal, Theme.Spacing.lg)
             }
-            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.vertical, Theme.Spacing.xl)
         }
+        .scrollBounceBehavior(.basedOnSize)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background { Theme.canvas.ignoresSafeArea() }
     }
 
     /// Deletes the damaged settings file so the app returns to onboarding.
-    private func resetSettings() {
+    private func useDefaults() {
         do {
             try store.reset()
             resetFailed = false
         } catch {
             resetFailed = true
         }
+    }
+
+    /// Explains why a restore is not possible yet.
+    private func explainRestore() {
+        showsRestoreExplanation = true
     }
 }

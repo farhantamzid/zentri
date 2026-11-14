@@ -6,6 +6,12 @@ public protocol SettingsRepository: Sendable {
     func load() throws -> AppSettings?
     /// Replaces the stored settings with `settings`.
     func save(_ settings: AppSettings) throws
+    /// Deletes the stored settings, leaving nothing for ``load()`` to return.
+    ///
+    /// Removing a document that does not exist is not a failure: the caller's intent — no stored
+    /// settings — is already true. ``OnboardingCommitter`` relies on that when it puts back the
+    /// settings state it found, which is no document at all on a first run.
+    func remove() throws
 }
 
 /// Errors raised while reading settings.
@@ -45,5 +51,14 @@ public struct FileSettingsStore: SettingsRepository {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(settings)
         try data.write(to: fileURL, options: .atomic)
+    }
+
+    public func remove() throws {
+        do {
+            try FileManager.default.removeItem(at: fileURL)
+        } catch let error as CocoaError where error.code == .fileNoSuchFile {
+            // Nothing is stored, so the requested state already holds.
+            return
+        }
     }
 }

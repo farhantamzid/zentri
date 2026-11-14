@@ -81,18 +81,6 @@
         }
       }
     },
-    "Reset Settings": {
-      "comment": "Deletes the unreadable settings file and returns to setup.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reset Settings"
-          }
-        }
-      }
-    },
     "Restore Backup": {
       "comment": "Opens the restore explanation; restoring is not available yet.",
       "extractionState": "manual",
@@ -135,17 +123,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Settings need a reset"
-          }
-        }
-      }
-    },
-    "Setup is coming next. Everything stays on this device.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Setup is coming next. Everything stays on this device."
           }
         }
       }
@@ -242,17 +219,6 @@
         }
       }
     },
-    "Zentri could not read its saved settings. Resetting returns to setup and keeps your accounts and transactions.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zentri could not read its saved settings. Resetting returns to setup and keeps your accounts and transactions."
-          }
-        }
-      }
-    },
     "Zentri couldn't reset its settings file. Try again.": {
       "extractionState": "manual",
       "localizations": {
@@ -260,6 +226,817 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zentri couldn't reset its settings file. Try again."
+          }
+        }
+      }
+    },
+    "A Shortcut can pass each bank message to Zentri, so new spending appears without you typing it in.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Shortcut can pass each bank message to Zentri, so new spending appears without you typing it in."
+          }
+        }
+      }
+    },
+    "A rule is a pattern you write once. It matches a message and tells Zentri the amount, the merchant, and the direction.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A rule is a pattern you write once. It matches a message and tells Zentri the amount, the merchant, and the direction."
+          }
+        }
+      }
+    },
+    "Account name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account name"
+          }
+        }
+      }
+    },
+    "Add your first account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add your first account"
+          }
+        }
+      }
+    },
+    "Add your first rule in Settings → Parsing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add your first rule in Settings → Parsing"
+          }
+        }
+      }
+    },
+    "Add, edit, reorder, and test rules there.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add, edit, reorder, and test rules there."
+          }
+        }
+      }
+    },
+    "Amounts are shown in this currency everywhere in the app. Changing it later never converts what you have already recorded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amounts are shown in this currency everywhere in the app. Changing it later never converts what you have already recorded."
+          }
+        }
+      }
+    },
+    "Apple Intelligence isn't available on this device.": {
+      "extractionState": "manual",
+      "comment": "Shown when the Foundation Models framework cannot be used on this platform.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence isn't available on this device."
+          }
+        }
+      }
+    },
+    "Apple Intelligence reads each message. Needs a supported device.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence reads each message. Needs a supported device."
+          }
+        }
+      }
+    },
+    "Available on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available on this iPhone."
+          }
+        }
+      }
+    },
+    "Back": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        }
+      }
+    },
+    "Capture messages with Shortcuts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture messages with Shortcuts"
+          }
+        }
+      }
+    },
+    "Checking availability…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking availability…"
+          }
+        }
+      }
+    },
+    "Choose your currency": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose your currency"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        }
+      }
+    },
+    "Currency": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Currency"
+          }
+        }
+      }
+    },
+    "Done": {
+      "extractionState": "manual",
+      "comment": "The keyboard button that dismisses the keyboard. It is not the last step's action.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "Enter a balance of 0 or more.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a balance of 0 or more."
+          }
+        }
+      }
+    },
+    "Everyday": {
+      "extractionState": "manual",
+      "comment": "Example account name, shown as placeholder text in an empty field.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyday"
+          }
+        }
+      }
+    },
+    "Face ID is optional. It keeps your finances behind the same check you use to unlock your iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID is optional. It keeps your finances behind the same check you use to unlock your iPhone."
+          }
+        }
+      }
+    },
+    "Follows this device": {
+      "extractionState": "manual",
+      "comment": "Number grouping that follows the device's locale.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follows this device"
+          }
+        }
+      }
+    },
+    "Foundation Models": {
+      "extractionState": "manual",
+      "comment": "Apple's on-device model. It is the parser option that needs a supported device.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foundation Models"
+          }
+        }
+      }
+    },
+    "Go to Overview": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to Overview"
+          }
+        }
+      }
+    },
+    "Groups of three digits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groups of three digits"
+          }
+        }
+      }
+    },
+    "How it works": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How it works"
+          }
+        }
+      }
+    },
+    "How should Zentri read messages?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How should Zentri read messages?"
+          }
+        }
+      }
+    },
+    "Hybrid": {
+      "extractionState": "manual",
+      "comment": "The parser engine that tries rules first, then the on-device model.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hybrid"
+          }
+        }
+      }
+    },
+    "Indian": {
+      "extractionState": "manual",
+      "comment": "Number grouping with three-digit groups, then two-digit groups, e.g. 10,00,000.00.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indian"
+          }
+        }
+      }
+    },
+    "Institution": {
+      "extractionState": "manual",
+      "comment": "The bank or provider an account belongs to.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Institution"
+          }
+        }
+      }
+    },
+    "Lock Zentri with Face ID": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock Zentri with Face ID"
+          }
+        }
+      }
+    },
+    "Messages, transactions, and rules stay on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages, transactions, and rules stay on this iPhone."
+          }
+        }
+      }
+    },
+    "New messages wait in the inbox until a rule or the on-device model can read them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New messages wait in the inbox until a rule or the on-device model can read them."
+          }
+        }
+      }
+    },
+    "No account": {
+      "extractionState": "manual",
+      "comment": "A privacy promise: the app has no user accounts and no sign-in.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No account"
+          }
+        }
+      }
+    },
+    "No analytics": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No analytics"
+          }
+        }
+      }
+    },
+    "Nothing to do now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to do now"
+          }
+        }
+      }
+    },
+    "Number grouping": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number grouping"
+          }
+        }
+      }
+    },
+    "On-device only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On-device only"
+          }
+        }
+      }
+    },
+    "Open Shortcuts": {
+      "extractionState": "manual",
+      "comment": "Opens the Shortcuts app so the user can build the automation there.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Shortcuts"
+          }
+        }
+      }
+    },
+    "Opening balance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opening balance"
+          }
+        }
+      }
+    },
+    "Optional": {
+      "extractionState": "manual",
+      "comment": "Placeholder for an optional text field.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
+          }
+        }
+      }
+    },
+    "Preview": {
+      "extractionState": "manual",
+      "comment": "Heading above a live example of the chosen formatting.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview"
+          }
+        }
+      }
+    },
+    "Privacy": {
+      "extractionState": "manual",
+      "comment": "VoiceOver label for the group of privacy promises on the welcome screen.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy"
+          }
+        }
+      }
+    },
+    "Require Face ID": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Require Face ID"
+          }
+        }
+      }
+    },
+    "Rules": {
+      "extractionState": "manual",
+      "comment": "The name of the rule-based parser engine.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rules"
+          }
+        }
+      }
+    },
+    "Rules first, then the on-device model when no rule matches.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rules first, then the on-device model when no rule matches."
+          }
+        }
+      }
+    },
+    "Rules read messages your way": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rules read messages your way"
+          }
+        }
+      }
+    },
+    "Settings → Parsing": {
+      "extractionState": "manual",
+      "comment": "A path through the app: the Parsing screen inside Settings.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings → Parsing"
+          }
+        }
+      }
+    },
+    "Step %lld of %lld": {
+      "extractionState": "manual",
+      "comment": "Progress through setup. The first number is the current step; the second is the total number of steps.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step %lld of %lld"
+          }
+        }
+      }
+    },
+    "System": {
+      "extractionState": "manual",
+      "comment": "Number grouping that follows the device's locale.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "The amount, merchant, and date are extracted on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The amount, merchant, and date are extracted on this iPhone."
+          }
+        }
+      }
+    },
+    "The message arrives": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The message arrives"
+          }
+        }
+      }
+    },
+    "There is nothing to sign up for and nowhere to log in.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is nothing to sign up for and nowhere to log in."
+          }
+        }
+      }
+    },
+    "This is how a balance will look.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is how a balance will look."
+          }
+        }
+      }
+    },
+    "This is how a message becomes a transaction. You can change it at any time in Settings, under Parsing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is how a message becomes a transaction. You can change it at any time in Settings, under Parsing."
+          }
+        }
+      }
+    },
+    "This is the balance the account starts at.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is the balance the account starts at."
+          }
+        }
+      }
+    },
+    "Three digits, then groups of two": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Three digits, then groups of two"
+          }
+        }
+      }
+    },
+    "Use 0 if you are not sure.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use 0 if you are not sure."
+          }
+        }
+      }
+    },
+    "Use Defaults": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Defaults"
+          }
+        }
+      }
+    },
+    "Western": {
+      "extractionState": "manual",
+      "comment": "Number grouping with three-digit groups throughout, e.g. 1,000,000.00.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Western"
+          }
+        }
+      }
+    },
+    "Where rules live": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where rules live"
+          }
+        }
+      }
+    },
+    "You can skip this and set it up later from Settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can skip this and set it up later from Settings."
+          }
+        }
+      }
+    },
+    "You're all set": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're all set"
+          }
+        }
+      }
+    },
+    "Your bank's message is handed to Zentri by a Shortcut you run.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your bank's message is handed to Zentri by a Shortcut you run."
+          }
+        }
+      }
+    },
+    "Your own patterns. Fast, predictable, and fully offline.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own patterns. Fast, predictable, and fully offline."
+          }
+        }
+      }
+    },
+    "Zentri collects no usage data and sends nothing anywhere.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri collects no usage data and sends nothing anywhere."
+          }
+        }
+      }
+    },
+    "Zentri could not read its saved settings. Using defaults returns to setup and keeps your accounts and transactions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri could not read its saved settings. Using defaults returns to setup and keeps your accounts and transactions."
+          }
+        }
+      }
+    },
+    "Zentri couldn't finish setup. Try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't finish setup. Try again."
+          }
+        }
+      }
+    },
+    "Zentri created %@ with this opening balance.": {
+      "extractionState": "manual",
+      "comment": "%@ is the name of the account the user just created.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri created %@ with this opening balance."
+          }
+        }
+      }
+    },
+    "Zentri reads it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri reads it"
+          }
+        }
+      }
+    },
+    "Zentri tracks this account from here. The opening balance is what it holds today, before any new messages arrive.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri tracks this account from here. The opening balance is what it holds today, before any new messages arrive."
+          }
+        }
+      }
+    },
+    "Zentri turns the bank messages you share with it into a clear picture of your money.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri turns the bank messages you share with it into a clear picture of your money."
+          }
+        }
+      }
+    },
+    "iOS checks your face, and Zentri only learns whether the check passed. You can change this later in Settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS checks your face, and Zentri only learns whether the check passed. You can change this later in Settings."
           }
         }
       }

@@ -73,6 +73,16 @@ public enum SeedData {
 
     /// Inserts any missing seeded categories and rules, then saves the context.
     public static func seed(into context: ModelContext) throws {
+        try insert(into: context)
+        try context.save()
+    }
+
+    /// Inserts any missing seeded categories and rules without saving.
+    ///
+    /// Onboarding seeds the store inside the same save that creates the first account, so the whole
+    /// setup either lands or rolls back together. Everything else — a launch that finds an empty
+    /// store, a reset — can keep calling ``seed(into:)``.
+    public static func insert(into context: ModelContext) throws {
         var categoriesByName = Dictionary(
             try context.fetch(FetchDescriptor<Category>()).map { ($0.name, $0) },
             uniquingKeysWith: { first, _ in first }
@@ -102,7 +112,6 @@ public enum SeedData {
             )
             context.insert(rule)
         }
-        try context.save()
     }
 }
 

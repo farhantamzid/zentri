@@ -9,7 +9,7 @@ struct RootView: View {
             if appState.settingsStore.loadFailure != nil {
                 SettingsRecoveryView(store: appState.settingsStore)
             } else if appState.settingsStore.settings == nil {
-                OnboardingPlaceholderView()
+                OnboardingFlow()
             } else {
                 RootTabView()
             }
