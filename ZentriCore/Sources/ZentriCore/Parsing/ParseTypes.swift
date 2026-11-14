@@ -91,6 +91,12 @@ public struct ParseDiagnostic: Sendable, Equatable {
         case missingMerchant
         /// The pattern could not be matched against the message.
         case matchFailed
+        /// The on-device model is not available, or is turned off, on this device.
+        case modelUnavailable
+        /// The on-device model did not return an answer this app could use.
+        case modelFailed
+        /// The on-device model did not answer within the time limit.
+        case modelTimedOut
     }
 
     /// The rule that produced the diagnostic, or `nil` for engine-wide and validation diagnostics.
