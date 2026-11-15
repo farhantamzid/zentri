@@ -86,6 +86,68 @@ public enum InsightsCalculator: Sendable {
     }
 }
 
+// MARK: - Peak day and largest spends
+
+public extension InsightsCalculator {
+    /// The day with the most spend among the days that have happened, compared with their average.
+    ///
+    /// Only days that start on or before `lastDay` count, both for the peak and for the average, so a
+    /// month still in progress is not averaged over days that have not happened yet. Pass the period's
+    /// end for a month that is over, or the current instant for the current month. Equal peaks resolve
+    /// to the earliest day.
+    ///
+    /// - Parameters:
+    ///   - dailySpend: One entry per day, as `InsightsSummary.dailySpend` publishes them.
+    ///   - lastDay: The last instant to include; a day counts when it starts at or before it.
+    /// - Returns: The peak day, or `nil` when the counted days have no spend.
+    static func peakDay(in dailySpend: [DailySpend], through lastDay: Date) -> PeakDaySpend? {
+        let counted = dailySpend.filter { $0.date <= lastDay }
+        let total = counted.reduce(Decimal.zero) { $0 + $1.amount }
+        guard total > 0 else { return nil }
+
+        var peak = counted[0]
+        for day in counted.dropFirst() where day.amount > peak.amount {
+            peak = day
+        }
+        let dayCount = Decimal(counted.count)
+        let average = NSDecimalNumber(decimal: total).dividing(by: NSDecimalNumber(decimal: dayCount)).decimalValue
+        let ratio = NSDecimalNumber(decimal: peak.amount * dayCount)
+            .dividing(by: NSDecimalNumber(decimal: total))
+            .decimalValue
+        return PeakDaySpend(
+            date: peak.date,
+            amount: peak.amount,
+            averageDailySpend: average,
+            ratioToAverage: rounded(ratio, scale: 1)
+        )
+    }
+
+    /// The period's largest spends: money that left the account, excluding transfers, largest first.
+    ///
+    /// `InsightsSummary.largestTransactions` ranks both directions, so a salary would always top it;
+    /// this list answers "where did the most money go" instead. It uses the same period filter and the
+    /// same order — highest amount, then newest, then identity — and the same limit.
+    ///
+    /// - Parameters:
+    ///   - transactions: The working set, including transactions outside the period.
+    ///   - period: The inclusive range of dates to rank.
+    /// - Returns: Up to ``largestTransactionLimit`` spends, largest first.
+    static func largestSpends(
+        transactions: [TransactionSnapshot],
+        period: InsightsPeriod
+    ) -> [TransactionSnapshot] {
+        Array(
+            transactions
+                .filter {
+                    !$0.isTransfer && $0.direction == .debit
+                        && period.start <= $0.occurredAt && $0.occurredAt <= period.end
+                }
+                .sorted(by: largestFirst)
+                .prefix(largestTransactionLimit)
+        )
+    }
+}
+
 // MARK: - Totals
 
 private extension InsightsCalculator {
@@ -388,12 +450,10 @@ private extension InsightsCalculator {
     /// precondition documented on `summary(transactions:period:calendar:)`). A non-month period therefore
     /// produces only the top-merchant sentence.
     ///
-    /// The spec's peak-day observation ("You spent 3.2× your daily average on 12 Oct") is intentionally
-    /// deferred: it belongs to Task 13 and is not produced here. Only rendering the date ("12 Oct") needs a
-    /// locale-aware formatter — the peak day and the ratio (peak day spend ÷ the period's average daily
-    /// spend) are locale-free and computable from what the summary already publishes. Task 13 computes it
-    /// from `InsightsSummary.dailySpend` and `InsightsSummary.totalSpend`, or from an additive helper added
-    /// alongside them, and formats the date in the UI.
+    /// The spec's peak-day observation ("You spent 3.2× your daily average on 12 Oct") is not produced
+    /// here, because rendering its date needs a locale-aware formatter. `peakDay(in:through:)` supplies
+    /// its locale-free values — the day and the ratio of its spend to the average day — and the insights
+    /// screen writes the sentence.
     static func observations(
         categoryTotals: [CategoryTotal],
         merchantTotals: [MerchantTotal]
