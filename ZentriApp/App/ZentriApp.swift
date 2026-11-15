@@ -33,55 +33,27 @@ struct ZentriApp: App {
 
     /// Builds the container, settings, parser, snapshot store, and shared state.
     ///
-    /// `-UITestMode` swaps the App Group store and the settings file for in-memory equivalents, so
-    /// a UI test can never read or write real shared state. A failure to open the container
-    /// returns nil, which the window shows as a recoverable error instead of a launch crash.
+    /// ``AppComposition`` builds each piece, the same way the Shortcuts capture does; in
+    /// `-UITestMode` every piece is in memory or inert, and the launch switches seed the fixtures. A
+    /// failure to open the container returns nil, which the window shows as a recoverable error
+    /// instead of a launch crash.
     private static func makeAppState() -> AppState? {
         do {
-            let container = try ZentriContainer.make(inMemory: UITestSupport.isUITestMode)
-            let settingsStore = makeSettingsStore()
-            try? settingsStore.load()
+            let container = try AppComposition.makeContainer()
+            let settingsStore = AppComposition.makeSettingsStore()
             if UITestSupport.isUITestMode {
                 try UITestSupport.prepare(container: container, settingsStore: settingsStore)
             }
-            let snapshotStore = FileWidgetSnapshotStore(
-                fileURL: UITestSupport.isUITestMode ? nil : SharedContainer.widgetSnapshotURL
-            )
-            let modelClient = makeModelClient()
+            let modelClient = AppComposition.makeModelClient()
             return AppState(
                 container: container,
                 settingsStore: settingsStore,
                 parserBuilder: ParserFactory(modelClient: modelClient),
                 modelClient: modelClient,
-                snapshotStore: snapshotStore
+                snapshotStore: AppComposition.makeSnapshotStore()
             )
         } catch {
             return nil
         }
-    }
-
-    /// The on-device model for this launch.
-    ///
-    /// A UI test gets a model that is always unavailable, so what the tester shows does not depend on
-    /// the simulator's Apple Intelligence state. A platform without Foundation Models gets the same.
-    private static func makeModelClient() -> any TransactionModelClient {
-        #if canImport(FoundationModels)
-        if !UITestSupport.isUITestMode {
-            return FoundationModelsClient()
-        }
-        #endif
-        return UnavailableModelClient()
-    }
-
-    /// The settings store for this launch: in memory for a UI test, the shared file otherwise.
-    private static func makeSettingsStore() -> SettingsStore {
-        if UITestSupport.isUITestMode {
-            return SettingsStore(repository: InMemorySettingsRepository())
-        }
-        // The App Group is the settings home. A build that cannot reach it (a missing
-        // entitlement) falls back to app-local storage so the app still launches.
-        let url = SharedContainer.settingsURL
-            ?? URL.applicationSupportDirectory.appending(path: AppGroup.settingsFileName)
-        return SettingsStore(repository: FileSettingsStore(fileURL: url))
     }
 }

@@ -1,0 +1,59 @@
+import Foundation
+import SwiftData
+import ZentriCore
+
+/// Hands one message from the Shortcut to the ingestion pipeline and describes the result.
+///
+/// It is the testable part of ``CaptureSMSIntent``: the intent only builds the app's shared pieces and
+/// reloads the widgets, while everything here runs against whatever container, settings, parser, and
+/// refresher a test supplies. The pipeline refreshes the widget snapshot itself, once per message, so
+/// the handler never refreshes again.
+@MainActor
+final class CaptureSMSHandler {
+    private let container: ModelContainer
+    private let settingsStore: SettingsStore
+    private let parserBuilder: any ParserBuilding
+    private let snapshotRefresher: any WidgetSnapshotRefresher
+
+    init(
+        container: ModelContainer,
+        settingsStore: SettingsStore,
+        parserBuilder: any ParserBuilding,
+        snapshotRefresher: any WidgetSnapshotRefresher
+    ) {
+        self.container = container
+        self.settingsStore = settingsStore
+        self.parserBuilder = parserBuilder
+        self.snapshotRefresher = snapshotRefresher
+    }
+
+    /// Ingests the message, or refuses it without touching the store.
+    ///
+    /// A capture before onboarding has finished is refused, since there are no settings and no account
+    /// to file it under, and so is empty text. Neither is archived. When the request names no account
+    /// the pipeline resolves one itself.
+    func handle(_ request: IngestionRequest) async -> IngestionOutcome {
+        guard settingsStore.settings != nil else {
+            return .failed([CaptureSMSDiagnostics.setupIncomplete])
+        }
+        guard !request.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return .failed([CaptureSMSDiagnostics.emptyText])
+        }
+        let service = IngestionService(
+            context: container.mainContext,
+            // Read per message, so a parser-mode change applies without rebuilding the handler.
+            settings: { [settingsStore] in settingsStore.settings ?? .defaultValue },
+            parserBuilder: parserBuilder,
+            snapshotRefresher: snapshotRefresher,
+            now: { .now }
+        )
+        return await service.ingest(request)
+    }
+
+    /// The Shortcut's dialog for an outcome, with amounts in the person's currency and grouping.
+    func dialog(for outcome: IngestionOutcome, locale: Locale) -> LocalizedStringResource {
+        let settings = settingsStore.settings ?? .defaultValue
+        let format = MoneyFormat(currencyCode: settings.currencyCode, grouping: settings.numberGrouping, locale: locale)
+        return CaptureSMSDialog(context: container.mainContext, format: format).message(for: outcome)
+    }
+}

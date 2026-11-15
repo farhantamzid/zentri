@@ -46,12 +46,10 @@ final class AppState {
         self.parserBuilder = parserBuilder
         self.modelClient = modelClient
         self.snapshotStore = snapshotStore
-        self.snapshotRefresher = LiveWidgetSnapshotRefresher(
-            context: container.mainContext,
-            store: snapshotStore,
-            settings: { [weak settingsStore] in settingsStore?.settings ?? .defaultValue },
-            now: { .now },
-            calendar: .current
+        self.snapshotRefresher = AppComposition.makeSnapshotRefresher(
+            container: container,
+            settingsStore: settingsStore,
+            snapshotStore: snapshotStore
         )
     }
 
