@@ -435,12 +435,7 @@ public final class IngestionService {
 
     /// The account a retried transaction belongs to: the matched rule's, or the single active one.
     private func retryAccount(for draft: TransactionDraft, among accounts: [Account]) -> Account? {
-        if let ruleID = draft.matchedRuleID,
-           let rule = ((try? context.fetch(FetchDescriptor<ParsingRule>())) ?? [])
-               .first(where: { $0.id == ruleID }) {
-            return rule.account
-        }
-        return accounts.count == 1 ? accounts[0] : nil
+        store.ruleAccount(for: draft) ?? (accounts.count == 1 ? accounts[0] : nil)
     }
 
     /// The non-archived accounts, in the order an account picker shows them.

@@ -25,10 +25,25 @@ struct IngestionStore {
             }
     }
 
+    /// The account of the rule that produced `draft`, when a stored rule did.
+    ///
+    /// A message parsed without an account — a launch retry, or a reprocess with several accounts and
+    /// no choice — lands on its matched rule's account, because rules are per account. A draft no
+    /// rule produced, such as the model's, names no account.
+    func ruleAccount(for draft: TransactionDraft) -> Account? {
+        guard let ruleID = draft.matchedRuleID else { return nil }
+        return ((try? context.fetch(FetchDescriptor<ParsingRule>())) ?? [])
+            .first { $0.id == ruleID }?
+            .account
+    }
+
     // MARK: - Writing a parse
 
     /// Inserts the transaction a draft describes, links it to `message`, and adds an SMS checkpoint
     /// when the draft carries a balance. Nothing is saved.
+    ///
+    /// `recordedAt` places the transaction and its checkpoint in balance math, so it must be when the
+    /// message arrived; `createdAt` is when the rows were written, which differs for a reprocess.
     ///
     /// The draft is not validated again: every engine runs ``TransactionValidator`` before it
     /// returns a ``ParseResult/transaction(_:)``.
@@ -37,8 +52,10 @@ struct IngestionStore {
         from draft: TransactionDraft,
         account: Account,
         message: RawMessage,
-        recordedAt: Date
+        recordedAt: Date,
+        createdAt: Date? = nil
     ) -> Transaction {
+        let createdAt = createdAt ?? recordedAt
         let merchantRaw = MessageText.collapsedWhitespace(draft.merchant)
         let merchantDisplay = MessageText.displayMerchant(from: merchantRaw)
         let match = categoryMatch(for: merchantDisplay, suggestion: draft.categorySuggestion)
@@ -60,8 +77,8 @@ struct IngestionStore {
             rawMessage: message,
             parseEngine: engine,
             matchedRuleID: draft.matchedRuleID,
-            createdAt: recordedAt,
-            updatedAt: recordedAt
+            createdAt: createdAt,
+            updatedAt: createdAt
         )
         context.insert(transaction)
 
@@ -74,7 +91,7 @@ struct IngestionStore {
                 recordedAt: recordedAt,
                 source: .sms,
                 sourceTransactionID: transaction.id,
-                createdAt: recordedAt
+                createdAt: createdAt
             ))
         }
         return transaction

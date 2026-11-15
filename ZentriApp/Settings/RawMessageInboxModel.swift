@@ -134,13 +134,6 @@ final class RawMessageInboxModel {
         allItems.first { $0.id == id }
     }
 
-    /// Whether reprocessing `id` needs the person to choose an account first: it has no
-    /// transaction to take the account from and more than one account could own it.
-    func needsAccountChoice(id: UUID) -> Bool {
-        guard let message = message(id: id) else { return false }
-        return !message.hasTransaction && accounts.count > 1
-    }
-
     /// Reprocesses one message, optionally as the account the person chose.
     func reprocess(id: UUID, accountID: UUID? = nil) async -> IngestionOutcome? {
         guard let message = storedMessages[id] else { return nil }

@@ -19,8 +19,13 @@ import SwiftData
 ///   is the one place a checkpoint is removed without deleting its account, and it only happens
 ///   because the person confirmed the reprocess.
 /// - **The account is never guessed.** It is the one the caller chose, else the existing
-///   transaction's, else the only active account; otherwise the message fails with an account
-///   diagnostic and the caller asks the person.
+///   transaction's, else the only active account. Otherwise every rule runs and the transaction
+///   lands on the matched rule's account, as the launch retry does. Only a transaction no rule
+///   produced fails with an account diagnostic, and the message keeps its stored error, so the
+///   caller can ask the person without losing why the message failed before.
+/// - **A new transaction keeps the message's original instant.** Its `recordedAt`, and its SMS
+///   checkpoint's, is when the message was first ingested, not when it was reprocessed: a later
+///   bank balance already includes it, and an old balance must not outrank a newer one.
 /// - **Deleting messages never deletes transactions.** A deleted message's transaction is detached
 ///   and stays in the history.
 ///
@@ -78,9 +83,10 @@ public final class RawMessageReprocessor {
 
     /// Reprocesses every failed message, oldest first, after the person changed their rules.
     ///
-    /// Each message resolves its account on its own, so with several accounts a message no rule
-    /// ties to an account keeps failing with an account diagnostic rather than being guessed at.
-    /// Copies of one message are handled in order: once the first parses, the rest are duplicates.
+    /// Each message resolves its account on its own: with several accounts, a message a rule reads
+    /// lands on that rule's account, and one only the model reads fails with an account diagnostic
+    /// while keeping its stored error. Copies of one message are handled in order: once the first
+    /// parses, the rest are duplicates.
     ///
     /// - Returns: One outcome per failed message, in `receivedAt` order.
     public func reprocessFailures(rules: [ParsingRuleSpec], mode: ParserMode) async -> [IngestionOutcome] {
@@ -133,8 +139,14 @@ public final class RawMessageReprocessor {
         guard !Task.isCancelled else { return .failed([IngestionDiagnostics.cancelled]) }
         let existing = message.transaction
 
-        guard let account = resolvedAccount(chosen: accountID, existing: existing) else {
+        let knownAccount: Account?
+        switch resolvedAccount(chosen: accountID, existing: existing) {
+        case .resolved(let account):
+            knownAccount = account
+        case .unknownChoice:
             return recordFailure([IngestionDiagnostics.retryAccount], on: message, keeping: existing)
+        case .undecided:
+            knownAccount = nil
         }
 
         // A message that already has its transaction is the original, so only an unlinked message
@@ -144,7 +156,7 @@ public final class RawMessageReprocessor {
             text: message.text,
             sender: message.sender,
             receivedAt: message.receivedAt,
-            accountID: account.id,
+            accountID: knownAccount?.id,
             excluding: message.id
         ) {
             message.status = .duplicate
@@ -154,16 +166,22 @@ public final class RawMessageReprocessor {
             return committed(.duplicate)
         }
 
+        // Without a known account every rule runs, and the matched rule decides the account.
         let parser = parserBuilder.makeParser(for: mode, rules: rules)
         let result = await parser.parse(ParseInput(
             text: MessageText.normalizedForParsing(message.text),
-            accountID: account.id,
+            accountID: knownAccount?.id,
             sender: message.sender,
             receivedAt: message.receivedAt
         ))
 
         switch ParseDisposition(classifying: result) {
         case .transaction(let draft):
+            guard let account = knownAccount ?? store.ruleAccount(for: draft) else {
+                // Nothing ties the answer to an account. The message keeps its stored error, which
+                // still explains it, and the caller asks the person which account it belongs to.
+                return .failed([IngestionDiagnostics.retryAccount])
+            }
             if let existing {
                 update(existing, from: draft, account: account, message: message)
                 return committed(.transaction(existing.id))
@@ -172,7 +190,8 @@ public final class RawMessageReprocessor {
                 from: draft,
                 account: account,
                 message: message,
-                recordedAt: now()
+                recordedAt: message.ingestedAt,
+                createdAt: now()
             )
             return committed(.transaction(transaction.id))
         case .notTransaction:
@@ -272,17 +291,31 @@ public final class RawMessageReprocessor {
         return committed(.failed(diagnostics))
     }
 
-    /// The account the message belongs to, or `nil` when choosing one would be a guess.
-    private func resolvedAccount(chosen accountID: UUID?, existing: Transaction?) -> Account? {
+    /// What the caller, the message's transaction, or the accounts say about the account.
+    private enum AccountResolution {
+        /// The account is known before parsing.
+        case resolved(Account)
+        /// The caller chose an account that is not an active one.
+        case unknownChoice
+        /// Several accounts could own the message; the matched rule decides.
+        case undecided
+    }
+
+    /// The account the message belongs to, before parsing: the chosen one, else the existing
+    /// transaction's, else the only active account.
+    private func resolvedAccount(chosen accountID: UUID?, existing: Transaction?) -> AccountResolution {
         if let accountID {
-            return store.activeAccounts().first { $0.id == accountID }
-                ?? (existing?.account.id == accountID ? existing?.account : nil)
+            if let account = store.activeAccounts().first(where: { $0.id == accountID })
+                ?? (existing?.account.id == accountID ? existing?.account : nil) {
+                return .resolved(account)
+            }
+            return .unknownChoice
         }
         if let existing {
-            return existing.account
+            return .resolved(existing.account)
         }
         let accounts = store.activeAccounts()
-        return accounts.count == 1 ? accounts[0] : nil
+        return accounts.count == 1 ? .resolved(accounts[0]) : .undecided
     }
 
     // MARK: - Saving

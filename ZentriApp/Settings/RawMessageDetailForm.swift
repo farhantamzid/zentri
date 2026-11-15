@@ -4,9 +4,9 @@ import ZentriCore
 /// The message in full — text, status, error, matched rule, and transaction — with reprocess, copy,
 /// and delete.
 ///
-/// Reprocessing a parsed message asks first, because it rewrites its transaction. A message with
-/// no transaction and several possible accounts asks which account it belongs to instead of
-/// guessing.
+/// Reprocessing a parsed message asks first, because it rewrites its transaction. When the
+/// reprocessor cannot tell which account a message belongs to — several accounts and no rule read
+/// it — the screen asks which account instead of guessing, then reprocesses as that account.
 struct RawMessageDetailForm: View {
     let model: RawMessageInboxModel
     let message: RawMessageListItem
@@ -90,12 +90,10 @@ struct RawMessageDetailForm: View {
         .sensoryFeedback(.success, trigger: copiedCount)
     }
 
-    /// Asks first when the message has a transaction to rewrite, or when its account is ambiguous.
+    /// Asks first when the message has a transaction to rewrite.
     private func startReprocess() {
         if message.hasTransaction {
             isConfirmingReprocess = true
-        } else if model.needsAccountChoice(id: message.id) {
-            isChoosingAccount = true
         } else {
             reprocess(accountID: nil)
         }
@@ -113,6 +111,8 @@ struct RawMessageDetailForm: View {
                 outcomeMessage = outcome.reprocessMessage
                 if outcome.isTransaction {
                     parsedCount += 1
+                } else if accountID == nil, outcome.needsAccountChoice, !model.accounts.isEmpty {
+                    isChoosingAccount = true
                 }
             }
             isReprocessing = false

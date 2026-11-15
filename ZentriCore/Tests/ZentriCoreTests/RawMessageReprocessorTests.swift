@@ -35,6 +35,23 @@ private struct CancellingParser: TransactionParsing {
     }
 }
 
+/// A parser builder whose parser always answers with the same result.
+private struct ScriptedParserBuilder: ParserBuilding {
+    let result: ParseResult
+
+    func makeParser(for mode: ParserMode, rules: [ParsingRuleSpec]) -> any TransactionParsing {
+        ScriptedParser(result: result)
+    }
+}
+
+private struct ScriptedParser: TransactionParsing {
+    let result: ParseResult
+
+    func parse(_ input: ParseInput) async -> ParseResult {
+        result
+    }
+}
+
 /// Holds the container for as long as a test uses its context.
 @MainActor
 private struct Store {
@@ -210,7 +227,9 @@ private func diagnostics(_ outcome: IngestionOutcome) -> [ParseDiagnostic] {
     #expect(transaction.direction == .debit)
     #expect(transaction.merchantDisplay == "KFC")
     #expect(transaction.account.id == store.account.id)
-    #expect(transaction.recordedAt == reprocessNow)
+    // The message's original instant, not the reprocess time, anchors it among the checkpoints.
+    #expect(transaction.recordedAt == receivedEarlier)
+    #expect(transaction.createdAt == reprocessNow)
     #expect(transaction.rawMessage?.id == message.id)
     #expect(transaction.matchedRuleID == rules[0].id)
     #expect(message.status == .parsed)
@@ -220,7 +239,7 @@ private func diagnostics(_ outcome: IngestionOutcome) -> [ParseDiagnostic] {
     let checkpoint = try #require(try store.smsCheckpoints().first)
     #expect(checkpoint.amount == Decimal(string: "1234.50"))
     #expect(checkpoint.sourceTransactionID == id)
-    #expect(checkpoint.recordedAt == reprocessNow)
+    #expect(checkpoint.recordedAt == receivedEarlier)
     #expect(!store.context.hasChanges)
     #expect(await refresher.refreshCount == 1)
 }
@@ -407,18 +426,35 @@ private func diagnostics(_ outcome: IngestionOutcome) -> [ParseDiagnostic] {
 // MARK: - Accounts
 
 @MainActor
-@Test func severalAccountsWithoutAChoiceFailWithoutGuessing() async throws {
+@Test func severalAccountsWithoutAChoiceUseTheMatchedRulesAccount() async throws {
     let store = try makeStore()
-    _ = try store.addAccount("Savings", sortOrder: 1)
-    let rules = try store.addRule()
+    let savings = try store.addAccount("Savings", sortOrder: 1)
+    let rules = try store.addRule(account: savings)
     let message = try store.addMessage()
     let reprocessor = makeReprocessor(store)
 
     let outcome = await reprocessor.reprocess(message, rules: rules, mode: .rules)
 
+    #expect(transactionID(outcome) != nil)
+    #expect(try store.transactions().first?.account.id == savings.id)
+    #expect(message.status == .parsed)
+}
+
+@MainActor
+@Test func severalAccountsAndNoMatchedRuleFailWithoutGuessingAndKeepTheStoredError() async throws {
+    let store = try makeStore()
+    _ = try store.addAccount("Savings", sortOrder: 1)
+    let message = try store.addMessage()
+    // The model reads the message, but nothing ties its answer to an account.
+    let reprocessor = makeReprocessor(store, builder: ScriptedParserBuilder(result: .transaction(
+        TransactionDraft(direction: .debit, amount: 12, merchant: "KFC", occurredAt: receivedEarlier)
+    )))
+
+    let outcome = await reprocessor.reprocess(message, rules: [], mode: .foundationModels)
+
     #expect(diagnostics(outcome).map(\.field) == ["account"])
     #expect(message.status == .failed)
-    #expect(message.errorDescription == "Choose an account for this message.")
+    #expect(message.errorDescription == "The message could not be read.")
     #expect(try store.transactions().isEmpty)
 }
 
@@ -530,6 +566,105 @@ private func diagnostics(_ outcome: IngestionOutcome) -> [ParseDiagnostic] {
     #expect(second.status == .duplicate)
     #expect(ignored.status == .ignored)
     #expect(try store.transactions().count == 1)
+}
+
+@MainActor
+@Test func reprocessFailuresWithSeveralAccountsUsesEachRulesAccountAndKeepsUnresolvedErrors() async throws {
+    let store = try makeStore()
+    let savings = try store.addAccount("Savings", sortOrder: 1)
+    let rules = try store.addRule(account: savings)
+    let readable = try store.addMessage(fingerprint: "readable")
+    let unreadable = try store.addMessage("Your OTP is 1234 ref RM", fingerprint: "unreadable")
+    unreadable.errorDescription = "The captured amount is not a number."
+    try store.context.save()
+    let reprocessor = makeReprocessor(store)
+
+    let outcomes = await reprocessor.reprocessFailures(rules: rules, mode: .rules)
+
+    #expect(outcomes.count == 2)
+    #expect(readable.status == .parsed)
+    #expect(readable.transaction?.account.id == savings.id)
+    // A message no rule reads is judged on its own parse, not on the account question.
+    #expect(unreadable.status == .ignored)
+}
+
+// MARK: - Balance
+
+/// The balance the app shows for the store's account.
+@MainActor
+private func balance(_ store: Store) -> Decimal {
+    BalanceCalculator.combined(accounts: [store.account])
+}
+
+/// Records a later debit whose SMS reported the balance, then a later manual debit, both after the
+/// archived message arrived.
+@MainActor
+private func addLaterActivity(_ store: Store) throws {
+    let smsAt = receivedEarlier.addingTimeInterval(1_800)
+    let later = ZentriCore.Transaction(
+        account: store.account, amount: 50, direction: .debit, occurredAt: smsAt, recordedAt: smsAt,
+        merchantRaw: "Later", merchantDisplay: "Later", balanceAfter: 900, parseEngine: .rules,
+        createdAt: smsAt, updatedAt: smsAt
+    )
+    store.context.insert(later)
+    store.context.insert(BalanceCheckpoint(
+        account: store.account, amount: 900, recordedAt: smsAt, source: .sms,
+        sourceTransactionID: later.id, createdAt: smsAt
+    ))
+    let manualAt = receivedEarlier.addingTimeInterval(3_000)
+    store.context.insert(ZentriCore.Transaction(
+        account: store.account, amount: 20, direction: .debit, occurredAt: manualAt, recordedAt: manualAt,
+        merchantRaw: "Cash", merchantDisplay: "Cash", parseEngine: .manual,
+        createdAt: manualAt, updatedAt: manualAt
+    ))
+    try store.context.save()
+}
+
+@MainActor
+@Test func reprocessingAnOldMessageWithABalanceLeavesTheLaterBalanceInCharge() async throws {
+    let store = try makeStore()
+    let rules = try store.addRule()
+    let message = try store.addMessage()
+    try addLaterActivity(store)
+    #expect(balance(store) == 880)
+
+    let outcome = await reprocessor(store).reprocess(message, rules: rules, mode: .rules)
+
+    #expect(transactionID(outcome) != nil)
+    // The bank's later balance of 900 already includes the old spend; only the 20 after it applies.
+    #expect(balance(store) == 880)
+}
+
+@MainActor
+@Test func reprocessingAnOldMessageWithoutABalanceIsNotCountedTwice() async throws {
+    let store = try makeStore()
+    let rules = try store.addRule(pattern: noBalancePattern)
+    let message = try store.addMessage()
+    try addLaterActivity(store)
+
+    let outcome = await reprocessor(store).reprocess(message, rules: rules, mode: .rules)
+
+    #expect(transactionID(outcome) != nil)
+    #expect(try store.smsCheckpoints().count == 1)
+    #expect(balance(store) == 880)
+}
+
+@MainActor
+@Test func reprocessingAParsedMessageWhoseTransactionWasDeletedRestoresItAtTheOriginalInstant() async throws {
+    let store = try makeStore()
+    let rules = try store.addRule()
+    let message = try store.addMessage(status: .parsed)
+    try addLaterActivity(store)
+
+    _ = await reprocessor(store).reprocess(message, rules: rules, mode: .rules)
+
+    #expect(message.transaction?.recordedAt == receivedEarlier)
+    #expect(balance(store) == 880)
+}
+
+@MainActor
+private func reprocessor(_ store: Store) -> RawMessageReprocessor {
+    makeReprocessor(store)
 }
 
 // MARK: - Deleting

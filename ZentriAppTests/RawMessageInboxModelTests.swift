@@ -76,8 +76,6 @@ private func makeInbox(
     let counter = ParsingMutationCounter()
     let inbox = makeInbox(store, counter: counter)
     inbox.refresh()
-    #expect(!inbox.needsAccountChoice(id: message.id))
-
     let outcome = await inbox.reprocess(id: message.id)
 
     #expect(outcome?.isTransaction == true)
@@ -93,7 +91,7 @@ private func makeInbox(
 }
 
 @MainActor
-@Test func severalAccountsAskWhichOneAMessageBelongsTo() async throws {
+@Test func severalAccountsUseTheMatchedRulesAccountWithoutAsking() async throws {
     let store = try ParsingTestStore()
     let savings = try store.addAccount("Savings", sortOrder: 1)
     try store.addRule("Savings debit", account: savings)
@@ -101,15 +99,21 @@ private func makeInbox(
     let inbox = makeInbox(store)
     inbox.refresh()
 
-    #expect(inbox.needsAccountChoice(id: message.id))
-    let unchosen = await inbox.reprocess(id: message.id)
-    #expect(unchosen?.needsAccountChoice == true)
+    let outcome = await inbox.reprocess(id: message.id)
 
-    let chosen = await inbox.reprocess(id: message.id, accountID: savings.id)
-    #expect(chosen?.isTransaction == true)
+    #expect(outcome?.isTransaction == true)
+    #expect(outcome?.needsAccountChoice == false)
     #expect(message.transaction?.account.id == savings.id)
-    // A message with a transaction takes its account from it.
-    #expect(!inbox.needsAccountChoice(id: message.id))
+}
+
+@MainActor
+@Test func onlyAnAccountDiagnosticAsksForAnAccount() {
+    let account = ParseDiagnostic(code: .missingField, field: "account", message: "Choose an account for this message.")
+    let amount = ParseDiagnostic(code: .invalidAmount, field: "amount", message: "The captured amount is not a number.")
+
+    #expect(IngestionOutcome.failed([account]).needsAccountChoice)
+    #expect(!IngestionOutcome.failed([amount]).needsAccountChoice)
+    #expect(!IngestionOutcome.transaction(UUID()).needsAccountChoice)
 }
 
 @MainActor
