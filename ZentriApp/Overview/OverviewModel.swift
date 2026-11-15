@@ -81,8 +81,8 @@ private extension OverviewModel {
         let instant = now()
         let transactions = accounts.flatMap(\.transactions)
         let fallbackCategory = transactions.isEmpty ? nil : fallbackCategory()
-        let snapshots = transactions.map { transactionSnapshot(from: $0, fallback: fallbackCategory) }
-        let month = calculateSummary(transactions: snapshots, in: monthPeriod(containing: instant))
+        let snapshots = transactions.map { TransactionSnapshot(stored: $0, fallback: fallbackCategory) }
+        let month = calculateSummary(transactions: snapshots, in: calendar.monthPeriod(containing: instant))
 
         return OverviewSummary(
             balance: BalanceCalculator.combined(accounts: accounts),
@@ -157,59 +157,11 @@ private extension OverviewModel {
         let name = CategorizationService.fallbackCategoryName
         return categories.first { $0.name == name }
     }
-
-    /// The insights projection of a stored transaction, with its category styling resolved.
-    ///
-    /// A transaction without a category takes the live `Other` category when the store has one, so
-    /// uncategorized spend still appears in the totals with the app's current styling for it.
-    func transactionSnapshot(
-        from transaction: ZentriCore.Transaction,
-        fallback: ZentriCore.Category?
-    ) -> TransactionSnapshot {
-        guard let category = transaction.category ?? fallback else {
-            return TransactionSnapshot(
-                id: transaction.id,
-                accountID: transaction.account.id,
-                amount: transaction.amount,
-                direction: transaction.direction,
-                occurredAt: transaction.occurredAt,
-                merchant: transaction.merchantDisplay,
-                isTransfer: transaction.isTransfer
-            )
-        }
-        return TransactionSnapshot(
-            id: transaction.id,
-            accountID: transaction.account.id,
-            amount: transaction.amount,
-            direction: transaction.direction,
-            occurredAt: transaction.occurredAt,
-            merchant: transaction.merchantDisplay,
-            categoryID: category.id,
-            categoryName: category.name,
-            symbolName: category.symbolName,
-            colorToken: category.colorToken,
-            isTransfer: transaction.isTransfer
-        )
-    }
 }
 
 // MARK: - Periods and totals
 
 private extension OverviewModel {
-    /// The current calendar month, from its first instant to its last.
-    ///
-    /// The month's end is its last instant rather than the next month's first one, which is the
-    /// shape `InsightsCalculator` needs to report month-over-month comparisons.
-    func monthPeriod(containing instant: Date) -> InsightsPeriod {
-        let start = calendar.dateInterval(of: .month, for: instant)?.start ?? calendar.startOfDay(for: instant)
-        guard let nextMonth = calendar.date(byAdding: .month, value: 1, to: start),
-              let lastSecond = calendar.date(byAdding: .second, value: -1, to: nextMonth)
-        else {
-            return InsightsPeriod(start: start, end: instant)
-        }
-        return InsightsPeriod(start: start, end: lastSecond)
-    }
-
     /// The seven calendar days ending with today, up to the supplied instant.
     func chartPeriod(endingAt instant: Date) -> InsightsPeriod {
         let today = calendar.startOfDay(for: instant)
