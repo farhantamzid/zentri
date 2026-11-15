@@ -97,15 +97,11 @@ final class AppearanceSettingsModel {
     func setFaceIDEnabled(_ enabled: Bool) async {
         faceIDMessage = nil
         if enabled {
-            guard biometric.canAuthenticate() else {
-                faceIDMessage = "Set up Face ID or a passcode in the Settings app to lock Zentri."
-                return
-            }
             isCheckingFaceID = true
-            let passed = await biometric.authenticate()
+            let refusal = await FaceIDActivation(biometric: biometric).confirm()
             isCheckingFaceID = false
-            guard passed else {
-                faceIDMessage = "Face ID didn't confirm it's you, so the lock is still off."
+            if let refusal {
+                faceIDMessage = refusal
                 return
             }
         }

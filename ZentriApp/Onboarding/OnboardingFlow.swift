@@ -11,8 +11,13 @@ struct OnboardingFlow: View {
     @Environment(AppState.self) private var appState
     @Environment(\.locale) private var locale
 
-    @State private var model = OnboardingModel()
+    @State private var model: OnboardingModel
     @State private var isKeyboardVisible = false
+
+    /// - Parameter biometric: The app lock's device check, which turning Face ID on must pass.
+    init(biometric: any BiometricAuthenticating) {
+        _model = State(initialValue: OnboardingModel(biometric: biometric))
+    }
 
     var body: some View {
         NavigationStack {

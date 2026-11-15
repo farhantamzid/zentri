@@ -115,12 +115,12 @@ private func model(advancedBy advances: Int) -> OnboardingModel {
 }
 
 @MainActor
-@Test func effectiveSettingsCarryEverySelection() {
-    let model = OnboardingModel()
+@Test func effectiveSettingsCarryEverySelection() async {
+    let model = OnboardingModel(biometric: StubBiometrics(results: [true]))
     model.currencyCode = "BDT"
     model.numberGrouping = .indian
     model.parserMode = .rules
-    model.faceIDEnabled = true
+    await model.setFaceIDEnabled(true)
 
     let settings = model.effectiveSettings
     #expect(settings.currencyCode == "BDT")
@@ -171,4 +171,53 @@ private func model(advancedBy advances: Int) -> OnboardingModel {
     #expect(model.currencyCodes == CurrencyCatalog.supportedCurrencyCodes)
     #expect(model.currencyCodes.contains("BDT"))
     #expect(model.currencyCode == AppSettings.defaultValue.currencyCode)
+}
+
+@MainActor
+@Test func turningFaceIDOnDuringSetupNeedsAPassingCheck() async {
+    let biometric = StubBiometrics(results: [true])
+    let model = OnboardingModel(biometric: biometric)
+
+    await model.setFaceIDEnabled(true)
+
+    #expect(biometric.authenticateCount == 1)
+    #expect(model.faceIDEnabled)
+    #expect(model.faceIDMessage == nil)
+    #expect(model.effectiveSettings.faceIDEnabled)
+}
+
+@MainActor
+@Test func aFailedCheckDuringSetupLeavesFaceIDOffAndSaysWhy() async {
+    let model = OnboardingModel(biometric: StubBiometrics(results: [false]))
+
+    await model.setFaceIDEnabled(true)
+
+    #expect(!model.faceIDEnabled)
+    #expect(model.faceIDMessage != nil)
+    #expect(!model.effectiveSettings.faceIDEnabled)
+}
+
+@MainActor
+@Test func aDeviceThatCannotCheckItsOwnerCannotTurnFaceIDOnDuringSetup() async {
+    let biometric = StubBiometrics(isAvailable: false)
+    let model = OnboardingModel(biometric: biometric)
+
+    await model.setFaceIDEnabled(true)
+
+    #expect(biometric.authenticateCount == 0)
+    #expect(!model.faceIDEnabled)
+    #expect(model.faceIDMessage != nil)
+}
+
+@MainActor
+@Test func turningFaceIDOffDuringSetupNeedsNoCheck() async {
+    let biometric = StubBiometrics(results: [true])
+    let model = OnboardingModel(biometric: biometric)
+    await model.setFaceIDEnabled(true)
+
+    await model.setFaceIDEnabled(false)
+
+    #expect(biometric.authenticateCount == 1)
+    #expect(!model.faceIDEnabled)
+    #expect(model.faceIDMessage == nil)
 }

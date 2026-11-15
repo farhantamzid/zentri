@@ -26,8 +26,13 @@ final class OnboardingModel {
     var openingBalanceText = ""
     /// The parser engine new messages use.
     var parserMode = AppSettings.defaultValue.parserMode
-    /// Whether the app should require Face ID. Off by default.
-    var faceIDEnabled = false
+    /// Whether the app should require Face ID. Off by default, and on only after the device's
+    /// check passed; ``faceIDChoice`` is what the toggle changes.
+    private(set) var faceIDEnabled = false
+    /// Why Face ID could not be turned on, shown under the toggle.
+    private(set) var faceIDMessage: LocalizedStringResource?
+    /// Whether the check that turns Face ID on is running.
+    private(set) var isCheckingFaceID = false
     /// The on-device model's availability, once the check has run.
     private(set) var availability: ModelAvailability?
     /// The account the commit created, once setup has been saved.
@@ -40,13 +45,43 @@ final class OnboardingModel {
     private(set) var commitFailed = false
     /// The locale that decides the separators a typed balance is read with.
     private let locale: Locale
+    /// The device check that turning Face ID on must pass.
+    @ObservationIgnored private let biometric: any BiometricAuthenticating
 
     /// Creates the flow's state.
     ///
-    /// - Parameter locale: The locale whose separators the decimal pad offers and ``openingBalance``
-    ///   accepts. The app keeps the default; a test passes one to fix the separators.
-    init(locale: Locale = .current) {
+    /// - Parameters:
+    ///   - locale: The locale whose separators the decimal pad offers and ``openingBalance``
+    ///     accepts. The app keeps the default; a test passes one to fix the separators.
+    ///   - biometric: The check behind the Face ID step; the flow passes the app lock's, so UI tests
+    ///     can script it.
+    init(locale: Locale = .current, biometric: any BiometricAuthenticating = LocalAuthenticationService()) {
         self.locale = locale
+        self.biometric = biometric
+    }
+
+    /// The Face ID toggle's value. Turning it on runs the device check first, as Settings does.
+    var faceIDChoice: Bool {
+        get { faceIDEnabled }
+        set {
+            guard newValue != faceIDEnabled, !isCheckingFaceID else { return }
+            Task { await setFaceIDEnabled(newValue) }
+        }
+    }
+
+    /// Records the Face ID choice; turning it on records it only after the device check passes.
+    func setFaceIDEnabled(_ enabled: Bool) async {
+        faceIDMessage = nil
+        if enabled {
+            isCheckingFaceID = true
+            let refusal = await FaceIDActivation(biometric: biometric).confirm()
+            isCheckingFaceID = false
+            if let refusal {
+                faceIDMessage = refusal
+                return
+            }
+        }
+        faceIDEnabled = enabled
     }
 
     /// The supported currencies in the order the picker shows them.

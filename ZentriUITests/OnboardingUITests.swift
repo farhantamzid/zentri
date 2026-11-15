@@ -79,6 +79,59 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertTrue(app.tab("Overview").waitForExistence(timeout: 5), "The app did not enter the tabs")
     }
 
+    func testTheFaceIDStepTurnsOnOnlyAfterAPassingCheck() {
+        // A failing scripted check: the toggle stays off and says why.
+        let failing = walkedToFaceIDStep(biometrics: "failure")
+        let refused = failing.switches["onboarding.faceID.toggle"]
+        refused.switches.firstMatch.tap()
+        XCTAssertTrue(
+            failing.descendants(matching: .any)["onboarding.faceID.message"].waitForExistence(timeout: 10),
+            "A failed check gave no reason"
+        )
+        XCTAssertEqual(refused.value as? String, "0", "A failed check turned Face ID on")
+        failing.terminate()
+
+        // A passing scripted check turns it on.
+        let passing = walkedToFaceIDStep(biometrics: "success")
+        let accepted = passing.switches["onboarding.faceID.toggle"]
+        accepted.switches.firstMatch.tap()
+        let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: accepted)
+        XCTAssertEqual(XCTWaiter().wait(for: [on], timeout: 10), .completed, "A passing check did not turn Face ID on")
+        XCTAssertFalse(passing.descendants(matching: .any)["onboarding.faceID.message"].exists)
+    }
+
+    /// Launches into onboarding with a scripted Face ID check and walks the shortest path — the
+    /// default currency, an account with a balance, and the Hybrid engine — to the Face ID step.
+    private func walkedToFaceIDStep(biometrics: String) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UITestMode", "-UITestReset", "-UITestMockBiometrics", biometrics]
+        app.launch()
+        let continueButton = app.buttons["onboarding.continue"]
+        XCTAssertTrue(continueButton.waitForExistence(timeout: 5), "Onboarding did not start")
+        continueButton.tap() // Welcome.
+        continueButton.tap() // Currency, left at the default.
+
+        let name = app.textFields["onboarding.account.name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        name.tap()
+        name.typeText("Everyday\n")
+        let balance = app.textFields["onboarding.account.balance"]
+        balance.tap()
+        balance.typeText("100")
+        app.buttons["onboarding.keyboard.done"].tap()
+        continueButton.tap() // Account.
+
+        XCTAssertTrue(app.buttons["onboarding.parser.rules"].waitForExistence(timeout: 5), "The parser step is missing")
+        continueButton.tap() // Parser, left at Hybrid, which skips the rules step.
+        XCTAssertTrue(app.buttons["onboarding.shortcuts.open"].waitForExistence(timeout: 5))
+        continueButton.tap() // Shortcuts.
+
+        let toggle = app.switches["onboarding.faceID.toggle"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5), "The Face ID step is missing")
+        XCTAssertEqual(toggle.value as? String, "0", "Face ID should start off")
+        return app
+    }
+
     /// Taps an element, scrolling it clear of the pinned footer first.
     ///
     /// Long steps (eleven currencies, three grouping examples) put controls under the footer, and
