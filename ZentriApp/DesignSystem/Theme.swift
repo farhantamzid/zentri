@@ -32,6 +32,9 @@ enum Theme {
     static let accent = Color("AccentColor")
     /// Text and symbols drawn on an accent fill, such as a prominent button's label.
     static let onAccent = Color("OnAccent")
+    /// A disabled prominent button's label, on the system's grey disabled fill: ink in light mode,
+    /// secondary ink in dark mode.
+    static let onAccentDisabled = Color("OnAccentDisabled")
     /// The warm neutral page background.
     static let canvas = Color("Canvas")
     /// Primary text.
