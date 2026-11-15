@@ -31,7 +31,9 @@ private func makeStore() throws -> SettingsStore {
     #expect(model.currencyCode == "USD")
     #expect(applied.isEmpty)
 
-    await model.confirmCurrencyChange()
+    // The dialog has already cleared its item by the time the confirm button's action runs.
+    model.pendingCurrencyCode = nil
+    await model.confirmCurrencyChange(to: "INR")
     #expect(model.pendingCurrencyCode == nil)
     #expect(store.settings?.currencyCode == "INR")
     // Only the currency changes; the grouping and every other setting stay as they were.

@@ -59,12 +59,14 @@ final class AppearanceSettingsModel {
         await save(updated)
     }
 
-    /// Saves the staged currency. Amounts are not converted.
-    func confirmCurrencyChange() async {
-        guard let pendingCurrencyCode else { return }
-        self.pendingCurrencyCode = nil
+    /// Saves the confirmed currency. Amounts are not converted.
+    ///
+    /// The code is passed in rather than read from ``pendingCurrencyCode``: the confirmation dialog
+    /// clears its item before the button's action runs.
+    func confirmCurrencyChange(to currencyCode: String) async {
+        pendingCurrencyCode = nil
         var updated = settings
-        updated.currencyCode = pendingCurrencyCode
+        updated.currencyCode = currencyCode
         await save(updated)
     }
 

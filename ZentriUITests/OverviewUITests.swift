@@ -98,9 +98,9 @@ final class OverviewUITests: XCTestCase {
         XCTAssertTrue(finishSetup.waitForExistence(timeout: 10), "The empty state did not appear")
         finishSetup.tap()
 
+        // Settings opens on the list whose first row adds the missing account.
         XCTAssertTrue(
-            app.staticTexts["Accounts, parsing, categories, and backup settings will appear here."]
-                .waitForExistence(timeout: 5),
+            app.buttons["settings.accounts"].waitForExistence(timeout: 5),
             "Finish setup did not open the Settings tab"
         )
     }

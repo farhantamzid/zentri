@@ -18,14 +18,18 @@ struct AppearanceSettingsForm: View {
                             .tag(code)
                     }
                 }
-                .pickerStyle(.navigationLink)
+                // A menu rather than a pushed list: picking only stages the currency, so the
+                // confirmation has to appear on this screen, which a pushed list would cover.
+                .pickerStyle(.menu)
                 .accessibilityIdentifier("appearance.currency")
                 .confirmationDialog(
                     "Change the currency?",
                     item: $model.pendingCurrencyCode,
                     titleVisibility: .visible
                 ) { code in
-                    Button("Change to \(code)", action: confirmCurrencyChange)
+                    Button("Change to \(code)") {
+                        confirmCurrencyChange(to: code)
+                    }
                     Button("Cancel", role: .cancel, action: model.cancelCurrencyChange)
                 } message: { _ in
                     Text("Amounts are not converted.")
@@ -76,7 +80,7 @@ struct AppearanceSettingsForm: View {
         .sensoryFeedback(.success, trigger: model.savedCount)
     }
 
-    private func confirmCurrencyChange() {
-        Task { await model.confirmCurrencyChange() }
+    private func confirmCurrencyChange(to code: String) {
+        Task { await model.confirmCurrencyChange(to: code) }
     }
 }

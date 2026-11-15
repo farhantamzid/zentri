@@ -21,9 +21,9 @@ struct SettingsPlaceholderView: View {
 #Preview {
     NavigationStack {
         SettingsPlaceholderView(
-            title: "Backup",
-            systemImage: "externaldrive",
-            message: "Export and import backups. Coming in a later update."
+            title: SettingsDestination.backup.title,
+            systemImage: SettingsDestination.backup.systemImage,
+            message: SettingsDestination.backup.placeholderMessage ?? SettingsDestination.backup.title
         )
     }
 }

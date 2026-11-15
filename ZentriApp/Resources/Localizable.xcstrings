@@ -1,17 +1,6 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Accounts, parsing, categories, and backup settings will appear here.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accounts, parsing, categories, and backup settings will appear here."
-          }
-        }
-      }
-    },
     "As of %@": {
       "comment": "The date and time the balance was last read. %@ is a formatted date.",
       "extractionState": "manual",
@@ -43,29 +32,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Insights"
-          }
-        }
-      }
-    },
-    "Messages you capture will appear here, grouped by day.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Messages you capture will appear here, grouped by day."
-          }
-        }
-      }
-    },
-    "Nothing here yet": {
-      "comment": "The empty state shown in a tab before its feature is built.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing here yet"
           }
         }
       }
@@ -127,17 +93,6 @@
         }
       }
     },
-    "Spending trends, categories, and observations will appear here.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spending trends, categories, and observations will appear here."
-          }
-        }
-      }
-    },
     "Storage unavailable": {
       "comment": "The heading shown when the local database cannot be opened.",
       "extractionState": "manual",
@@ -193,17 +148,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Welcome to Zentri"
-          }
-        }
-      }
-    },
-    "Your balance, monthly summary, and recent activity will appear here.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your balance, monthly summary, and recent activity will appear here."
           }
         }
       }
@@ -2521,6 +2465,1386 @@
           "stringUnit": {
             "state": "translated",
             "value": "Largest: %@, %@ of spending."
+          }
+        }
+      }
+    },
+    "": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        }
+      }
+    },
+    "A rule files every transaction whose merchant contains its keyword in one category.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A rule files every transaction whose merchant contains its keyword in one category."
+          }
+        }
+      }
+    },
+    "About": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About"
+          }
+        }
+      }
+    },
+    "Account not found": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account not found"
+          }
+        }
+      }
+    },
+    "Accounts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accounts"
+          }
+        }
+      }
+    },
+    "Active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        }
+      }
+    },
+    "Add Account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Account"
+          }
+        }
+      }
+    },
+    "Add Category": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Category"
+          }
+        }
+      }
+    },
+    "Add Rule": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Rule"
+          }
+        }
+      }
+    },
+    "Add a category to sort your spending.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a category to sort your spending."
+          }
+        }
+      }
+    },
+    "Add the bank account Zentri should watch, with the balance it has today.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the bank account Zentri should watch, with the balance it has today."
+          }
+        }
+      }
+    },
+    "Amber": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amber"
+          }
+        }
+      }
+    },
+    "Amounts are not converted.": {
+      "comment": "The warning shown before the display currency changes; stored amounts keep their numbers.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amounts are not converted."
+          }
+        }
+      }
+    },
+    "Another category already has that name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another category already has that name."
+          }
+        }
+      }
+    },
+    "Another rule already uses that keyword.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another rule already uses that keyword."
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        }
+      }
+    },
+    "Archive Account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive Account"
+          }
+        }
+      }
+    },
+    "Archived": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archived"
+          }
+        }
+      }
+    },
+    "Archived accounts keep their history but leave the balance and the account pickers.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archived accounts keep their history but leave the balance and the account pickers."
+          }
+        }
+      }
+    },
+    "Archiving removes this account from the Overview balance and the pickers. Its transactions stay in your history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archiving removes this account from the Overview balance and the pickers. Its transactions stay in your history."
+          }
+        }
+      }
+    },
+    "As of": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As of"
+          }
+        }
+      }
+    },
+    "Backup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup"
+          }
+        }
+      }
+    },
+    "Balance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balance"
+          }
+        }
+      }
+    },
+    "Can't show your accounts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't show your accounts"
+          }
+        }
+      }
+    },
+    "Can't show your categories": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't show your categories"
+          }
+        }
+      }
+    },
+    "Can't show your keyword rules": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't show your keyword rules"
+          }
+        }
+      }
+    },
+    "Capture": {
+      "comment": "A Settings section holding message parsing and Shortcuts setup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture"
+          }
+        }
+      }
+    },
+    "Categories": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categories"
+          }
+        }
+      }
+    },
+    "Change the currency?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change the currency?"
+          }
+        }
+      }
+    },
+    "Change to %@": {
+      "comment": "The button that confirms a currency change. %@ is a currency code, e.g. INR.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change to %@"
+          }
+        }
+      }
+    },
+    "Choose a date after the account's last recorded balance.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a date after the account's last recorded balance."
+          }
+        }
+      }
+    },
+    "Choose a date that isn't in the future.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a date that isn't in the future."
+          }
+        }
+      }
+    },
+    "Choose the parser engine, write and test regex rules for each account, and review the raw-message inbox. Coming in a later update.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the parser engine, write and test regex rules for each account, and review the raw-message inbox. Coming in a later update."
+          }
+        }
+      }
+    },
+    "Color": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color"
+          }
+        }
+      }
+    },
+    "Coral": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coral"
+          }
+        }
+      }
+    },
+    "Couldn't delete your data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't delete your data"
+          }
+        }
+      }
+    },
+    "Couldn't save the account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save the account"
+          }
+        }
+      }
+    },
+    "Couldn't save the category": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save the category"
+          }
+        }
+      }
+    },
+    "Couldn't save the rule": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save the rule"
+          }
+        }
+      }
+    },
+    "Couldn't save your settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save your settings"
+          }
+        }
+      }
+    },
+    "Couldn't set the balance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't set the balance"
+          }
+        }
+      }
+    },
+    "Couldn't update categories": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't update categories"
+          }
+        }
+      }
+    },
+    "Couldn't update the account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't update the account"
+          }
+        }
+      }
+    },
+    "Couldn't update the rule": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't update the rule"
+          }
+        }
+      }
+    },
+    "Cyan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cyan"
+          }
+        }
+      }
+    },
+    "Data": {
+      "comment": "A Settings section holding backup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
+    "Delete %@": {
+      "comment": "The button that confirms deleting a category. %@ is the category name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete %@"
+          }
+        }
+      }
+    },
+    "Delete All Data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete All Data"
+          }
+        }
+      }
+    },
+    "Delete all data?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete all data?"
+          }
+        }
+      }
+    },
+    "Delete this category?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this category?"
+          }
+        }
+      }
+    },
+    "Display": {
+      "comment": "A Settings section holding currency and number grouping.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Display"
+          }
+        }
+      }
+    },
+    "Edit Account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Account"
+          }
+        }
+      }
+    },
+    "Edit Name and Institution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Name and Institution"
+          }
+        }
+      }
+    },
+    "Edit Rule": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Rule"
+          }
+        }
+      }
+    },
+    "Edits the rule.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edits the rule."
+          }
+        }
+      }
+    },
+    "Enabled": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enabled"
+          }
+        }
+      }
+    },
+    "Enter a balance of zero or more.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a balance of zero or more."
+          }
+        }
+      }
+    },
+    "Enter a keyword.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a keyword."
+          }
+        }
+      }
+    },
+    "Enter a name for the account.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a name for the account."
+          }
+        }
+      }
+    },
+    "Enter a name for the category.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a name for the category."
+          }
+        }
+      }
+    },
+    "Enter the balance your bank shows for %@. Transactions recorded after this time are added to it.": {
+      "comment": "The footer of the Set Balance sheet. %@ is the account name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the balance your bank shows for %@. Transactions recorded after this time are added to it."
+          }
+        }
+      }
+    },
+    "Every account, balance, transaction, saved message, rule, and category on this iPhone is deleted, along with your settings and the widget data. Backups you exported are not touched. This can't be undone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every account, balance, transaction, saved message, rule, and category on this iPhone is deleted, along with your settings and the widget data. Backups you exported are not touched. This can't be undone."
+          }
+        }
+      }
+    },
+    "Everyday Account": {
+      "comment": "Placeholder text in the account name field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyday Account"
+          }
+        }
+      }
+    },
+    "Export and import backups, choose an iCloud folder, and check when the last backup ran. Coming in a later update.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export and import backups, choose an iCloud folder, and check when the last backup ran. Coming in a later update."
+          }
+        }
+      }
+    },
+    "Export and import backups. Coming in a later update.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export and import backups. Coming in a later update."
+          }
+        }
+      }
+    },
+    "Face ID": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID"
+          }
+        }
+      }
+    },
+    "Fallback · ^[%lld transaction](inflect: true)": {
+      "comment": "The detail line under the Other category in Settings. The number is how many transactions it holds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fallback · ^[%lld transaction](inflect: true)"
+          }
+        }
+      }
+    },
+    "Green": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Green"
+          }
+        }
+      }
+    },
+    "Icon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon"
+          }
+        }
+      }
+    },
+    "Indigo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indigo"
+          }
+        }
+      }
+    },
+    "Keyword": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyword"
+          }
+        }
+      }
+    },
+    "Keyword Rules": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyword Rules"
+          }
+        }
+      }
+    },
+    "Keyword rules file a merchant's transactions in a category automatically.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyword rules file a merchant's transactions in a category automatically."
+          }
+        }
+      }
+    },
+    "Matches any merchant that contains this text, ignoring case.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matches any merchant that contains this text, ignoring case."
+          }
+        }
+      }
+    },
+    "Money": {
+      "comment": "A Settings section holding accounts and categories.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Money"
+          }
+        }
+      }
+    },
+    "Name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        }
+      }
+    },
+    "New Account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Account"
+          }
+        }
+      }
+    },
+    "New Category": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Category"
+          }
+        }
+      }
+    },
+    "New Rule": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Rule"
+          }
+        }
+      }
+    },
+    "No accounts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No accounts"
+          }
+        }
+      }
+    },
+    "No categories": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No categories"
+          }
+        }
+      }
+    },
+    "No keyword rules": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No keyword rules"
+          }
+        }
+      }
+    },
+    "Other can't be renamed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other can't be renamed."
+          }
+        }
+      }
+    },
+    "Other collects everything no rule matches, so it can't be renamed or deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other collects everything no rule matches, so it can't be renamed or deleted."
+          }
+        }
+      }
+    },
+    "Parsing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parsing"
+          }
+        }
+      }
+    },
+    "Pets": {
+      "comment": "Placeholder text in the new category name field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pets"
+          }
+        }
+      }
+    },
+    "Priority": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priority"
+          }
+        }
+      }
+    },
+    "Priority %lld": {
+      "comment": "A keyword rule's evaluation order. The number is the rule's priority; lower runs first.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priority %lld"
+          }
+        }
+      }
+    },
+    "Priority %lld · Off": {
+      "comment": "A disabled keyword rule's evaluation order. The number is the rule's priority.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priority %lld · Off"
+          }
+        }
+      }
+    },
+    "Recorded": {
+      "comment": "The label for when an account balance was last recorded.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded"
+          }
+        }
+      }
+    },
+    "Rename Category": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename Category"
+          }
+        }
+      }
+    },
+    "Renames the category.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renames the category."
+          }
+        }
+      }
+    },
+    "Reopen the Shortcuts setup guide and send test messages from the test console. Coming in a later update.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen the Shortcuts setup guide and send test messages from the test console. Coming in a later update."
+          }
+        }
+      }
+    },
+    "Require Face ID to open Zentri. Coming in a later update.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Require Face ID to open Zentri. Coming in a later update."
+          }
+        }
+      }
+    },
+    "Rules are tried from the lowest priority number up; the first enabled rule whose keyword the merchant contains wins. Matching ignores case.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rules are tried from the lowest priority number up; the first enabled rule whose keyword the merchant contains wins. Matching ignores case."
+          }
+        }
+      }
+    },
+    "Security": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Security"
+          }
+        }
+      }
+    },
+    "Set Balance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set Balance"
+          }
+        }
+      }
+    },
+    "Shortcuts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcuts"
+          }
+        }
+      }
+    },
+    "Slate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slate"
+          }
+        }
+      }
+    },
+    "Some data may remain. Try deleting again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some data may remain. Try deleting again."
+          }
+        }
+      }
+    },
+    "Status": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        }
+      }
+    },
+    "Teal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teal"
+          }
+        }
+      }
+    },
+    "The Overview balance adds up every active account.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Overview balance adds up every active account."
+          }
+        }
+      }
+    },
+    "The balance is the last recorded balance plus every transaction since.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The balance is the last recorded balance plus every transaction since."
+          }
+        }
+      }
+    },
+    "The balance this account has right now. Later messages and transactions add to it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The balance this account has right now. Later messages and transactions add to it."
+          }
+        }
+      }
+    },
+    "The currency only changes the symbol in front of every amount.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The currency only changes the symbol in front of every amount."
+          }
+        }
+      }
+    },
+    "The icon goes with the name everywhere the category appears, so color is never the only cue.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The icon goes with the name everywhere the category appears, so color is never the only cue."
+          }
+        }
+      }
+    },
+    "This account is no longer in your data.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This account is no longer in your data."
+          }
+        }
+      }
+    },
+    "Touch and hold a category to drag it into a new order. Other collects everything no rule matches, so it can't be renamed or deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touch and hold a category to drag it into a new order. Other collects everything no rule matches, so it can't be renamed or deleted."
+          }
+        }
+      }
+    },
+    "Turn Off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn Off"
+          }
+        }
+      }
+    },
+    "Turn On": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn On"
+          }
+        }
+      }
+    },
+    "Unarchive Account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unarchive Account"
+          }
+        }
+      }
+    },
+    "Unarchiving adds this account back into the Overview balance.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unarchiving adds this account back into the Overview balance."
+          }
+        }
+      }
+    },
+    "Version": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        }
+      }
+    },
+    "Violet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Violet"
+          }
+        }
+      }
+    },
+    "When several rules match, the lowest priority number wins.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When several rules match, the lowest priority number wins."
+          }
+        }
+      }
+    },
+    "Your data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your data"
+          }
+        }
+      }
+    },
+    "Zentri couldn't find the Other category to move these transactions to.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't find the Other category to move these transactions to."
+          }
+        }
+      }
+    },
+    "Zentri couldn't save your settings. Try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't save your settings. Try again."
+          }
+        }
+      }
+    },
+    "Zentri returns to setup afterwards.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri returns to setup afterwards."
+          }
+        }
+      }
+    },
+    "Zentri works entirely on this iPhone. There is no account to sign in to, no analytics, and no tracking. Bank messages are parsed on the device — by your own rules or Apple's on-device model — and nothing is sent to a server.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri works entirely on this iPhone. There is no account to sign in to, no analytics, and no tracking. Bank messages are parsed on the device — by your own rules or Apple's on-device model — and nothing is sent to a server."
+          }
+        }
+      }
+    },
+    "^[%lld transaction](inflect: true) will move to Other, and this category's keyword rules will be deleted.": {
+      "comment": "The message confirming a category delete. The number is how many transactions the category holds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "^[%lld transaction](inflect: true) will move to Other, and this category's keyword rules will be deleted."
+          }
+        }
+      }
+    },
+    "grab": {
+      "comment": "Placeholder text in the keyword rule field: an example merchant keyword.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "grab"
           }
         }
       }

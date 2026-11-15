@@ -17,11 +17,13 @@ struct SettingsDestinationView: View {
         case .about:
             AboutView()
         case .faceID, .parsing, .shortcuts, .backup:
-            SettingsPlaceholderView(
-                title: destination.title,
-                systemImage: destination.systemImage,
-                message: destination.placeholderMessage ?? ""
-            )
+            if let message = destination.placeholderMessage {
+                SettingsPlaceholderView(
+                    title: destination.title,
+                    systemImage: destination.systemImage,
+                    message: message
+                )
+            }
         }
     }
 }
