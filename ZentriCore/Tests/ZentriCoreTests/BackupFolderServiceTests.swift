@@ -10,6 +10,15 @@ import Testing
 private final class InMemoryBookmarkStore: BackupBookmarkStoring, @unchecked Sendable {
     private let lock = NSLock()
     private var bookmark: Data?
+    private var held = false
+
+    func loadWritesHeld() -> Bool {
+        lock.withLock { held }
+    }
+
+    func saveWritesHeld(_ isHeld: Bool) {
+        lock.withLock { held = isHeld }
+    }
 
     func loadBookmark() -> Data? {
         lock.withLock { bookmark }
@@ -218,6 +227,45 @@ private func fileNames(in folder: borrowing TemporaryFolder) throws -> [String] 
     #expect(bookmarks.loadBookmark() != firstBookmark)
     _ = try service.write(snapshotData(transactionCount: 1, exportedAt: start))
     #expect(try FileManager.default.contentsOfDirectory(atPath: moved.path).count == 1)
+}
+
+// MARK: - Holding writes to a newly chosen folder
+
+@Test func choosingAFolderHoldsAutomaticWritesUntilReleased() throws {
+    let folder = try TemporaryFolder()
+    let bookmarks = InMemoryBookmarkStore()
+    let service = try makeService(in: folder, clock: TestClock(start), bookmarks: bookmarks)
+
+    #expect(service.holdsWrites)
+    // The hold is stored with the bookmark, so a new service — a relaunch — still sees it.
+    let relaunched = BackupFolderService(bookmarkStore: bookmarks, fileManager: .default, now: { start })
+    #expect(relaunched.holdsWrites)
+
+    relaunched.releaseWriteHold()
+    #expect(service.holdsWrites == false)
+}
+
+@Test func forgettingTheFolderClearsTheHold() throws {
+    let folder = try TemporaryFolder()
+    let service = try makeService(in: folder, clock: TestClock(start))
+
+    service.forgetFolder()
+
+    #expect(service.holdsWrites == false)
+}
+
+@Test func reCreatingAStaleBookmarkDoesNotHoldWritesAgain() throws {
+    let parent = try TemporaryFolder()
+    let original = parent.url.appending(path: "Zentri Backups", directoryHint: .isDirectory)
+    try FileManager.default.createDirectory(at: original, withIntermediateDirectories: false)
+    let service = BackupFolderService(bookmarkStore: InMemoryBookmarkStore(), fileManager: .default, now: { start })
+    try service.chooseFolder(original)
+    service.releaseWriteHold()
+    try FileManager.default.moveItem(at: original, to: parent.url.appending(path: "Moved", directoryHint: .isDirectory))
+
+    _ = try service.resolveFolder()
+
+    #expect(service.holdsWrites == false)
 }
 
 // MARK: - Writing and rotation

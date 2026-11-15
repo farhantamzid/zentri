@@ -8,6 +8,8 @@ import ZentriCore
 struct BackupRestoreCandidate: Identifiable, Equatable {
     let id = UUID()
     let document: BackupDocument
+    /// Whether it came from the backup folder or from a file picked elsewhere.
+    let source: BackupRestoreSource
 
     /// When the backup was made.
     var exportDate: Date? { document.exportDate }

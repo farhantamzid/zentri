@@ -16,6 +16,13 @@ import Foundation
 /// not automatic snapshots — a manual export the person dropped in, anything else — are never
 /// deleted. The service never creates a directory: snapshots go straight into the chosen folder.
 ///
+/// Choosing a folder **holds automatic writes** to it (``holdsWrites``), stored with the bookmark so
+/// the hold survives a relaunch. A folder chosen after a reinstall usually holds the very backups the
+/// person wants to restore; writing this device's fresh data there would rotate them out. The app
+/// releases the hold (``releaseWriteHold()``) once it knows writing is safe — the folder has no
+/// snapshots, its newest one matches the current data, the person restored from it, or the person
+/// confirmed backing up there. ``write(_:)`` itself does not check the hold; the app's scheduler does.
+///
 /// Every method does blocking file I/O, so the app calls them off the main actor.
 public struct BackupFolderService: Sendable {
     /// How many automatic snapshots the folder keeps.
@@ -46,10 +53,27 @@ public struct BackupFolderService: Sendable {
         bookmarkStore.loadBookmark() != nil
     }
 
-    /// Remembers `url`, a folder the document picker returned, as the backup folder.
+    /// Whether automatic writes to the chosen folder wait for the app to release them.
+    public var holdsWrites: Bool {
+        bookmarkStore.loadWritesHeld()
+    }
+
+    /// Lets automatic backups write to the chosen folder.
+    public func releaseWriteHold() {
+        bookmarkStore.saveWritesHeld(false)
+    }
+
+    /// Remembers `url`, a folder the document picker returned, as the backup folder, holding
+    /// automatic writes to it until the app releases them.
     ///
     /// - Throws: ``BackupFolderError/permissionDenied`` when no bookmark can be made for it.
     public func chooseFolder(_ url: URL) throws {
+        try saveBookmark(for: url)
+        bookmarkStore.saveWritesHeld(true)
+    }
+
+    /// Makes and stores a bookmark for `url`, leaving the write hold as it is.
+    private func saveBookmark(for url: URL) throws {
         let isAccessing = url.startAccessingSecurityScopedResource()
         defer {
             if isAccessing { url.stopAccessingSecurityScopedResource() }
@@ -62,9 +86,10 @@ public struct BackupFolderService: Sendable {
         }
     }
 
-    /// Forgets the folder. Its files are left where they are.
+    /// Forgets the folder and its write hold. Its files are left where they are.
     public func forgetFolder() {
         bookmarkStore.removeBookmark()
+        bookmarkStore.saveWritesHeld(false)
     }
 
     /// The chosen folder, re-creating its bookmark when the system reports it stale.
@@ -83,7 +108,7 @@ public struct BackupFolderService: Sendable {
             throw BackupFolderError.permissionDenied
         }
         if isStale {
-            try chooseFolder(url)
+            try saveBookmark(for: url)
         }
         return url
     }

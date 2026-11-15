@@ -6335,6 +6335,66 @@
           }
         }
       }
+    },
+    "Back Up This iPhone Here": {
+      "comment": "Backup and restore (BackupHeldFolderNotice).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back Up This iPhone Here"
+          }
+        }
+      }
+    },
+    "Back up this iPhone to this folder?": {
+      "comment": "Backup and restore (BackupHeldFolderNotice).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back up this iPhone to this folder?"
+          }
+        }
+      }
+    },
+    "This folder already holds Zentri backups that differ from this iPhone's data. Automatic backups are paused so they aren't replaced. Restore from the folder, or back up this iPhone there.": {
+      "comment": "Backup and restore (BackupHeldFolderNotice).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder already holds Zentri backups that differ from this iPhone's data. Automatic backups are paused so they aren't replaced. Restore from the folder, or back up this iPhone there."
+          }
+        }
+      }
+    },
+    "Back Up Here": {
+      "comment": "Backup and restore (BackupHeldFolderNotice).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back Up Here"
+          }
+        }
+      }
+    },
+    "Zentri keeps the latest 10 snapshots, so the backups already in this folder are deleted one by one as new ones are saved. Restore from the folder first if you need them.": {
+      "comment": "Backup and restore (BackupHeldFolderNotice).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri keeps the latest 10 snapshots, so the backups already in this folder are deleted one by one as new ones are saved. Restore from the folder first if you need them."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

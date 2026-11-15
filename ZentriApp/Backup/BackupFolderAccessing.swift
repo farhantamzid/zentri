@@ -10,6 +10,11 @@ import ZentriCore
 protocol BackupFolderAccessing: Sendable {
     /// Whether a folder has been chosen on this device.
     var hasFolder: Bool { get }
+    /// Whether automatic backups must not write to the folder yet: it was just chosen and may hold
+    /// backups the person still wants. Persisted, so it survives a relaunch.
+    var holdsWrites: Bool { get }
+    /// Lets automatic backups write to the folder.
+    func releaseWriteHold()
     /// Remembers a folder the picker returned.
     func chooseFolder(_ url: URL) throws
     /// Forgets the folder, leaving its files alone.

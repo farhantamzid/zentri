@@ -18,7 +18,6 @@ private final class RestoreFixture {
     var canMerge = true
     var restoreError: (any Error)?
     private(set) var restored: [(BackupDocument, ImportMode)] = []
-    private(set) var foldersChosen = 0
     lazy var model = BackupRestoreModel(
         folder: folder,
         canMerge: { [unowned self] in canMerge },
@@ -26,8 +25,7 @@ private final class RestoreFixture {
             if let restoreError { throw restoreError }
             restored.append((document, mode))
             return ImportSummary(mode: mode, created: .init(accounts: 1), skipped: .init())
-        },
-        onFolderChosen: { [unowned self] in foldersChosen += 1 }
+        }
     )
 
     init(folder: FakeBackupFolder = FakeBackupFolder()) {
@@ -98,7 +96,70 @@ private func encoded(_ document: BackupDocument) -> Data {
 
     #expect(fixture.folder.chosenFolders == [picked])
     #expect(fixture.model.snapshotsState == .loaded([]))
-    #expect(fixture.foldersChosen == 1)
+}
+
+@MainActor
+@Test func choosingAFolderToBrowseNeverWritesToIt() async throws {
+    // After a reinstall: the folder holds the old phone's backups, this iPhone has fresh data.
+    let folder = FakeBackupFolder(hasFolder: false)
+    folder.addSnapshot(of: makeBackupDocument(transactionCount: 40, accountName: "Old phone"))
+    let fixture = RestoreFixture(folder: folder)
+    let scheduler = BackupScheduler(
+        folder: folder,
+        makeDocument: { makeBackupDocument(transactionCount: 1, accountName: "New phone") },
+        didBackUp: { _ in }
+    )
+
+    await fixture.model.chooseFolder(.success(URL(filePath: "/iCloud/Zentri Backups")))
+    // Then the data changes and the app goes to the background.
+    scheduler.schedule()
+    await scheduler.flush()
+
+    #expect(folder.writeCount == 0)
+    #expect(folder.holdsWrites)
+    guard case .loaded(let snapshots) = fixture.model.snapshotsState else {
+        Issue.record("The list did not load")
+        return
+    }
+    #expect(snapshots.map(\.transactionCount) == [40])
+}
+
+@MainActor
+@Test func restoringFromTheFolderLiftsItsHold() async throws {
+    let folder = FakeBackupFolder(holdsWrites: true)
+    let document = makeBackupDocument(transactionCount: 3)
+    let url = folder.addSnapshot(of: document)
+    let fixture = RestoreFixture(folder: folder)
+    await fixture.model.open(SnapshotInfo(url: url, createdAt: backupTestDate, byteCount: 1, transactionCount: 3))
+    let candidate = try #require(fixture.model.candidate)
+    #expect(candidate.source == .folder)
+
+    await fixture.model.restore(candidate, mode: .replace)
+
+    #expect(folder.holdsWrites == false)
+}
+
+@MainActor
+@Test func restoringAFilePickedElsewhereKeepsTheFoldersHold() async throws {
+    let folder = FakeBackupFolder(holdsWrites: true)
+    folder.addSnapshot(of: makeBackupDocument(transactionCount: 40))
+    let fixture = RestoreFixture(folder: folder)
+
+    await fixture.model.restore(BackupRestoreCandidate(document: makeBackupDocument(), source: .file), mode: .merge)
+
+    #expect(fixture.restored.count == 1)
+    #expect(folder.holdsWrites)
+}
+
+@MainActor
+@Test func aFailedRestoreFromTheFolderKeepsItsHold() async {
+    let folder = FakeBackupFolder(holdsWrites: true)
+    let fixture = RestoreFixture(folder: folder)
+    fixture.restoreError = StoreFailure.unwritable
+
+    await fixture.model.restore(BackupRestoreCandidate(document: makeBackupDocument(), source: .folder), mode: .replace)
+
+    #expect(folder.holdsWrites)
 }
 
 @MainActor
@@ -108,7 +169,6 @@ private func encoded(_ document: BackupDocument) -> Data {
     await fixture.model.chooseFolder(.failure(PickerFailure.cancelled))
 
     #expect(fixture.folder.chosenFolders.isEmpty)
-    #expect(fixture.foldersChosen == 0)
 }
 
 // MARK: - Opening a backup
@@ -189,7 +249,7 @@ private func encoded(_ document: BackupDocument) -> Data {
 @Test func restoringRunsTheChosenModeAndReportsTheSummary() async {
     let fixture = RestoreFixture()
     let document = makeBackupDocument()
-    let candidate = BackupRestoreCandidate(document: document)
+    let candidate = BackupRestoreCandidate(document: document, source: .file)
 
     await fixture.model.restore(candidate, mode: .merge)
 
@@ -205,7 +265,7 @@ private func encoded(_ document: BackupDocument) -> Data {
     let fixture = RestoreFixture()
     fixture.restoreError = StoreFailure.unwritable
 
-    await fixture.model.restore(BackupRestoreCandidate(document: makeBackupDocument()), mode: .replace)
+    await fixture.model.restore(BackupRestoreCandidate(document: makeBackupDocument(), source: .file), mode: .replace)
 
     #expect(fixture.model.failureMessage != nil)
     #expect(fixture.model.completedSummary == nil)

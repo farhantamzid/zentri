@@ -7,6 +7,8 @@ import Foundation
 public struct BackupBookmarkStore: BackupBookmarkStoring {
     /// The defaults key the bookmark is stored under.
     public static let defaultsKey = "backupFolderBookmark"
+    /// The defaults key the write hold is stored under: the bookmark key with a suffix.
+    private var holdKey: String { key + ".writesHeld" }
 
     /// The defaults suite, or `nil` for the app's standard defaults. A name rather than a
     /// `UserDefaults` instance is stored because `UserDefaults` is not `Sendable`.
@@ -35,5 +37,13 @@ public struct BackupBookmarkStore: BackupBookmarkStoring {
 
     public func removeBookmark() {
         defaults.removeObject(forKey: key)
+    }
+
+    public func loadWritesHeld() -> Bool {
+        defaults.bool(forKey: holdKey)
+    }
+
+    public func saveWritesHeld(_ isHeld: Bool) {
+        defaults.set(isHeld, forKey: holdKey)
     }
 }

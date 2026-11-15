@@ -6,8 +6,7 @@ extension BackupRestoreModel {
         BackupRestoreModel(
             folder: appState.backupFolder,
             canMerge: { [settingsStore = appState.settingsStore] in settingsStore.settings != nil },
-            restore: appState.restoreBackup,
-            onFolderChosen: appState.backupScheduler.schedule
+            restore: appState.restoreBackup
         )
     }
 }

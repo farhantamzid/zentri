@@ -9,6 +9,10 @@ import ZentriCore
 /// valid one becomes a ``candidate``, which the screen summarises before asking how to restore.
 /// Nothing in the store changes until ``restore(_:mode:)``, which the app wires to
 /// `AppState.restoreBackup(_:mode:)`.
+///
+/// Choosing a folder here only browses it: it never starts a backup, and the folder service holds
+/// automatic writes to it. A successful restore from one of the folder's files lifts that hold,
+/// because the folder's backups are then this iPhone's data.
 @MainActor
 @Observable
 final class BackupRestoreModel {
@@ -26,23 +30,19 @@ final class BackupRestoreModel {
     @ObservationIgnored private let folder: any BackupFolderAccessing
     @ObservationIgnored private let canMerge: @MainActor () -> Bool
     @ObservationIgnored private let restoreDocument: @MainActor (BackupDocument, ImportMode) async throws -> ImportSummary
-    @ObservationIgnored private let onFolderChosen: @MainActor () -> Void
 
     /// - Parameters:
     ///   - folder: The backup folder.
     ///   - canMerge: Whether merging is possible: it keeps the current settings, so it needs some.
     ///   - restore: Applies a document; the app passes `AppState.restoreBackup(_:mode:)`.
-    ///   - onFolderChosen: Told after a folder is chosen, so an automatic backup can start.
     init(
         folder: any BackupFolderAccessing,
         canMerge: @escaping @MainActor () -> Bool,
-        restore: @escaping @MainActor (BackupDocument, ImportMode) async throws -> ImportSummary,
-        onFolderChosen: @escaping @MainActor () -> Void
+        restore: @escaping @MainActor (BackupDocument, ImportMode) async throws -> ImportSummary
     ) {
         self.folder = folder
         self.canMerge = canMerge
         self.restoreDocument = restore
-        self.onFolderChosen = onFolderChosen
     }
 
     /// The restore modes on offer. Without settings (the recovery screen) only replace makes sense.
@@ -71,7 +71,8 @@ final class BackupRestoreModel {
         }
     }
 
-    /// Remembers the folder the picker returned, then lists it. A cancelled pick does nothing.
+    /// Remembers the folder the picker returned, then lists it. A cancelled pick does nothing, and
+    /// no backup is written: browsing a folder is not consent to write into it.
     func chooseFolder(_ result: Result<URL, any Error>) async {
         guard case .success(let url) = result else { return }
         let folder = folder
@@ -81,7 +82,6 @@ final class BackupRestoreModel {
             failureMessage = BackupRestoreMessage.message(for: error)
             return
         }
-        onFolderChosen()
         await loadSnapshots()
     }
 
@@ -89,13 +89,13 @@ final class BackupRestoreModel {
     func open(_ snapshot: SnapshotInfo) async {
         let folder = folder
         let url = snapshot.url
-        await openDocument { try BackupCodec.decode(folder.readSnapshot(at: url)) }
+        await openDocument(from: .folder) { try BackupCodec.decode(folder.readSnapshot(at: url)) }
     }
 
     /// Opens a file the person picked. A cancelled pick is silent.
     func openFile(_ result: Result<URL, any Error>) async {
         guard case .success(let url) = result else { return }
-        await openDocument { try BackupCodec.decode(BackupFileReader.read(at: url)) }
+        await openDocument(from: .file) { try BackupCodec.decode(BackupFileReader.read(at: url)) }
     }
 
     /// Restores the confirmed backup.
@@ -105,19 +105,25 @@ final class BackupRestoreModel {
         defer { isWorking = false }
         do {
             completedSummary = try await restoreDocument(candidate.document, mode)
+            if candidate.source == .folder {
+                folder.releaseWriteHold()
+            }
         } catch {
             failureMessage = BackupRestoreMessage.message(for: error)
         }
     }
 
     /// Reads and validates a document off the main actor, then offers it for confirmation.
-    private func openDocument(_ read: @escaping @Sendable () throws -> BackupDocument) async {
+    private func openDocument(
+        from source: BackupRestoreSource,
+        _ read: @escaping @Sendable () throws -> BackupDocument
+    ) async {
         isWorking = true
         defer { isWorking = false }
         do {
             // `BackupCodec.decode` validates the whole document, so only a restorable one gets here.
             let document = try await BackgroundWork.run(read)
-            candidate = BackupRestoreCandidate(document: document)
+            candidate = BackupRestoreCandidate(document: document, source: source)
         } catch {
             failureMessage = BackupRestoreMessage.message(for: error)
         }

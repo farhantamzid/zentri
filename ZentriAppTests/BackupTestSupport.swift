@@ -9,6 +9,7 @@ import ZentriCore
 final class FakeBackupFolder: BackupFolderAccessing, Sendable {
     private struct State {
         var hasFolder = true
+        var holdsWrites = false
         var folderName = "Zentri Backups"
         var snapshots: [URL: Data] = [:]
         var order: [URL] = []
@@ -21,8 +22,11 @@ final class FakeBackupFolder: BackupFolderAccessing, Sendable {
 
     private let state = Mutex(State())
 
-    init(hasFolder: Bool = true) {
-        state.withLock { $0.hasFolder = hasFolder }
+    init(hasFolder: Bool = true, holdsWrites: Bool = false) {
+        state.withLock { state in
+            state.hasFolder = hasFolder
+            state.holdsWrites = holdsWrites
+        }
     }
 
     // MARK: Test controls
@@ -43,6 +47,13 @@ final class FakeBackupFolder: BackupFolderAccessing, Sendable {
         state.withLock { $0.listError = error }
     }
 
+    /// Puts an automatic snapshot of `document` in the folder without counting it as a write, as an
+    /// earlier install of the app would have left it.
+    @discardableResult
+    func addSnapshot(of document: BackupDocument) -> URL {
+        add((try? BackupCodec.encode(document)) ?? Data(), named: "Zentri-earlier-\(UUID().uuidString).json")
+    }
+
     /// Puts a file in the folder without counting it as a write.
     @discardableResult
     func add(_ data: Data, named name: String) -> URL {
@@ -58,17 +69,27 @@ final class FakeBackupFolder: BackupFolderAccessing, Sendable {
 
     var hasFolder: Bool { state.withLock { $0.hasFolder } }
 
+    var holdsWrites: Bool { state.withLock { $0.holdsWrites } }
+
+    func releaseWriteHold() {
+        state.withLock { $0.holdsWrites = false }
+    }
+
     func chooseFolder(_ url: URL) throws {
         try state.withLock { state in
             if let error = state.resolveError { throw error }
             state.hasFolder = true
+            state.holdsWrites = true
             state.folderName = url.lastPathComponent
             state.chosen.append(url)
         }
     }
 
     func forgetFolder() {
-        state.withLock { $0.hasFolder = false }
+        state.withLock { state in
+            state.hasFolder = false
+            state.holdsWrites = false
+        }
     }
 
     func resolveFolder() throws -> URL {
@@ -116,7 +137,10 @@ final class FakeBackupFolder: BackupFolderAccessing, Sendable {
 
     func newestSnapshot() throws -> BackupDocument? {
         _ = try resolveFolder()
-        let newest = state.withLock { state in state.order.last.flatMap { state.snapshots[$0] } }
+        // Like the real folder, only automatic snapshots count, not files a test adds by name.
+        let newest = state.withLock { state in
+            state.order.last(where: { $0.lastPathComponent.hasPrefix("Zentri-") }).flatMap { state.snapshots[$0] }
+        }
         return try newest.map(BackupCodec.decode)
     }
 }

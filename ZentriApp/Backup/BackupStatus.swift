@@ -8,6 +8,9 @@ enum BackupStatus: Equatable, Sendable {
     case backingUp
     /// The folder holds a snapshot of the current data.
     case succeeded
+    /// The folder already holds different backups, so nothing is written until the person restores
+    /// from it or confirms backing this iPhone up there.
+    case held
     /// The last attempt failed; the previous snapshot is untouched.
     case failed(BackupFolderError)
 }

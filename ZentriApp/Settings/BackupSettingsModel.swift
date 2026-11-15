@@ -8,6 +8,10 @@ import ZentriCore
 /// shown as an error rather than as "no folder". The last backup's time comes from the saved
 /// settings, which the scheduler updates after each snapshot; the scheduler's status adds why the
 /// most recent attempt failed, if it did.
+///
+/// Choosing a folder backs up at once, unless the folder already holds different backups: then the
+/// folder's write hold stays and ``isAwaitingConfirmation`` asks the person to restore from it or to
+/// confirm backing this iPhone up there.
 @MainActor
 @Observable
 final class BackupSettingsModel {
@@ -23,12 +27,13 @@ final class BackupSettingsModel {
     private(set) var exportFilename = ""
     /// Counts finished exports, which the save haptic watches.
     private(set) var exportCount = 0
+    /// Whether the chosen folder holds other backups and automatic backups wait for the person.
+    private(set) var isAwaitingConfirmation = false
 
     @ObservationIgnored private let folder: any BackupFolderAccessing
     @ObservationIgnored private let settingsStore: SettingsStore
     @ObservationIgnored private let scheduler: BackupScheduler
     @ObservationIgnored private let makeExport: @MainActor () throws -> BackupDocument
-    @ObservationIgnored private let onFolderChosen: @MainActor () -> Void
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let timeZone: TimeZone
 
@@ -37,7 +42,6 @@ final class BackupSettingsModel {
     ///   - settingsStore: The live settings, which carry the last backup's time.
     ///   - scheduler: The automatic backup, for its status and to stop it when the folder is forgotten.
     ///   - makeExport: Exports the store with the current settings.
-    ///   - onFolderChosen: Told after a folder is chosen, so an automatic backup can start.
     ///   - now: The clock the export's name comes from.
     ///   - timeZone: The time zone the export's name is written in.
     init(
@@ -45,7 +49,6 @@ final class BackupSettingsModel {
         settingsStore: SettingsStore,
         scheduler: BackupScheduler,
         makeExport: @escaping @MainActor () throws -> BackupDocument,
-        onFolderChosen: @escaping @MainActor () -> Void,
         now: @escaping () -> Date = { .now },
         timeZone: TimeZone = .current
     ) {
@@ -53,7 +56,6 @@ final class BackupSettingsModel {
         self.settingsStore = settingsStore
         self.scheduler = scheduler
         self.makeExport = makeExport
-        self.onFolderChosen = onFolderChosen
         self.now = now
         self.timeZone = timeZone
     }
@@ -70,6 +72,7 @@ final class BackupSettingsModel {
 
     /// Resolves the folder again.
     func refreshFolder() async {
+        isAwaitingConfirmation = folder.hasFolder && folder.holdsWrites
         guard folder.hasFolder else {
             folderState = .none
             return
@@ -87,7 +90,8 @@ final class BackupSettingsModel {
         }
     }
 
-    /// Remembers the folder the picker returned and starts a backup into it. A cancelled pick does
+    /// Remembers the folder the picker returned and backs up into it — unless it already holds
+    /// different backups, which keeps the hold and asks the person first. A cancelled pick does
     /// nothing.
     func chooseFolder(_ result: Result<URL, any Error>) async {
         guard case .success(let url) = result else { return }
@@ -98,8 +102,15 @@ final class BackupSettingsModel {
             failureMessage = BackupRestoreMessage.message(for: error)
             return
         }
+        await scheduler.backUpNow()
         await refreshFolder()
-        onFolderChosen()
+    }
+
+    /// Backs this iPhone up to a folder that held other backups. Its older snapshots rotate out as
+    /// new ones are written.
+    func confirmBackingUpHere() async {
+        await scheduler.confirmBackingUpHere()
+        await refreshFolder()
     }
 
     /// Stops automatic backups to the folder. The backups already there are kept.

@@ -147,7 +147,7 @@ private enum ExportFailure: Error {
     // A capture the Shortcut made while the app was not running: the folder's newest snapshot
     // predates it, and the new scheduler has no memory of earlier writes.
     let folder = FakeBackupFolder()
-    folder.add((try? BackupCodec.encode(makeBackupDocument(transactionCount: 1))) ?? Data(), named: "old.json")
+    folder.addSnapshot(of: makeBackupDocument(transactionCount: 1))
     let fixture = SchedulerFixture(folder: folder)
     fixture.document = makeBackupDocument(transactionCount: 2)
     fixture.scheduler.schedule()
@@ -215,4 +215,89 @@ private enum ExportFailure: Error {
     _ = await (first, second)
 
     #expect(fixture.folder.writeCount == 1)
+}
+
+// MARK: - A newly chosen folder that already holds backups
+
+/// A held folder whose newest snapshot is a real backup that differs from this iPhone's data.
+private func heldFolderWithOtherBackups() -> FakeBackupFolder {
+    let folder = FakeBackupFolder(holdsWrites: true)
+    folder.addSnapshot(of: makeBackupDocument(transactionCount: 40, accountName: "Old phone"))
+    return folder
+}
+
+@MainActor
+@Test func aHeldFolderWithDifferentBackupsIsNeverWrittenTo() async {
+    let folder = heldFolderWithOtherBackups()
+    let before = folder.snapshotData
+    let fixture = SchedulerFixture(folder: folder)
+
+    // A data change, the launch catch-up, and the background flush all go through flush.
+    fixture.scheduler.schedule()
+    await fixture.scheduler.flush()
+    fixture.scheduler.schedule()
+    await fixture.scheduler.flush()
+    await fixture.scheduler.flush()
+
+    #expect(folder.writeCount == 0)
+    #expect(folder.snapshotData == before)
+    #expect(folder.holdsWrites)
+    #expect(fixture.scheduler.status == .held)
+    #expect(fixture.backedUpAt.isEmpty)
+}
+
+@MainActor
+@Test func theHoldSurvivesANewScheduler() async {
+    let folder = heldFolderWithOtherBackups()
+    let first = SchedulerFixture(folder: folder)
+    first.scheduler.schedule()
+    await first.scheduler.flush()
+
+    // A relaunch: a new scheduler over the same (persisted) folder state.
+    let relaunched = SchedulerFixture(folder: folder)
+    relaunched.scheduler.schedule()
+    await relaunched.scheduler.flush()
+
+    #expect(folder.writeCount == 0)
+    #expect(relaunched.scheduler.status == .held)
+}
+
+@MainActor
+@Test func confirmingLiftsTheHoldAndBacksUp() async {
+    let folder = heldFolderWithOtherBackups()
+    let fixture = SchedulerFixture(folder: folder)
+    fixture.scheduler.schedule()
+    await fixture.scheduler.flush()
+
+    await fixture.scheduler.confirmBackingUpHere()
+
+    #expect(folder.holdsWrites == false)
+    #expect(folder.writeCount == 1)
+    #expect(fixture.scheduler.status == .succeeded)
+}
+
+@MainActor
+@Test func anEmptyHeldFolderIsReleasedAndBackedUpWithoutAsking() async {
+    let folder = FakeBackupFolder(holdsWrites: true)
+    let fixture = SchedulerFixture(folder: folder)
+
+    await fixture.scheduler.backUpNow()
+
+    #expect(folder.holdsWrites == false)
+    #expect(folder.writeCount == 1)
+}
+
+@MainActor
+@Test func aHeldFolderWhoseNewestBackupMatchesIsReleasedWithoutWriting() async throws {
+    let folder = FakeBackupFolder(holdsWrites: true)
+    let fixture = SchedulerFixture(folder: folder)
+    var same = try #require(fixture.document)
+    same.exportedAt = backupTestDate.addingTimeInterval(-3_600).ISO8601Format()
+    folder.addSnapshot(of: same)
+
+    await fixture.scheduler.backUpNow()
+
+    #expect(folder.holdsWrites == false)
+    #expect(folder.writeCount == 0)
+    #expect(fixture.scheduler.status == .succeeded)
 }

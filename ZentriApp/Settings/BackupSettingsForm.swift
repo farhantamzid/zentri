@@ -22,7 +22,9 @@ struct BackupSettingsForm: View {
                 folderState: settingsModel.folderState,
                 lastBackupAt: settingsModel.lastBackupAt,
                 status: settingsModel.status,
+                isAwaitingConfirmation: settingsModel.isAwaitingConfirmation,
                 onChooseFolder: chooseFolder,
+                onConfirmFolder: confirmFolder,
                 onForgetFolder: confirmForget
             )
             .confirmationDialog(
@@ -51,6 +53,10 @@ struct BackupSettingsForm: View {
         .task {
             await settingsModel.refreshFolder()
         }
+        .onChange(of: settingsModel.status) {
+            // A backup that ran meanwhile may have released a new folder's hold.
+            Task { await settingsModel.refreshFolder() }
+        }
         .backupFolderPicker(isPresented: $isChoosingFolder, onPick: folderPicked)
         .fileExporter(
             isPresented: $settingsModel.isExporting,
@@ -73,6 +79,10 @@ struct BackupSettingsForm: View {
 
     private func folderPicked(_ result: Result<URL, any Error>) {
         Task { await settingsModel.chooseFolder(result) }
+    }
+
+    private func confirmFolder() {
+        Task { await settingsModel.confirmBackingUpHere() }
     }
 
     private func confirmForget() {

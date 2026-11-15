@@ -19,10 +19,9 @@ private final class SettingsFixture {
     let settingsStore = SettingsStore(repository: InMemorySettingsRepository())
     var exportError: (any Error)?
     let document = makeBackupDocument(transactionCount: 2)
-    private(set) var foldersChosen = 0
     lazy var scheduler = BackupScheduler(
         folder: folder,
-        makeDocument: { nil },
+        makeDocument: { [unowned self] in document },
         didBackUp: { _ in }
     )
     lazy var model = BackupSettingsModel(
@@ -33,7 +32,6 @@ private final class SettingsFixture {
             if let exportError { throw exportError }
             return document
         },
-        onFolderChosen: { [unowned self] in foldersChosen += 1 },
         now: { backupTestDate },
         timeZone: TimeZone(identifier: "Asia/Dhaka") ?? .gmt
     )
@@ -73,7 +71,7 @@ private final class SettingsFixture {
 }
 
 @MainActor
-@Test func choosingAFolderRemembersItAndStartsABackup() async throws {
+@Test func choosingAnEmptyFolderBacksUpWithoutAsking() async throws {
     let fixture = try SettingsFixture(folder: FakeBackupFolder(hasFolder: false))
     let picked = URL(filePath: "/iCloud/My Backups", directoryHint: .isDirectory)
 
@@ -81,7 +79,47 @@ private final class SettingsFixture {
 
     #expect(fixture.folder.chosenFolders == [picked])
     #expect(fixture.model.folderState == .chosen(name: "My Backups"))
-    #expect(fixture.foldersChosen == 1)
+    #expect(fixture.model.isAwaitingConfirmation == false)
+    #expect(fixture.folder.writeCount == 1)
+}
+
+@MainActor
+@Test func choosingAFolderWithOtherBackupsAsksBeforeWriting() async throws {
+    let folder = FakeBackupFolder(hasFolder: false)
+    folder.addSnapshot(of: makeBackupDocument(transactionCount: 40, accountName: "Old phone"))
+    let fixture = try SettingsFixture(folder: folder)
+
+    await fixture.model.chooseFolder(.success(URL(filePath: "/iCloud/Zentri Backups")))
+    fixture.scheduler.schedule()
+    await fixture.scheduler.flush()
+
+    #expect(folder.writeCount == 0)
+    #expect(fixture.model.isAwaitingConfirmation)
+}
+
+@MainActor
+@Test func confirmingBacksThisIPhoneUpToTheFolder() async throws {
+    let folder = FakeBackupFolder(hasFolder: false)
+    folder.addSnapshot(of: makeBackupDocument(transactionCount: 40, accountName: "Old phone"))
+    let fixture = try SettingsFixture(folder: folder)
+    await fixture.model.chooseFolder(.success(URL(filePath: "/iCloud/Zentri Backups")))
+
+    await fixture.model.confirmBackingUpHere()
+
+    #expect(folder.holdsWrites == false)
+    #expect(folder.writeCount == 1)
+    #expect(fixture.model.isAwaitingConfirmation == false)
+}
+
+@MainActor
+@Test func aHeldFolderStillAsksAfterARelaunch() async throws {
+    let folder = FakeBackupFolder(holdsWrites: true)
+    folder.addSnapshot(of: makeBackupDocument(transactionCount: 40, accountName: "Old phone"))
+    let fixture = try SettingsFixture(folder: folder)
+
+    await fixture.model.refreshFolder()
+
+    #expect(fixture.model.isAwaitingConfirmation)
 }
 
 @MainActor
@@ -92,7 +130,7 @@ private final class SettingsFixture {
     await fixture.model.chooseFolder(.success(URL(filePath: "/iCloud/My Backups")))
 
     #expect(fixture.model.failureMessage != nil)
-    #expect(fixture.foldersChosen == 0)
+    #expect(fixture.folder.writeCount == 0)
 }
 
 @MainActor
@@ -102,7 +140,7 @@ private final class SettingsFixture {
     await fixture.model.chooseFolder(.failure(PickerFailure.cancelled))
 
     #expect(fixture.model.failureMessage == nil)
-    #expect(fixture.foldersChosen == 0)
+    #expect(fixture.folder.writeCount == 0)
 }
 
 @MainActor

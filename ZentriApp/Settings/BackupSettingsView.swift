@@ -13,8 +13,7 @@ struct BackupSettingsView: View {
                 folder: appState.backupFolder,
                 settingsStore: appState.settingsStore,
                 scheduler: appState.backupScheduler,
-                makeExport: appState.makeBackupDocument,
-                onFolderChosen: appState.backupScheduler.schedule
+                makeExport: appState.makeBackupDocument
             ),
             restoreModel: BackupRestoreModel.make(for: appState)
         )

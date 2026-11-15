@@ -8,6 +8,10 @@ import ZentriCore
 struct InertBackupFolder: BackupFolderAccessing {
     var hasFolder: Bool { false }
 
+    var holdsWrites: Bool { false }
+
+    func releaseWriteHold() {}
+
     func chooseFolder(_ url: URL) throws {
         throw BackupFolderError.permissionDenied
     }

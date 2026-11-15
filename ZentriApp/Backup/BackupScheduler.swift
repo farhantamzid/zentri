@@ -18,6 +18,14 @@ import ZentriCore
 ///
 /// Flushes run one at a time. A failure keeps the change pending, so the next flush retries, and the
 /// folder service guarantees the previous snapshot is untouched.
+///
+/// A newly chosen folder holds writes (``BackupFolderAccessing/holdsWrites``). Every write path —
+/// the debounce, the launch catch-up, the foreground reload, the background flush — goes through
+/// ``flush()``, which releases the hold only when writing cannot replace anything the person may
+/// want: the folder has no automatic snapshots, or its newest one already matches the current data.
+/// Otherwise the status is ``BackupStatus/held`` and nothing is written until the person restores
+/// from the folder or confirms with ``confirmBackingUpHere()``. The hold is stored with the
+/// bookmark, so it survives a relaunch.
 @MainActor
 @Observable
 final class BackupScheduler {
@@ -90,6 +98,20 @@ final class BackupScheduler {
         await task.value
     }
 
+    /// Backs up now, whether or not anything changed since the last backup, still honouring the
+    /// folder's hold. Used right after a folder is chosen.
+    func backUpNow() async {
+        hasPendingChange = true
+        await flush()
+    }
+
+    /// The person confirmed backing this iPhone up to a folder that already held other backups:
+    /// lifts the hold and backs up. Older snapshots then rotate out as new ones are written.
+    func confirmBackingUpHere() async {
+        folder.releaseWriteHold()
+        await backUpNow()
+    }
+
     /// Drops a pending debounce without writing, as when the app terminates or the folder is
     /// forgotten.
     func cancel() {
@@ -104,6 +126,7 @@ final class BackupScheduler {
     private enum Outcome: Sendable {
         case written
         case unchanged
+        case held
         case failed(BackupFolderError)
     }
 
@@ -131,17 +154,39 @@ final class BackupScheduler {
             didBackUp(now())
         case .unchanged:
             status = .succeeded
+        case .held:
+            // Still pending, so the folder is checked again on the next flush, such as after a
+            // restore from it.
+            hasPendingChange = true
+            status = .held
         case .failed(let error):
             hasPendingChange = true
             status = .failed(error)
         }
     }
 
-    /// Writes `document` unless the folder's newest snapshot already holds the same data.
+    /// Writes `document` unless the folder's newest snapshot already holds the same data, or the
+    /// folder's hold forbids it.
     ///
-    /// A newest snapshot that cannot be read is treated as different, so the backup is written.
+    /// Without a hold, a newest snapshot that cannot be read is treated as different, so the backup
+    /// is written. With a hold, writing needs proof that nothing would be replaced, so an unreadable
+    /// folder is reported and an undecodable newest snapshot keeps the hold.
     private nonisolated static func write(_ document: BackupDocument, to folder: any BackupFolderAccessing) -> Outcome {
-        if let newest = try? folder.newestSnapshot(), newest.hasSameContent(as: document) {
+        if folder.holdsWrites {
+            switch Result(catching: { try folder.newestSnapshot() }) {
+            case .success(nil):
+                folder.releaseWriteHold()
+            case .success(let newest?) where newest.hasSameContent(as: document):
+                folder.releaseWriteHold()
+                return .unchanged
+            case .success:
+                return .held
+            case .failure(let error as BackupFolderError):
+                return .failed(error)
+            case .failure:
+                return .held
+            }
+        } else if let newest = try? folder.newestSnapshot(), newest.hasSameContent(as: document) {
             return .unchanged
         }
         do {

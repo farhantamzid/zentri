@@ -7,7 +7,9 @@ struct BackupAutomaticSection: View {
     let folderState: BackupFolderState
     let lastBackupAt: Date?
     let status: BackupStatus
+    let isAwaitingConfirmation: Bool
     let onChooseFolder: () -> Void
+    let onConfirmFolder: () -> Void
     let onForgetFolder: () -> Void
 
     var body: some View {
@@ -37,6 +39,10 @@ struct BackupAutomaticSection: View {
                         .foregroundStyle(Theme.spending)
                 }
                 .accessibilityIdentifier("backup.failure")
+            }
+
+            if isAwaitingConfirmation {
+                BackupHeldFolderNotice(onConfirm: onConfirmFolder)
             }
 
             Button(chooseTitle, systemImage: "folder.badge.plus", action: onChooseFolder)
