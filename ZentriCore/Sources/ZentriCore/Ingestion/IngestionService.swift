@@ -51,11 +51,6 @@ public enum IngestionOutcome: Sendable, Equatable {
 /// outcome, so the widgets and the health card never describe stale state.
 @MainActor
 public final class IngestionService {
-    /// The merchant shown when nothing is left after the message's noise is stripped.
-    private static let unknownMerchant = "Unknown merchant"
-    /// The largest number of trailing-noise removals tried on one merchant name.
-    private static let maximumMerchantCleanupPasses = 3
-
     private let context: ModelContext
     private let settings: @MainActor @Sendable () -> AppSettings
     private let parserBuilder: any ParserBuilding
@@ -161,7 +156,7 @@ public final class IngestionService {
                     receivedAt: request.receivedAt
                 )
             )
-            return persist(message) ? .failed([diagnostic]) : .failed([diagnostic, Self.storageDiagnostic])
+            return persist(message) ? .failed([diagnostic]) : .failed([diagnostic, IngestionDiagnostics.storage])
         }
 
         let fingerprint = Dedupe.fingerprint(
@@ -177,12 +172,12 @@ public final class IngestionService {
                 status: .duplicate,
                 fingerprint: fingerprint
             )
-            return persist(message) ? .duplicate : .failed([Self.storageDiagnostic])
+            return persist(message) ? .duplicate : .failed([IngestionDiagnostics.storage])
         }
 
         let result = await parse(request, accountID: account.id)
 
-        switch disposition(of: result) {
+        switch ParseDisposition(classifying: result) {
         case .transaction(let draft):
             let message = makeMessage(
                 for: request,
@@ -206,16 +201,16 @@ public final class IngestionService {
                 status: .ignored,
                 fingerprint: fingerprint
             )
-            return persist(message) ? .notTransaction : .failed([Self.storageDiagnostic])
+            return persist(message) ? .notTransaction : .failed([IngestionDiagnostics.storage])
         case .failed(let diagnostics):
             let message = makeMessage(
                 for: request,
                 ingestedAt: ingestedAt,
                 status: .failed,
-                errorDescription: Self.errorDescription(of: diagnostics),
+                errorDescription: IngestionDiagnostics.errorDescription(of: diagnostics),
                 fingerprint: fingerprint
             )
-            return persist(message) ? .failed(diagnostics) : .failed(diagnostics + [Self.storageDiagnostic])
+            return persist(message) ? .failed(diagnostics) : .failed(diagnostics + [IngestionDiagnostics.storage])
         case .cancelled(let diagnostics):
             // Cancelled work is retryable, never archived as a verdict on the message.
             let message = makeMessage(
@@ -224,8 +219,8 @@ public final class IngestionService {
                 status: .processing,
                 fingerprint: fingerprint
             )
-            let surfaced = diagnostics.isEmpty ? [Self.cancelledDiagnostic] : diagnostics
-            return persist(message) ? .failed(surfaced) : .failed(surfaced + [Self.storageDiagnostic])
+            let surfaced = diagnostics.isEmpty ? [IngestionDiagnostics.cancelled] : diagnostics
+            return persist(message) ? .failed(surfaced) : .failed(surfaced + [IngestionDiagnostics.storage])
         }
     }
 
@@ -239,7 +234,7 @@ public final class IngestionService {
             accountID: nil
         )
         // A cancelled retry changes nothing, so the row is still `processing` for the next launch.
-        guard !Task.isCancelled else { return .failed([Self.cancelledDiagnostic]) }
+        guard !Task.isCancelled else { return .failed([IngestionDiagnostics.cancelled]) }
 
         let fingerprint = message.fingerprint
         let accounts = activeAccounts()
@@ -255,18 +250,18 @@ public final class IngestionService {
             message.engine = nil
             message.matchedRuleID = nil
             message.errorDescription = nil
-            return save() ? .duplicate : .failed([Self.storageDiagnostic])
+            return save() ? .duplicate : .failed([IngestionDiagnostics.storage])
         }
 
         // A row has no account yet, so every rule runs; the matched rule or the single active
         // account decides where the transaction lands.
         let result = await parse(request, accountID: nil)
 
-        switch disposition(of: result) {
+        switch ParseDisposition(classifying: result) {
         case .transaction(let draft):
             guard let account = retryAccount(for: draft, among: accounts) else {
                 // Nothing identifies an account, so the row stays retryable rather than guessed at.
-                return .failed([Self.retryAccountDiagnostic])
+                return .failed([IngestionDiagnostics.retryAccount])
             }
             return persist(
                 draft: draft,
@@ -281,14 +276,14 @@ public final class IngestionService {
             message.engine = nil
             message.matchedRuleID = nil
             message.errorDescription = nil
-            return save() ? .notTransaction : .failed([Self.storageDiagnostic])
+            return save() ? .notTransaction : .failed([IngestionDiagnostics.storage])
         case .failed(let diagnostics):
             message.status = .failed
-            message.errorDescription = Self.errorDescription(of: diagnostics)
-            return save() ? .failed(diagnostics) : .failed(diagnostics + [Self.storageDiagnostic])
+            message.errorDescription = IngestionDiagnostics.errorDescription(of: diagnostics)
+            return save() ? .failed(diagnostics) : .failed(diagnostics + [IngestionDiagnostics.storage])
         case .cancelled(let diagnostics):
             // Left `processing`: the message is retried on the next launch.
-            return .failed(diagnostics.isEmpty ? [Self.cancelledDiagnostic] : diagnostics)
+            return .failed(diagnostics.isEmpty ? [IngestionDiagnostics.cancelled] : diagnostics)
         }
     }
 
@@ -297,7 +292,7 @@ public final class IngestionService {
         let appSettings = settings()
         let parser = parserBuilder.makeParser(for: appSettings.parserMode, rules: parsingRuleSpecs())
         let input = ParseInput(
-            text: Self.normalizedForParsing(request.text),
+            text: MessageText.normalizedForParsing(request.text),
             accountID: accountID,
             sender: request.sender,
             receivedAt: request.receivedAt
@@ -324,48 +319,13 @@ public final class IngestionService {
         ingestedAt: Date,
         fingerprint: String
     ) -> IngestionOutcome {
-        let merchantRaw = Self.collapsedWhitespace(draft.merchant)
-        let merchantDisplay = Self.displayMerchant(from: merchantRaw)
-        let match = categoryMatch(for: merchantDisplay, suggestion: draft.categorySuggestion)
-        let engine: ParseEngine = draft.matchedRuleID == nil ? .foundationModels : .rules
-
-        message.status = .parsed
-        message.engine = engine
-        message.matchedRuleID = draft.matchedRuleID
-        message.errorDescription = nil
-
-        let transaction = Transaction(
+        let transaction = store.insertTransaction(
+            from: draft,
             account: account,
-            amount: draft.amount,
-            direction: draft.direction,
-            occurredAt: draft.occurredAt ?? message.receivedAt,
-            recordedAt: ingestedAt,
-            merchantRaw: merchantRaw,
-            merchantDisplay: merchantDisplay,
-            category: match?.category,
-            categorySource: match?.source,
-            balanceAfter: draft.balanceAfter,
-            rawMessage: message,
-            parseEngine: engine,
-            matchedRuleID: draft.matchedRuleID,
-            createdAt: ingestedAt,
-            updatedAt: ingestedAt
+            message: message,
+            recordedAt: ingestedAt
         )
         let transactionID = transaction.id
-        context.insert(transaction)
-
-        if let balanceAfter = draft.balanceAfter {
-            // An SMS balance is the account's balance at ingestion, so the checkpoint shares the
-            // transaction's instant and the transaction itself is already counted in it.
-            context.insert(BalanceCheckpoint(
-                account: account,
-                amount: balanceAfter,
-                recordedAt: ingestedAt,
-                source: .sms,
-                sourceTransactionID: transactionID,
-                createdAt: ingestedAt
-            ))
-        }
 
         guard save() else {
             return recordStorageFailure(for: request, ingestedAt: ingestedAt, fingerprint: fingerprint)
@@ -396,11 +356,11 @@ public final class IngestionService {
             receivedAt: request.receivedAt,
             ingestedAt: ingestedAt,
             status: .failed,
-            errorDescription: Self.storageDiagnostic.message,
+            errorDescription: IngestionDiagnostics.storage.message,
             fingerprint: fingerprint
         )
         persist(message)
-        return .failed([Self.storageDiagnostic])
+        return .failed([IngestionDiagnostics.storage])
     }
 
     /// Saves the context, rolling back so a throw cannot leave partial rows behind.
@@ -459,7 +419,7 @@ public final class IngestionService {
         let accounts = activeAccounts()
         if let accountID = request.accountID {
             guard let account = accounts.first(where: { $0.id == accountID }) else {
-                return .failed(accounts.isEmpty ? Self.addAccountDiagnostic : Self.chooseAccountDiagnostic)
+                return .failed(accounts.isEmpty ? IngestionDiagnostics.addAccount : IngestionDiagnostics.chooseAccount)
             }
             return .resolved(account)
         }
@@ -467,9 +427,9 @@ public final class IngestionService {
         case 1:
             return .resolved(accounts[0])
         case 0:
-            return .failed(Self.addAccountDiagnostic)
+            return .failed(IngestionDiagnostics.addAccount)
         default:
-            return .failed(Self.chooseAccountDiagnostic)
+            return .failed(IngestionDiagnostics.chooseAccount)
         }
     }
 
@@ -485,140 +445,15 @@ public final class IngestionService {
 
     /// The non-archived accounts, in the order an account picker shows them.
     private func activeAccounts() -> [Account] {
-        let accounts = (try? context.fetch(FetchDescriptor<Account>())) ?? []
-        return accounts
-            .filter { $0.archivedAt == nil }
-            .sorted { lhs, rhs in
-                if lhs.sortOrder != rhs.sortOrder {
-                    return lhs.sortOrder < rhs.sortOrder
-                }
-                return lhs.id.uuidString < rhs.id.uuidString
-            }
+        store.activeAccounts()
     }
 
     /// The stored rules as parser specs, in the order the engine must evaluate them.
-    ///
-    /// `sorted(by:)` is not stable, so every ordering key is spelled out: priority, then creation
-    /// date, then identity. Without the last two, rules that share a priority would run in whatever
-    /// order the store returned them.
     private func parsingRuleSpecs() -> [ParsingRuleSpec] {
-        let rules = (try? context.fetch(FetchDescriptor<ParsingRule>())) ?? []
-        return rules
-            .sorted { lhs, rhs in
-                if lhs.priority != rhs.priority {
-                    return lhs.priority < rhs.priority
-                }
-                if lhs.createdAt != rhs.createdAt {
-                    return lhs.createdAt < rhs.createdAt
-                }
-                return lhs.id.uuidString < rhs.id.uuidString
-            }
-            .map { rule in
-                ParsingRuleSpec(
-                    id: rule.id,
-                    accountID: rule.account.id,
-                    direction: rule.direction,
-                    pattern: rule.pattern,
-                    dateFormat: rule.dateFormat,
-                    isCaseInsensitive: rule.isCaseInsensitive,
-                    dotMatchesNewlines: rule.dotMatchesNewlines,
-                    priority: rule.priority,
-                    isEnabled: rule.isEnabled
-                )
-            }
+        (try? StoredParsingRules.specs(in: context)) ?? []
     }
 
-    /// The category the transaction receives, looked up in the live catalog.
-    ///
-    /// The service never creates a category: a match that names no stored category leaves the
-    /// transaction uncategorized so the UI can show it as such.
-    private func categoryMatch(
-        for merchant: String,
-        suggestion: String?
-    ) -> (category: Category, source: CategorySource)? {
-        let categories = (try? context.fetch(FetchDescriptor<Category>())) ?? []
-        guard !categories.isEmpty else { return nil }
-        let rules = ((try? context.fetch(FetchDescriptor<CategorizationRule>())) ?? [])
-            .sorted { lhs, rhs in
-                if lhs.priority != rhs.priority {
-                    return lhs.priority < rhs.priority
-                }
-                return lhs.keyword < rhs.keyword
-            }
-            .map { rule in
-                CategorizationRuleSpec(
-                    keyword: rule.keyword,
-                    categoryName: rule.category.name,
-                    priority: rule.priority,
-                    isEnabled: rule.isEnabled
-                )
-            }
-        let match = CategorizationService.match(
-            merchant: merchant,
-            rules: rules,
-            suggestion: suggestion,
-            categories: categories.map {
-                CategorySnapshot(
-                    id: $0.id,
-                    name: $0.name,
-                    symbolName: $0.symbolName,
-                    colorToken: $0.colorToken
-                )
-            }
-        )
-        guard let category = categories.first(where: { $0.name == match.categoryName }) else {
-            return nil
-        }
-        return (category, match.source)
-    }
-
-    // MARK: - Deduplication
-
-    /// Whether a message is already in the archive.
-    ///
-    /// A failed row never blocks a new attempt: the user is re-running the automation because the
-    /// message could not be read, and calling that a duplicate would hide the problem. The row being
-    /// retried is excluded so a message cannot duplicate itself.
-    private func isDuplicate(
-        fingerprint: String,
-        request: IngestionRequest,
-        accountID: UUID?,
-        excluding excludedID: UUID?
-    ) -> Bool {
-        let byFingerprint = (try? context.fetch(FetchDescriptor<RawMessage>(
-            predicate: #Predicate { $0.fingerprint == fingerprint }
-        ))) ?? []
-        if byFingerprint.contains(where: { $0.id != excludedID && $0.status != .failed }) {
-            return true
-        }
-
-        let windowStart = request.receivedAt.addingTimeInterval(-Dedupe.recentDuplicateWindow)
-        let windowEnd = request.receivedAt.addingTimeInterval(Dedupe.recentDuplicateWindow)
-        let nearby = (try? context.fetch(FetchDescriptor<RawMessage>(
-            predicate: #Predicate { $0.receivedAt >= windowStart && $0.receivedAt <= windowEnd }
-        ))) ?? []
-        let candidates = nearby
-            .filter { $0.id != excludedID && $0.status != .failed }
-            .map { message in
-                DedupeCandidate(
-                    text: message.text,
-                    sender: message.sender,
-                    // A message's account is only recorded through its transaction; without one the
-                    // account is unknown, and the sender comparison is the safer identity anyway.
-                    accountID: message.transaction?.account.id,
-                    receivedAt: message.receivedAt
-                )
-            }
-        return Dedupe.isRecentDuplicate(
-            text: request.text,
-            sender: request.sender,
-            accountID: accountID,
-            receivedAt: request.receivedAt,
-            existing: candidates
-        )
-    }
-
-    // MARK: - Result classification
+    // MARK: - Account resolution
 
     /// What resolving an account produced.
     private enum AccountResolution {
@@ -628,156 +463,27 @@ public final class IngestionService {
         case failed(ParseDiagnostic)
     }
 
-    /// What a parse result means for the archive.
-    private enum ParseDisposition {
-        /// A validated transaction.
-        case transaction(TransactionDraft)
-        /// The message is not a transaction.
-        case notTransaction
-        /// The message could not be read; the diagnostics explain why.
-        case failed([ParseDiagnostic])
-        /// The caller cancelled the work, so the message must stay retryable.
-        case cancelled([ParseDiagnostic])
+    // MARK: - Shared helpers
+
+    /// The reads and writes ingestion shares with reprocessing.
+    private var store: IngestionStore {
+        IngestionStore(context: context)
     }
 
-    /// Classifies a parse result, folding cancellation in.
-    ///
-    /// Cancellation is checked here rather than trusted to the engines: the hybrid engine collapses a
-    /// cancelled rule parse into `.notTransaction` when the model finds nothing, and every
-    /// diagnostic is inspected so a cancellation reported after another failure is still caught.
-    private func disposition(of result: ParseResult) -> ParseDisposition {
-        if Task.isCancelled {
-            return .cancelled(diagnostics(from: result))
-        }
-        switch result {
-        case .transaction(let draft):
-            return .transaction(draft)
-        case .notTransaction:
-            return .notTransaction
-        case .failure(let diagnostics):
-            return diagnostics.contains { $0.code == .cancelled }
-                ? .cancelled(diagnostics)
-                : .failed(diagnostics)
-        }
+    /// Whether the message is already in the archive; see ``IngestionStore/isDuplicate(fingerprint:text:sender:receivedAt:accountID:excluding:)``.
+    private func isDuplicate(
+        fingerprint: String,
+        request: IngestionRequest,
+        accountID: UUID?,
+        excluding excludedID: UUID?
+    ) -> Bool {
+        store.isDuplicate(
+            fingerprint: fingerprint,
+            text: request.text,
+            sender: request.sender,
+            receivedAt: request.receivedAt,
+            accountID: accountID,
+            excluding: excludedID
+        )
     }
-
-    /// The diagnostics a failure carries, or none for any other result.
-    private func diagnostics(from result: ParseResult) -> [ParseDiagnostic] {
-        if case .failure(let diagnostics) = result {
-            return diagnostics
-        }
-        return []
-    }
-
-    /// A user-facing error description built from diagnostics; it never contains message text.
-    private static func errorDescription(of diagnostics: [ParseDiagnostic]) -> String? {
-        let description = diagnostics.map(\.message).joined(separator: " ")
-        return description.isEmpty ? nil : description
-    }
-
-    // MARK: - Text
-
-    /// The text handed to the parser.
-    ///
-    /// Line endings are unified and the outer whitespace is trimmed, but the message's own line
-    /// breaks and inner spacing stay intact so a multi-line rule still matches. The original text is
-    /// what the archive keeps.
-    private static func normalizedForParsing(_ text: String) -> String {
-        text
-            .replacingOccurrences(of: "\r\n", with: "\n")
-            .replacingOccurrences(of: "\r", with: "\n")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    /// The text with runs of whitespace collapsed to single spaces.
-    private static func collapsedWhitespace(_ value: String) -> String {
-        value.split(whereSeparator: \.isWhitespace).joined(separator: " ")
-    }
-
-    /// The merchant for display and keyword matching, with trailing reference noise removed.
-    ///
-    /// A rule captures everything after its keyword, so "RM12.50 spent at KFC on 14/11/26 Ref 8891"
-    /// can leave "KFC on 14/11/26 Ref 8891" as the merchant. Spec §10.2 asks for that noise to be
-    /// stripped from the name the app shows and matches; the extracted value is kept on
-    /// `merchantRaw` so nothing is lost. A name that is nothing but noise becomes
-    /// ``unknownMerchant``.
-    private static func displayMerchant(from extracted: String) -> String {
-        var value = extracted
-        for _ in 0..<maximumMerchantCleanupPasses {
-            let stripped = trimmingTrailingSeparators(strippingTrailingNoise(value))
-            if stripped == value {
-                break
-            }
-            value = stripped
-        }
-        return value.isEmpty ? unknownMerchant : value
-    }
-
-    /// Removes one trailing reference or date phrase, when the value ends with one.
-    private static func strippingTrailingNoise(_ value: String) -> String {
-        var result = value
-        for pattern in [referenceNoise, numericDateNoise, namedDateNoise] {
-            guard let range = result.firstRange(of: pattern) else { continue }
-            result.removeSubrange(range)
-        }
-        return result
-    }
-
-    /// Removes trailing punctuation that separated a merchant from the noise removed from it.
-    private static func trimmingTrailingSeparators(_ value: String) -> String {
-        var result = value
-        while let last = result.last, ",;:.-–—".contains(last) {
-            result.removeLast()
-        }
-        return result
-    }
-
-    /// A trailing reference such as "Ref 12345", "REF: 8891-A", or "Reference no. 77".
-    private static let referenceNoise = /(?i)[\s,;:.\-–—]*\bref(?:erence)?\s*(?:no\.?|number|#|id)?\s*[:#]?\s*[A-Za-z0-9][A-Za-z0-9\-\/_]*[\s,;:.\-–—]*$/
-
-    /// A trailing numeric date such as "on 17/11/26" or "on 2026-11-17".
-    private static let numericDateNoise = /(?i)[\s,;:.\-–—]*\bon\s+\d{1,4}[.\/-]\d{1,2}[.\/-]\d{1,4}[\s,;:.\-–—]*$/
-
-    /// A trailing named date such as "on 17 Nov 2026".
-    private static let namedDateNoise = /(?i)[\s,;:.\-–—]*\bon\s+\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]{3,9}(?:\s+\d{2,4})?[\s,;:.\-–—]*$/
-
-    // MARK: - Diagnostics
-
-    /// The message for a capture that names more than one possible account.
-    private static let chooseAccountDiagnostic = ParseDiagnostic(
-        code: .missingField,
-        field: "account",
-        message: "Choose an account in the Shortcut."
-    )
-
-    /// The message for a capture with no account to fall back on.
-    private static let addAccountDiagnostic = ParseDiagnostic(
-        code: .missingField,
-        field: "account",
-        message: "Add an account in Zentri before capturing messages."
-    )
-
-    /// The message for a retry that still cannot identify an account.
-    private static let retryAccountDiagnostic = ParseDiagnostic(
-        code: .missingField,
-        field: "account",
-        message: "Choose an account for this message."
-    )
-
-    /// The message for a write that could not be saved.
-    ///
-    /// ``ParseDiagnostic/Code`` describes parsing problems only and has no storage case, so the
-    /// write failure is reported as a missing field named `storage`: something the outcome needs is
-    /// absent. Adding a dedicated code would mean editing the parsing contract this task consumes.
-    private static let storageDiagnostic = ParseDiagnostic(
-        code: .missingField,
-        field: "storage",
-        message: "The message could not be saved. Try again."
-    )
-
-    /// The diagnostic reported when a parse was cancelled without one of its own.
-    private static let cancelledDiagnostic = ParseDiagnostic(
-        code: .cancelled,
-        message: "Parsing was cancelled."
-    )
 }

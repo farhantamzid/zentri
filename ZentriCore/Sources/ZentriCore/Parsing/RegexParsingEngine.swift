@@ -48,6 +48,42 @@ public struct RegexParsingEngine: TransactionParsing, Sendable {
         return diagnostics.isEmpty ? .notTransaction : .failure(diagnostics)
     }
 
+    /// The applicable rules whose pattern matches the message, in evaluation order.
+    ///
+    /// A rule is listed whether or not its match would pass validation, so the tester can show
+    /// rules competing for one message. A pattern that does not compile matches nothing.
+    public func matchingRuleIDs(for input: ParseInput) -> [UUID] {
+        guard input.text.count <= Self.maximumTextLength else { return [] }
+        return orderedRules(for: input).compactMap { spec in
+            guard let regex = try? Self.compiled(spec),
+                  (try? regex.firstMatch(in: input.text)) != nil else { return nil }
+            return spec.id
+        }
+    }
+
+    /// The named groups `spec` captures in its first match of `text`, in pattern order.
+    ///
+    /// The rule's switch and account are ignored: the editor previews the rule being edited
+    /// whatever its state. A pattern that does not compile or does not match captures nothing.
+    public static func captures(for spec: ParsingRuleSpec, in text: String) -> [RuleCapture] {
+        guard text.count <= maximumTextLength,
+              let regex = try? compiled(spec),
+              let match = try? regex.firstMatch(in: text) else { return [] }
+        return match.output.compactMap { element in
+            guard let name = element.name, let range = element.range else { return nil }
+            let lower = text.distance(from: text.startIndex, to: range.lowerBound)
+            let upper = lower + text.distance(from: range.lowerBound, to: range.upperBound)
+            return RuleCapture(name: name, value: String(text[range]), range: lower..<upper)
+        }
+    }
+
+    /// The rule's pattern compiled with its flags.
+    private static func compiled(_ spec: ParsingRuleSpec) throws -> Regex<AnyRegexOutput> {
+        try Regex(spec.pattern)
+            .ignoresCase(spec.isCaseInsensitive)
+            .dotMatchesNewlines(spec.dotMatchesNewlines)
+    }
+
     /// The enabled rules that apply to the input, in evaluation order.
     private func orderedRules(for input: ParseInput) -> [ParsingRuleSpec] {
         rules.enumerated()
@@ -77,9 +113,7 @@ public struct RegexParsingEngine: TransactionParsing, Sendable {
     private func evaluate(_ spec: ParsingRuleSpec, in input: ParseInput) -> RuleMatch {
         let regex: Regex<AnyRegexOutput>
         do {
-            regex = try Regex(spec.pattern)
-                .ignoresCase(spec.isCaseInsensitive)
-                .dotMatchesNewlines(spec.dotMatchesNewlines)
+            regex = try Self.compiled(spec)
         } catch {
             return .failed(ParseDiagnostic(
                 code: .invalidPattern,
