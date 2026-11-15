@@ -4,7 +4,8 @@ import SwiftUI
 ///
 /// Every row pushes a ``SettingsDestination``; the destinations are registered here, once for the
 /// tab's stack, so a screen deeper in the stack (Appearance's Face ID row, Categories' rules row)
-/// pushes through the same registration.
+/// pushes through the same registration. The parsing screens' ``ParsingRoute`` is registered here
+/// too, so an account's detail can open that account's rules.
 struct SettingsView: View {
     var body: some View {
         List {
@@ -43,6 +44,9 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .navigationDestination(for: SettingsDestination.self) { destination in
             SettingsDestinationView(destination: destination)
+        }
+        .navigationDestination(for: ParsingRoute.self) { route in
+            ParsingRouteDestination(route: route)
         }
     }
 }

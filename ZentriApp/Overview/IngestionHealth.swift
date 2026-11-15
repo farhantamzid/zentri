@@ -3,8 +3,7 @@ import Foundation
 /// What the ingestion health card reports about the message archive.
 ///
 /// These are the three questions a person has when a transaction is missing: did the message
-/// arrive, when did one last parse, and how many are stuck. The inbox itself arrives with the raw
-/// message screen, so this card reports the counts without a link.
+/// arrive, when did one last parse, and how many are stuck.
 struct IngestionHealth: Sendable, Equatable {
     /// The newest message's arrival time, or `nil` when no message has arrived.
     let lastMessageAt: Date?

@@ -9,6 +9,7 @@ enum SettingsErrorMessage {
         switch error {
         case let error as AccountMutationError: error.message
         case let error as CategoryMutationError: error.message
+        case let error as ParsingRuleMutationError: error.message
         case CategorizationRulesModelError.missingCategory: "That category no longer exists. Choose another."
         default: "Zentri couldn't save your changes. Try again."
         }

@@ -3,8 +3,8 @@ import SwiftUI
 /// How message ingestion has been going: what last arrived, what last parsed, and what failed.
 ///
 /// The three figures answer the question a missing transaction raises — did the message arrive,
-/// and did it read — so a person can tell the automation apart from the parser. The inbox itself
-/// arrives with the raw-message screen, so this card reports without linking anywhere yet.
+/// and did it read — so a person can tell the automation apart from the parser. The card links to
+/// the raw-message inbox, where a failed message can be read and reprocessed.
 struct IngestionHealthCard: View {
     private let health: IngestionHealth
 
@@ -36,6 +36,23 @@ struct IngestionHealthCard: View {
                             .foregroundStyle(health.failureCount == 0 ? Theme.income : Theme.spending)
                     }
                 }
+
+                Divider()
+
+                NavigationLink(value: ParsingRoute.inbox) {
+                    HStack {
+                        Label("Open Message Inbox", systemImage: "tray.full")
+                            .foregroundStyle(Theme.accent)
+                        Spacer()
+                        Image(systemName: "chevron.forward")
+                            .foregroundStyle(Theme.secondaryInk)
+                            .accessibilityHidden(true)
+                    }
+                    .frame(minHeight: Theme.Layout.minimumTapTarget)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("overview.health.inbox")
             }
         }
     }

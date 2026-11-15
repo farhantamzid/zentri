@@ -47,15 +47,30 @@ struct ZentriApp: App {
             let snapshotStore = FileWidgetSnapshotStore(
                 fileURL: UITestSupport.isUITestMode ? nil : SharedContainer.widgetSnapshotURL
             )
+            let modelClient = makeModelClient()
             return AppState(
                 container: container,
                 settingsStore: settingsStore,
-                parserBuilder: ParserFactory(modelClient: FoundationModelsClient()),
+                parserBuilder: ParserFactory(modelClient: modelClient),
+                modelClient: modelClient,
                 snapshotStore: snapshotStore
             )
         } catch {
             return nil
         }
+    }
+
+    /// The on-device model for this launch.
+    ///
+    /// A UI test gets a model that is always unavailable, so what the tester shows does not depend on
+    /// the simulator's Apple Intelligence state. A platform without Foundation Models gets the same.
+    private static func makeModelClient() -> any TransactionModelClient {
+        #if canImport(FoundationModels)
+        if !UITestSupport.isUITestMode {
+            return FoundationModelsClient()
+        }
+        #endif
+        return UnavailableModelClient()
     }
 
     /// The settings store for this launch: in memory for a UI test, the shared file otherwise.

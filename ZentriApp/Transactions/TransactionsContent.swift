@@ -58,7 +58,8 @@ struct TransactionsContent: View {
                 service: appState.makeTransactionMutationService(),
                 accounts: model.accounts,
                 categories: model.categories,
-                onMutation: appState.mutate
+                onMutation: appState.mutate,
+                onReprocess: appState.reprocess
             )
         }
         .sheet(isPresented: $isAddingTransaction) {

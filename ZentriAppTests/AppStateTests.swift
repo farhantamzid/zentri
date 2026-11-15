@@ -27,6 +27,7 @@ private func makeAppState() throws -> (AppState, SettingsStore) {
         container: container,
         settingsStore: settingsStore,
         parserBuilder: UnusedParserBuilder(),
+        modelClient: UnavailableModelClient(),
         snapshotStore: FileWidgetSnapshotStore(fileURL: nil)
     )
     return (appState, settingsStore)
@@ -72,6 +73,7 @@ private func makeAppState() throws -> (AppState, SettingsStore) {
         container: container,
         settingsStore: settingsStore,
         parserBuilder: UnusedParserBuilder(),
+        modelClient: UnavailableModelClient(),
         snapshotStore: snapshotStore
     )
     var settings = AppSettings.defaultValue
@@ -103,6 +105,7 @@ private func makeAppState() throws -> (AppState, SettingsStore) {
         container: container,
         settingsStore: settingsStore,
         parserBuilder: UnusedParserBuilder(),
+        modelClient: UnavailableModelClient(),
         snapshotStore: snapshotStore
     )
     await appState.snapshotRefresher.refresh()

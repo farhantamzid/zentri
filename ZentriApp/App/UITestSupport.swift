@@ -20,6 +20,9 @@ enum UITestSupport {
     /// Adds ``InsightsFixture``'s two months of spending on top of the dashboard rows; needs
     /// `-UITestSeed`.
     static let seedInsightsArgument = "-UITestSeedInsights"
+    /// Adds ``ParsingFixture``'s rule and failed message on top of the dashboard rows; needs
+    /// `-UITestSeed`.
+    static let seedParsingArgument = "-UITestSeedParsing"
     /// Clears the in-memory settings and store state before the test starts.
     static let resetArgument = "-UITestReset"
 
@@ -40,6 +43,8 @@ enum UITestSupport {
     static var seedsHistory: Bool { arguments.contains(seedHistoryArgument) }
     /// Whether the test wants the Insights months on top of the dashboard rows.
     static var seedsInsights: Bool { arguments.contains(seedInsightsArgument) }
+    /// Whether the test wants a parsing rule and a message it can read.
+    static var seedsParsing: Bool { arguments.contains(seedParsingArgument) }
     /// Whether the test wants an empty start.
     static var resetsState: Bool { arguments.contains(resetArgument) }
 
@@ -65,6 +70,9 @@ enum UITestSupport {
             }
             if seedsInsights {
                 try InsightsFixture.seed(into: container.mainContext)
+            }
+            if seedsParsing {
+                try ParsingFixture.seed(into: container.mainContext)
             }
         }
     }

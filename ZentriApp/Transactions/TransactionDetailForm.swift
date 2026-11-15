@@ -8,6 +8,10 @@ struct TransactionDetailForm: View {
     let categories: [TransactionCategoryOption]
     let onDelete: @MainActor () -> Void
 
+    private func reprocess() {
+        Task { await model.reprocess() }
+    }
+
     var body: some View {
         if model.isDeleted {
             Color.clear
@@ -22,6 +26,9 @@ struct TransactionDetailForm: View {
                     Text("Transfers move money between your own accounts, so spending and income totals leave them out.")
                 }
                 TransactionDetailSourceSection(transaction: model.transaction, matchedRuleName: matchedRuleName)
+                if model.canReprocess {
+                    TransactionReprocessSection(isReprocessing: model.isReprocessing, onReprocess: reprocess)
+                }
                 TransactionDeleteSection(onDelete: onDelete)
             }
         }

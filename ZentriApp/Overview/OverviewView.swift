@@ -18,6 +18,9 @@ struct OverviewView: View {
         )
         .background { Theme.canvas.ignoresSafeArea() }
         .navigationTitle("Overview")
+        .navigationDestination(for: ParsingRoute.self) { route in
+            ParsingRouteDestination(route: route)
+        }
     }
 
     /// Points a person whose store holds no account at the screen that adds one.

@@ -14,9 +14,11 @@ struct SettingsDestinationView: View {
             CategorizationRulesView()
         case .appearance:
             AppearanceSettingsView()
+        case .parsing:
+            ParsingSettingsView()
         case .about:
             AboutView()
-        case .faceID, .parsing, .shortcuts, .backup:
+        case .faceID, .shortcuts, .backup:
             if let message = destination.placeholderMessage {
                 SettingsPlaceholderView(
                     title: destination.title,

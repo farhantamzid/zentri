@@ -15,8 +15,10 @@ final class AppState {
     let container: ModelContainer
     /// The live settings, shared with onboarding, settings, and every money label.
     let settingsStore: SettingsStore
-    /// The parser builder ingestion and the rule tester use.
+    /// The parser builder ingestion, reprocessing, and the rule tester use.
     let parserBuilder: any ParserBuilding
+    /// The on-device model client, asked only whether the model can run here.
+    let modelClient: any TransactionModelClient
     /// The refresher that keeps widgets in step with the store.
     let snapshotRefresher: any WidgetSnapshotRefresher
     /// Where the widget snapshot is written; "Delete All Data" removes it.
@@ -36,11 +38,13 @@ final class AppState {
         container: ModelContainer,
         settingsStore: SettingsStore,
         parserBuilder: any ParserBuilding,
+        modelClient: any TransactionModelClient,
         snapshotStore: any WidgetSnapshotStore
     ) {
         self.container = container
         self.settingsStore = settingsStore
         self.parserBuilder = parserBuilder
+        self.modelClient = modelClient
         self.snapshotStore = snapshotStore
         self.snapshotRefresher = LiveWidgetSnapshotRefresher(
             context: container.mainContext,
@@ -81,6 +85,67 @@ final class AppState {
     func makeCategoryMutationService() -> CategoryMutationService {
         CategoryMutationService(context: container.mainContext, snapshotRefresher: snapshotRefresher)
     }
+
+    /// A service for the person's parsing rules. Rules change no balance, so the caller only calls
+    /// ``mutate()`` afterwards.
+    func makeParsingRuleMutationService() -> ParsingRuleMutationService {
+        ParsingRuleMutationService(context: container.mainContext)
+    }
+
+    /// The rule tester, which parses with the same builder ingestion uses and never writes.
+    func makeRuleTesterService() -> RuleTesterService {
+        RuleTesterService(parserBuilder: parserBuilder)
+    }
+
+    /// The archive's reprocessor, refreshing the widgets after each reprocess.
+    func makeRawMessageReprocessor() -> RawMessageReprocessor {
+        RawMessageReprocessor(
+            context: container.mainContext,
+            parserBuilder: parserBuilder,
+            snapshotRefresher: snapshotRefresher
+        )
+    }
+
+    /// The parser mode new messages and reprocessing use.
+    var parserMode: ParserMode {
+        (settingsStore.settings ?? .defaultValue).parserMode
+    }
+
+    /// Parses an archived message again with the stored rules and the saved parser mode, then tells
+    /// every screen.
+    ///
+    /// The rules are read first: a rule list that cannot be read is reported as a storage failure,
+    /// never parsed as "no rules", which would wrongly mark the message as not a transaction.
+    func reprocess(_ message: RawMessage, accountID: UUID?) async -> IngestionOutcome {
+        guard let rules = try? StoredParsingRules.specs(in: container.mainContext) else {
+            return .failed([Self.unreadableRulesDiagnostic])
+        }
+        let outcome = await makeRawMessageReprocessor().reprocess(
+            message,
+            accountID: accountID,
+            rules: rules,
+            mode: parserMode
+        )
+        mutate()
+        return outcome
+    }
+
+    /// Reprocesses every failed message with the stored rules, then tells every screen.
+    func reprocessFailures() async -> [IngestionOutcome] {
+        guard let rules = try? StoredParsingRules.specs(in: container.mainContext) else {
+            return [.failed([Self.unreadableRulesDiagnostic])]
+        }
+        let outcomes = await makeRawMessageReprocessor().reprocessFailures(rules: rules, mode: parserMode)
+        mutate()
+        return outcomes
+    }
+
+    /// Reported when the rules could not be read for a reprocess.
+    private static let unreadableRulesDiagnostic = ParseDiagnostic(
+        code: .missingField,
+        field: "storage",
+        message: "The rules could not be read."
+    )
 
     /// Saves new settings, then rewrites the widget snapshot, which carries the currency and grouping.
     ///

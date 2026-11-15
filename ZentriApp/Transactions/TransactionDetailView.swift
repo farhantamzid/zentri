@@ -21,7 +21,8 @@ struct TransactionDetailView: View {
         service: TransactionMutationService,
         accounts: [TransactionAccountOption],
         categories: [TransactionCategoryOption],
-        onMutation: @escaping @MainActor () -> Void
+        onMutation: @escaping @MainActor () -> Void,
+        onReprocess: (@MainActor (RawMessage, UUID?) async -> IngestionOutcome)? = nil
     ) {
         self.matchedRuleName = selection.matchedRuleName
         self.accounts = accounts
@@ -30,7 +31,8 @@ struct TransactionDetailView: View {
             initialValue: TransactionDetailModel(
                 transaction: selection.transaction,
                 service: service,
-                onMutation: onMutation
+                onMutation: onMutation,
+                onReprocess: onReprocess
             )
         )
     }
@@ -68,6 +70,10 @@ struct TransactionDetailView: View {
             .alert("Couldn't save the change", isPresented: $model.isShowingFailure) {
             } message: {
                 Text("Zentri couldn't save your changes. Try again.")
+            }
+            .alert("Reprocessed", item: $model.reprocessMessage) { _ in
+            } message: { message in
+                Text(message)
             }
             .sensoryFeedback(.success, trigger: model.changeCount)
         }

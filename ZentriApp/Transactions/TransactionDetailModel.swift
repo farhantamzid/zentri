@@ -23,17 +23,45 @@ final class TransactionDetailModel {
     /// the screen stops drawing it before the delete starts.
     private(set) var isDeleted = false
 
+    /// What the last reprocess said, for the screen's alert.
+    var reprocessMessage: LocalizedStringResource?
+    /// Whether a reprocess is running.
+    private(set) var isReprocessing = false
+
     @ObservationIgnored private let service: TransactionMutationService
     @ObservationIgnored private let onMutation: @MainActor () -> Void
+    @ObservationIgnored private let onReprocess: (@MainActor (RawMessage, UUID?) async -> IngestionOutcome)?
 
     init(
         transaction: ZentriCore.Transaction,
         service: TransactionMutationService,
-        onMutation: @escaping @MainActor () -> Void
+        onMutation: @escaping @MainActor () -> Void,
+        onReprocess: (@MainActor (RawMessage, UUID?) async -> IngestionOutcome)? = nil
     ) {
         self.transaction = transaction
         self.service = service
         self.onMutation = onMutation
+        self.onReprocess = onReprocess
+    }
+
+    /// Whether the transaction came from a message that can be read again.
+    var canReprocess: Bool {
+        onReprocess != nil && transaction.rawMessage != nil
+    }
+
+    /// Reads the transaction's message again with the current rules.
+    ///
+    /// The transaction is updated in place only when the message parses; otherwise it is left as it
+    /// was and the reason is reported. The reprocess path already tells the app the store changed.
+    func reprocess() async {
+        guard let onReprocess, let message = transaction.rawMessage else { return }
+        isReprocessing = true
+        let outcome = await onReprocess(message, transaction.account.id)
+        isReprocessing = false
+        if outcome.isTransaction {
+            changeCount += 1
+        }
+        reprocessMessage = outcome.reprocessMessage
     }
 
     /// The transfer flag, as a toggle sets it.

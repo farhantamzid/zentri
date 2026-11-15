@@ -46,6 +46,15 @@ struct AccountDetailForm: View {
             }
 
             Section {
+                NavigationLink(value: ParsingRoute.rules(accountID: account.id)) {
+                    Label("Parsing Rules", systemImage: "list.bullet.rectangle")
+                }
+                .accessibilityIdentifier("accounts.detail.rules")
+            } footer: {
+                Text("The patterns that read this account's bank messages.")
+            }
+
+            Section {
                 Button(
                     account.isArchived ? "Unarchive Account" : "Archive Account",
                     systemImage: account.isArchived ? "tray.and.arrow.up" : "archivebox",
