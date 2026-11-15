@@ -712,6 +712,92 @@ private func fetchCheckpoints(_ context: ModelContext) throws -> [BalanceCheckpo
     #expect(await refresher.refreshCount == 1)
 }
 
+/// A savings account whose stored rule reads the sample message, beside an everyday account.
+@MainActor
+private func makeTwoAccountStoreWithSavingsRule() throws -> (store: TestStore, savings: Account, rule: ParsingRule) {
+    let store = try makeStore(accountNames: ["Everyday", "Savings"])
+    let savings = store.accounts[1]
+    let rule = ParsingRule(
+        account: savings, name: "Savings debit", direction: .debit, pattern: "spent", priority: 0,
+        isEnabled: true, createdAt: ingestNow, updatedAt: ingestNow
+    )
+    store.context.insert(rule)
+    try store.context.save()
+    return (store, savings, rule)
+}
+
+@Test @MainActor func ingestWithoutAChosenAccountRunsEveryRuleAndUsesTheMatchedRulesAccount() async throws {
+    let (store, savings, rule) = try makeTwoAccountStoreWithSavingsRule()
+    let recorder = ParseRecorder()
+    let refresher = SpySnapshotRefresher()
+    let service = store.service(
+        parser: StubParser(result: .transaction(sampleDraft(matchedRuleID: rule.id)), recorder: recorder),
+        refresher: refresher
+    )
+
+    let outcome = await service.ingest(sampleRequest())
+
+    let transaction = try #require(try fetchTransactions(store.context).first)
+    #expect(outcome == .transaction(transaction.id))
+    #expect(transaction.account.id == savings.id)
+    #expect(transaction.parseEngine == .rules)
+    #expect(recorder.inputs.map(\.accountID) == [nil])
+    #expect(try fetchMessages(store.context).map(\.status) == [.parsed])
+    #expect(await refresher.refreshCount == 1)
+}
+
+@Test @MainActor func ingestWithoutAChosenAccountFailsWhenNoRuleProducedTheTransaction() async throws {
+    let store = try makeStore(accountNames: ["Everyday", "Savings"])
+    let service = store.service(
+        parser: StubParser(result: .transaction(sampleDraft(matchedRuleID: nil))),
+        refresher: SpySnapshotRefresher()
+    )
+
+    let outcome = await service.ingest(sampleRequest())
+
+    let expected = ParseDiagnostic(
+        code: .missingField,
+        field: "account",
+        message: "Choose an account in the Shortcut."
+    )
+    #expect(outcome == .failed([expected]))
+    let message = try #require(try fetchMessages(store.context).first)
+    #expect(message.status == .failed)
+    #expect(message.errorDescription == expected.message)
+    #expect(try fetchTransactions(store.context).isEmpty)
+}
+
+@Test @MainActor func rerunningAnUnresolvedCaptureIsADuplicate() async throws {
+    let (store, _, rule) = try makeTwoAccountStoreWithSavingsRule()
+    let service = store.service(
+        parser: StubParser(result: .transaction(sampleDraft(matchedRuleID: rule.id))),
+        refresher: SpySnapshotRefresher()
+    )
+
+    _ = await service.ingest(sampleRequest())
+    let outcome = await service.ingest(sampleRequest())
+
+    #expect(outcome == .duplicate)
+    #expect(try fetchTransactions(store.context).count == 1)
+    #expect(try fetchMessages(store.context).map(\.status).sorted { $0.rawValue < $1.rawValue } == [.duplicate, .parsed])
+}
+
+/// Without a sender the recent-duplicate window keys on the account, which an unresolved capture only
+/// knows after its rule matched, so the window is checked again once the account is resolved.
+@Test @MainActor func unresolvedCaptureWithoutASenderIsADuplicateOnceItsAccountIsKnown() async throws {
+    let (store, _, rule) = try makeTwoAccountStoreWithSavingsRule()
+    let service = store.service(
+        parser: StubParser(result: .transaction(sampleDraft(matchedRuleID: rule.id))),
+        refresher: SpySnapshotRefresher()
+    )
+
+    _ = await service.ingest(sampleRequest(sender: nil, receivedAt: ingestNow))
+    let outcome = await service.ingest(sampleRequest(sender: nil, receivedAt: ingestNow.addingTimeInterval(90)))
+
+    #expect(outcome == .duplicate)
+    #expect(try fetchTransactions(store.context).count == 1)
+}
+
 @Test @MainActor func ingestFailsWhenNoAccountExists() async throws {
     let store = try makeStore(accountNames: [])
     let service = store.service(

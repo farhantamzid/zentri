@@ -135,13 +135,24 @@ public final class IngestionService {
     // MARK: - Pipeline
 
     /// The ingest pipeline for one message, without the snapshot refresh that follows it.
+    ///
+    /// The account is settled before parsing when the request names one or only one is active; then
+    /// only that account's rules run. With several active accounts and no choice every rule runs and
+    /// the matched rule's account receives the transaction, as a launch retry does.
+    ///
+    /// Duplicates are checked before parsing with whatever account is known — none, for an unresolved
+    /// capture, whose fingerprint and archive row then carry no account, so re-running the same
+    /// automation still matches exactly. Once a rule resolves the account the check runs again with
+    /// that account, because without a sender the recent-duplicate window keys on the account.
     private func ingestMessage(_ request: IngestionRequest) async -> IngestionOutcome {
         let ingestedAt = now()
 
-        let account: Account
+        let account: Account?
         switch resolvedAccount(for: request) {
         case .resolved(let resolved):
             account = resolved
+        case .byMatchedRule:
+            account = nil
         case .failed(let diagnostic):
             // The message is still archived, with the chosen account as the only identity available.
             let message = makeMessage(
@@ -162,23 +173,51 @@ public final class IngestionService {
         let fingerprint = Dedupe.fingerprint(
             text: request.text,
             sender: request.sender,
-            accountID: account.id,
+            accountID: account?.id,
             receivedAt: request.receivedAt
         )
-        if isDuplicate(fingerprint: fingerprint, request: request, accountID: account.id, excluding: nil) {
-            let message = makeMessage(
-                for: request,
-                ingestedAt: ingestedAt,
-                status: .duplicate,
-                fingerprint: fingerprint
-            )
-            return persist(message) ? .duplicate : .failed([IngestionDiagnostics.storage])
+        if isDuplicate(fingerprint: fingerprint, request: request, accountID: account?.id, excluding: nil) {
+            return archiveDuplicate(request, ingestedAt: ingestedAt, fingerprint: fingerprint)
         }
 
-        let result = await parse(request, accountID: account.id)
+        let result = await parse(request, accountID: account?.id)
 
         switch ParseDisposition(classifying: result) {
         case .transaction(let draft):
+            let target: Account
+            if let account {
+                target = account
+            } else {
+                guard let ruleAccount = store.ruleAccount(for: draft) else {
+                    // No stored rule produced the answer, so nothing says which account it belongs to.
+                    let diagnostic = IngestionDiagnostics.chooseAccount
+                    let message = makeMessage(
+                        for: request,
+                        ingestedAt: ingestedAt,
+                        status: .failed,
+                        errorDescription: diagnostic.message,
+                        fingerprint: fingerprint
+                    )
+                    return persist(message)
+                        ? .failed([diagnostic])
+                        : .failed([diagnostic, IngestionDiagnostics.storage])
+                }
+                let resolvedFingerprint = Dedupe.fingerprint(
+                    text: request.text,
+                    sender: request.sender,
+                    accountID: ruleAccount.id,
+                    receivedAt: request.receivedAt
+                )
+                if isDuplicate(
+                    fingerprint: resolvedFingerprint,
+                    request: request,
+                    accountID: ruleAccount.id,
+                    excluding: nil
+                ) {
+                    return archiveDuplicate(request, ingestedAt: ingestedAt, fingerprint: fingerprint)
+                }
+                target = ruleAccount
+            }
             let message = makeMessage(
                 for: request,
                 ingestedAt: ingestedAt,
@@ -188,7 +227,7 @@ public final class IngestionService {
             context.insert(message)
             return persist(
                 draft: draft,
-                account: account,
+                account: target,
                 message: message,
                 request: request,
                 ingestedAt: ingestedAt,
@@ -222,6 +261,21 @@ public final class IngestionService {
             let surfaced = diagnostics.isEmpty ? [IngestionDiagnostics.cancelled] : diagnostics
             return persist(message) ? .failed(surfaced) : .failed(surfaced + [IngestionDiagnostics.storage])
         }
+    }
+
+    /// Archives a repeat of a stored message, with no transaction and no balance change.
+    private func archiveDuplicate(
+        _ request: IngestionRequest,
+        ingestedAt: Date,
+        fingerprint: String
+    ) -> IngestionOutcome {
+        let message = makeMessage(
+            for: request,
+            ingestedAt: ingestedAt,
+            status: .duplicate,
+            fingerprint: fingerprint
+        )
+        return persist(message) ? .duplicate : .failed([IngestionDiagnostics.storage])
     }
 
     /// The retry pipeline for one existing archive row.
@@ -412,9 +466,9 @@ public final class IngestionService {
 
     /// The account the message belongs to.
     ///
-    /// An account the Shortcut chose wins. Otherwise exactly one active account must exist; with
-    /// several the message is failed rather than guessed at, because a transaction on the wrong
-    /// account corrupts both balances.
+    /// An account the Shortcut chose wins, and a single active account is used. With several and no
+    /// choice the matched rule decides after parsing; nothing is guessed, because a transaction on the
+    /// wrong account corrupts both balances.
     private func resolvedAccount(for request: IngestionRequest) -> AccountResolution {
         let accounts = activeAccounts()
         if let accountID = request.accountID {
@@ -429,7 +483,7 @@ public final class IngestionService {
         case 0:
             return .failed(IngestionDiagnostics.addAccount)
         default:
-            return .failed(IngestionDiagnostics.chooseAccount)
+            return .byMatchedRule
         }
     }
 
@@ -454,6 +508,8 @@ public final class IngestionService {
     private enum AccountResolution {
         /// The account the transaction belongs to.
         case resolved(Account)
+        /// Several accounts and no choice: the matched rule's account, known only after parsing.
+        case byMatchedRule
         /// Why no account could be chosen.
         case failed(ParseDiagnostic)
     }
