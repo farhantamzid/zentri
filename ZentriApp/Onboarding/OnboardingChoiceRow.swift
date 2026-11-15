@@ -48,7 +48,7 @@ struct OnboardingChoiceRow<Label: View>: View {
         OnboardingChoiceRow(isSelected: true, action: {}) {
             VStack(alignment: .leading) {
                 Text("Western")
-                Text("1,000,000.00")
+                Text(verbatim: "1,000,000.00")
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
             }

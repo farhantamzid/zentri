@@ -30,6 +30,8 @@ enum Theme {
 
     /// The deep teal accent, applied with `tint` at the app root.
     static let accent = Color("AccentColor")
+    /// Text and symbols drawn on an accent fill, such as a prominent button's label.
+    static let onAccent = Color("OnAccent")
     /// The warm neutral page background.
     static let canvas = Color("Canvas")
     /// Primary text.

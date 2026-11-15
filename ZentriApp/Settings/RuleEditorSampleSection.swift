@@ -15,7 +15,10 @@ struct RuleEditorSampleSection: View {
                 Text(highlighted)
                     .font(.body.monospaced())
                     .foregroundStyle(Theme.ink)
-                    .accessibilityLabel(Text("The sample with its captured groups marked"))
+                    // VoiceOver reads the sample itself; the highlight is visual only, and the
+                    // extracted fields below repeat every captured value in words.
+                    .accessibilityHint(Text("Captured groups are highlighted. The extracted fields follow."))
+                    .accessibilityIdentifier("ruleEditor.highlightedSample")
             }
 
             if let preview = model.preview {

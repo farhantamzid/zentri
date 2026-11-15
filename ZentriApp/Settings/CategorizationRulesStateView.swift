@@ -22,7 +22,7 @@ struct CategorizationRulesStateView: View {
                     Text("A rule files every transaction whose merchant contains its keyword in one category.")
                 } actions: {
                     Button("Add Rule", action: onAdd)
-                        .buttonStyle(.borderedProminent)
+                        .prominentButtonStyle()
                         .controlSize(.large)
                         .frame(minHeight: Theme.Layout.minimumTapTarget)
                         .disabled(model.categories.isEmpty)

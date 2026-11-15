@@ -33,7 +33,7 @@ struct RulesStepView: View {
             }
 
             Button("Add your first rule in Settings → Parsing", action: onContinue)
-                .buttonStyle(.borderedProminent)
+                .prominentButtonStyle()
                 .controlSize(.large)
                 .frame(maxWidth: .infinity, minHeight: Theme.Layout.minimumTapTarget)
                 .accessibilityIdentifier("onboarding.rules.continue")

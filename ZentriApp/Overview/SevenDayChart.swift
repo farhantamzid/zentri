@@ -5,13 +5,14 @@ import ZentriCore
 /// The last seven days of spending, one bar per day.
 ///
 /// Every bar announces its own day and amount, so VoiceOver can move through the week bar by bar,
-/// and the chart itself announces the week as a table — every day and its spend, one row after
-/// another — for a person who would rather hear the numbers than the shape. The reveal follows
+/// and the chart offers an audio graph and data table (VoiceOver's Chart Details) — every day and
+/// its spend — for a person who would rather hear the numbers than the shape. The reveal follows
 /// Reduce Motion: with it on, the chart is simply there.
 struct SevenDayChart: View {
     private let days: [DailySpend]
 
     @Environment(\.moneyFormat) private var moneyFormat
+    @Environment(\.locale) private var locale
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .body) private var chartHeight: CGFloat = 160
     @State private var revealed = false
@@ -23,13 +24,15 @@ struct SevenDayChart: View {
     var body: some View {
         ChartCard("Last seven days") {
             if days.contains(where: { $0.amount > 0 }) {
+                let data = SevenDayChartData(days: days, moneyFormat: moneyFormat, locale: locale)
                 chart
                     .frame(height: chartHeight)
                     .opacity(revealed ? 1 : 0)
                     .offset(y: revealed ? 0 : Theme.Spacing.sm)
                     .accessibilityElement(children: .contain)
                     .accessibilityLabel("Spending, last seven days")
-                    .accessibilityValue(weekTable)
+                    .accessibilityValue(data.weekTable)
+                    .accessibilityChartDescriptor(data.descriptor)
                     .onAppear(perform: reveal)
             } else {
                 ContentUnavailableView(
@@ -62,19 +65,6 @@ struct SevenDayChart: View {
                 AxisGridLine()
             }
         }
-    }
-
-    /// The week as a table reads it: a total, then one day and its spend per line.
-    private var weekTable: String {
-        let total = days.reduce(Decimal.zero) { $0 + $1.amount }
-        let rows = days.map { day in
-            String(localized: "\(dayText(day.date)): \(money(day.amount))")
-        }
-        return ([String(localized: "Total \(money(total))")] + rows).joined(separator: "\n")
-    }
-
-    private func dayText(_ date: Date) -> String {
-        date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())
     }
 
     private func money(_ amount: Decimal) -> String {

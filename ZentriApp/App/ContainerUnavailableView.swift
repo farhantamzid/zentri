@@ -15,7 +15,7 @@ struct ContainerUnavailableView: View {
             Text("Zentri could not open its database on this device.")
         } actions: {
             Button("Try Again", action: retry)
-                .buttonStyle(.borderedProminent)
+                .prominentButtonStyle()
                 .controlSize(.large)
                 .frame(minHeight: Theme.Layout.minimumTapTarget)
         }

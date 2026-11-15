@@ -28,6 +28,8 @@ struct AccountStepView: View {
                         Text("Account name")
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryInk)
+                            // The field below carries the same title, so VoiceOver reads it once.
+                            .accessibilityHidden(true)
                         TextField("Account name", text: $model.accountName, prompt: Text("Everyday"))
                             .textInputAutocapitalization(.words)
                             .submitLabel(.done)
@@ -42,6 +44,8 @@ struct AccountStepView: View {
                         Text("Institution")
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryInk)
+                            // The field below carries the same title, so VoiceOver reads it once.
+                            .accessibilityHidden(true)
                         TextField("Institution", text: $model.institutionName, prompt: Text("Optional"))
                             .textInputAutocapitalization(.words)
                             .submitLabel(.done)
@@ -56,6 +60,8 @@ struct AccountStepView: View {
                         Text("Opening balance")
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryInk)
+                            // The field below carries the same title, so VoiceOver reads it once.
+                            .accessibilityHidden(true)
                         HStack(alignment: .center, spacing: Theme.Spacing.sm) {
                             Text(CurrencyCatalog.symbol(for: model.currencyCode))
                                 .foregroundStyle(Theme.secondaryInk)

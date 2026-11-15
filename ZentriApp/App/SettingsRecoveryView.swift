@@ -28,7 +28,7 @@ struct SettingsRecoveryView: View {
             } actions: {
                 VStack(spacing: Theme.Spacing.sm) {
                     Button("Use Defaults", action: useDefaults)
-                        .buttonStyle(.borderedProminent)
+                        .prominentButtonStyle()
                         .controlSize(.large)
                         .frame(minHeight: Theme.Layout.minimumTapTarget)
 

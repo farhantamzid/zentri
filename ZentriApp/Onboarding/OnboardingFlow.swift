@@ -12,6 +12,7 @@ struct OnboardingFlow: View {
     @Environment(\.locale) private var locale
 
     @State private var model = OnboardingModel()
+    @State private var isKeyboardVisible = false
 
     var body: some View {
         NavigationStack {
@@ -28,7 +29,9 @@ struct OnboardingFlow: View {
                         .safeAreaInset(edge: .top, spacing: 0) {
                             OnboardingProgressBar(current: model.stepNumber, total: model.stepCount)
                         }
-                        .safeAreaInset(edge: .bottom, spacing: 0) {
+                        .safeAreaBar(edge: .bottom, spacing: 0) {
+                            // A control bar: it reserves its height and gets the system's
+                            // scroll-edge treatment over the step that scrolls beneath it.
                             OnboardingFooter(
                                 canGoBack: model.canGoBack,
                                 canContinue: model.canContinue,
@@ -43,6 +46,9 @@ struct OnboardingFlow: View {
                             // field is. The account step's Done button closes the keyboard and
                             // brings the footer back.
                             .ignoresSafeArea(.keyboard, edges: .bottom)
+                            // Covered by the keyboard, the footer must not stay reachable to
+                            // VoiceOver either, or a swipe lands on buttons nobody can see.
+                            .accessibilityHidden(isKeyboardVisible)
                         }
                 }
             }
@@ -54,6 +60,20 @@ struct OnboardingFlow: View {
         .sensoryFeedback(.success, trigger: model.committedAccount?.id)
         .task {
             await model.checkParserAvailability()
+        }
+        .task {
+            await trackKeyboard(on: UIResponder.keyboardWillShowNotification, visible: true)
+        }
+        .task {
+            await trackKeyboard(on: UIResponder.keyboardWillHideNotification, visible: false)
+        }
+    }
+
+    /// Follows the keyboard, which covers the footer while it is up. SwiftUI reports focus but not
+    /// the keyboard itself, and the decimal pad's Done is the only way some fields close it.
+    private func trackKeyboard(on name: Notification.Name, visible: Bool) async {
+        for await _ in NotificationCenter.default.notifications(named: name).map({ _ in () }) {
+            isKeyboardVisible = visible
         }
     }
 

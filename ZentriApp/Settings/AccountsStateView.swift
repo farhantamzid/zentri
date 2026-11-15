@@ -24,7 +24,7 @@ struct AccountsStateView: View {
                     Text("Add the bank account Zentri should watch, with the balance it has today.")
                 } actions: {
                     Button("Add Account", action: onAdd)
-                        .buttonStyle(.borderedProminent)
+                        .prominentButtonStyle()
                         .controlSize(.large)
                         .frame(minHeight: Theme.Layout.minimumTapTarget)
                 }

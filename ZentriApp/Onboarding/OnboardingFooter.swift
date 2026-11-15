@@ -38,7 +38,7 @@ struct OnboardingFooter: View {
             Text("Continue")
                 .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.borderedProminent)
+        .prominentButtonStyle()
         .controlSize(.large)
         .frame(maxWidth: .infinity, minHeight: Theme.Layout.minimumTapTarget)
         .disabled(!canContinue)

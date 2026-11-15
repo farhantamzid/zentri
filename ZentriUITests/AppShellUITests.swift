@@ -1,5 +1,7 @@
 import XCTest
 
+/// The four root tabs appear once onboarding is skipped.
+@MainActor
 final class AppShellUITests: XCTestCase {
     func testRootTabsAppear() {
         let app = XCUIApplication()

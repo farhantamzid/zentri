@@ -16,7 +16,7 @@ struct InsightsFailureState: View {
                     .frame(minHeight: Theme.Layout.minimumTapTarget)
                     .contentShape(.rect)
             }
-            .buttonStyle(.borderedProminent)
+            .prominentButtonStyle()
             .accessibilityIdentifier("insights.retry")
         }
     }

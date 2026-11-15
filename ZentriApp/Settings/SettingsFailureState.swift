@@ -13,7 +13,7 @@ struct SettingsFailureState: View {
             Text("Zentri couldn't read your data just now. Try again.")
         } actions: {
             Button("Try Again", action: onRetry)
-                .buttonStyle(.borderedProminent)
+                .prominentButtonStyle()
                 .controlSize(.large)
                 .frame(minHeight: Theme.Layout.minimumTapTarget)
                 .accessibilityIdentifier("settings.retry")

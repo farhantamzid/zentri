@@ -72,7 +72,7 @@ struct OverviewContent: View {
             Text("Finish setup to add the account Zentri should watch.")
         } actions: {
             Button("Finish setup", action: onFinishSetup)
-                .buttonStyle(.borderedProminent)
+                .prominentButtonStyle()
                 .controlSize(.large)
                 .frame(minHeight: Theme.Layout.minimumTapTarget)
                 .accessibilityIdentifier("overview.finishSetup")
@@ -91,7 +91,7 @@ struct OverviewContent: View {
             Button("Try Again") {
                 model.refresh()
             }
-            .buttonStyle(.borderedProminent)
+            .prominentButtonStyle()
             .controlSize(.large)
             .frame(minHeight: Theme.Layout.minimumTapTarget)
             .accessibilityIdentifier("overview.retry")

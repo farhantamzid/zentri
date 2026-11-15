@@ -5,7 +5,7 @@ import ZentriCore
 ///
 /// The row is one accessibility element that says whether the money arrived or left, because the
 /// minus sign the amount carries is not what a listener would call it, and the row's direction color
-/// is not available to them at all.
+/// is not available to them at all. A transfer says so, as its tag does on screen.
 struct RecentTransactionRow: View {
     private let transaction: OverviewTransaction
 
@@ -30,7 +30,7 @@ struct RecentTransactionRow: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityIdentifier("overview.recent.row")
-        .accessibilityLabel(spokenSummary)
+        .accessibilityLabel(transaction.spokenSummary(moneyFormat: moneyFormat))
     }
 
     private var details: some View {
@@ -58,18 +58,5 @@ struct RecentTransactionRow: View {
         MoneyText(transaction.signedAmount)
             .font(.subheadline)
             .foregroundStyle(transaction.direction == .credit ? Theme.income : Theme.ink)
-    }
-
-    /// Merchant, category, and the movement in words, in the order the row reads.
-    ///
-    /// The direction is spelled out rather than left to the amount's sign, which is how a listener
-    /// hears which way the money went without seeing the row's color.
-    private var spokenSummary: String {
-        let money = moneyFormat.currencyString(from: transaction.amount)
-        let movement = switch transaction.direction {
-        case .credit: String(localized: "received \(money)")
-        case .debit: String(localized: "spent \(money)")
-        }
-        return "\(transaction.merchant), \(transaction.categoryName), \(movement)"
     }
 }

@@ -14,8 +14,10 @@ struct AccountEntity: AppEntity, Identifiable, Sendable {
     let id: UUID
     let name: String
 
+    /// The account's own name, shown as typed. It is built from a runtime value rather than a
+    /// literal, so the string catalog never gains a bare `%@` key for it.
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(name)")
+        DisplayRepresentation(title: LocalizedStringResource(String.LocalizationValue(name)))
     }
 
     init(id: UUID, name: String) {

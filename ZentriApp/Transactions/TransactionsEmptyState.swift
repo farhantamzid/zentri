@@ -11,7 +11,7 @@ struct TransactionsEmptyState: View {
             Text("Transactions appear here as the Shortcut passes your bank's SMS messages to Zentri. You can also add one you missed.")
         } actions: {
             Button("Add Transaction", action: onAdd)
-                .buttonStyle(.borderedProminent)
+                .prominentButtonStyle()
                 .controlSize(.large)
                 .frame(minHeight: Theme.Layout.minimumTapTarget)
         }

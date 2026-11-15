@@ -46,7 +46,7 @@ struct OnboardingStepLayout<Content: View>: View {
 
 #Preview {
     OnboardingStepLayout("Welcome to Zentri", message: "Everything stays on this iPhone.") {
-        Text("Step content")
+        Text(verbatim: "Step content")
     }
     .background { Theme.canvas.ignoresSafeArea() }
 }

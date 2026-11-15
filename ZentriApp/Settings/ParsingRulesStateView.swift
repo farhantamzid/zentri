@@ -24,7 +24,7 @@ struct ParsingRulesStateView: View {
                     Text("A rule is a pattern that reads one bank's messages into transactions for an account.")
                 } actions: {
                     Button("Add Rule", action: onAdd)
-                        .buttonStyle(.borderedProminent)
+                        .prominentButtonStyle()
                         .controlSize(.large)
                         .frame(minHeight: Theme.Layout.minimumTapTarget)
                         .disabled(model.defaultAccountID == nil)

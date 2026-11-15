@@ -34,7 +34,7 @@ struct SectionCard<Content: View>: View {
 
 #Preview {
     SectionCard("This month") {
-        Text("Spent and received")
+        Text(verbatim: "Spent and received")
             .foregroundStyle(Theme.secondaryInk)
     }
     .padding()

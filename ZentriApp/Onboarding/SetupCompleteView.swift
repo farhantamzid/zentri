@@ -54,7 +54,7 @@ struct SetupCompleteView: View {
                 }
 
                 Button("Go to Overview", action: enterApp)
-                    .buttonStyle(.borderedProminent)
+                    .prominentButtonStyle()
                     .controlSize(.large)
                     .frame(maxWidth: .infinity, minHeight: Theme.Layout.minimumTapTarget)
                     .accessibilityIdentifier("setupComplete.continue")
