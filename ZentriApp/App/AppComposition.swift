@@ -11,8 +11,9 @@ import ZentriCore
 /// store would leave those screens showing stale rows. ``liveAppState`` is how a capture finds the
 /// running app to tell it the store changed.
 ///
-/// `-UITestMode` swaps the App Group store, the settings file, and the snapshot file for in-memory
-/// or inert equivalents, so a UI test can never read or write real shared state.
+/// `-UITestMode` swaps the App Group store, the settings file, the snapshot file, and the widget
+/// reloads for in-memory or inert equivalents, so a UI test can never read or write real shared
+/// state.
 @MainActor
 enum AppComposition {
     /// The app's shared state once a window has built it, or `nil` when the process was launched
@@ -76,19 +77,32 @@ enum AppComposition {
         return UnavailableModelClient()
     }
 
+    /// What tells WidgetKit the snapshot changed: `WidgetCenter`, or nothing for a UI test.
+    static func makeTimelineReloader(
+        isUITestMode: Bool = UITestSupport.isUITestMode
+    ) -> any WidgetTimelineReloading {
+        isUITestMode ? InertTimelineReloader() : WidgetCenterTimelineReloader()
+    }
+
     /// The refresher that rewrites the widget snapshot from the container's main context, reading the
-    /// live settings on every refresh so a currency change reaches the widgets.
+    /// live settings on every refresh so a currency change reaches the widgets, and then reloads the
+    /// widgets.
     static func makeSnapshotRefresher(
         container: ModelContainer,
         settingsStore: SettingsStore,
-        snapshotStore: any WidgetSnapshotStore
-    ) -> LiveWidgetSnapshotRefresher {
-        LiveWidgetSnapshotRefresher(
-            context: container.mainContext,
+        snapshotStore: any WidgetSnapshotStore,
+        timelineReloader: any WidgetTimelineReloading
+    ) -> WidgetSnapshotPublisher {
+        WidgetSnapshotPublisher(
+            refresher: LiveWidgetSnapshotRefresher(
+                context: container.mainContext,
+                store: snapshotStore,
+                settings: { [weak settingsStore] in settingsStore?.settings ?? .defaultValue },
+                now: { .now },
+                calendar: .current
+            ),
             store: snapshotStore,
-            settings: { [weak settingsStore] in settingsStore?.settings ?? .defaultValue },
-            now: { .now },
-            calendar: .current
+            timelineReloader: timelineReloader
         )
     }
 
@@ -104,7 +118,8 @@ enum AppComposition {
             snapshotRefresher: makeSnapshotRefresher(
                 container: container,
                 settingsStore: settingsStore,
-                snapshotStore: makeSnapshotStore()
+                snapshotStore: makeSnapshotStore(),
+                timelineReloader: makeTimelineReloader()
             )
         )
     }

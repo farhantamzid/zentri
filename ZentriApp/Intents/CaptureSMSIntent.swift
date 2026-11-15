@@ -1,6 +1,5 @@
 import AppIntents
 import Foundation
-import WidgetKit
 import ZentriCore
 
 /// The action a Shortcuts "Message" automation runs to hand a bank message to Zentri.
@@ -9,7 +8,7 @@ import ZentriCore
 /// already in memory the capture goes through its live ``AppState``, so the open screens reload;
 /// otherwise it uses ``AppComposition``'s process-wide container and settings, which a window opened
 /// later shares. Either way ``CaptureSMSHandler`` does the work and the intent answers with a short
-/// dialog. Only a new transaction changes what the widgets show, so only that reloads them.
+/// dialog. The handler's snapshot refresher rewrites the widget snapshot and reloads the widgets.
 struct CaptureSMSIntent: AppIntent {
     static let title = LocalizedStringResource(
         "Capture Bank SMS",
@@ -70,9 +69,6 @@ struct CaptureSMSIntent: AppIntent {
             outcome = await standalone.handle(request)
             // A window may have opened while the message was being read; it shares the container.
             AppComposition.liveAppState?.mutate()
-        }
-        if case .transaction = outcome {
-            WidgetCenter.shared.reloadAllTimelines()
         }
         return .result(dialog: IntentDialog(handler.dialog(for: outcome, locale: .current)))
     }

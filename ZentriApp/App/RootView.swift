@@ -23,11 +23,17 @@ struct RootView: View {
         .task {
             await appState.retryPendingIngestion()
         }
+        .onOpenURL(perform: openURL)
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 sceneBecameActive()
             }
         }
+    }
+
+    /// Opens the tab a widget's `zentri://` link names.
+    private func openURL(_ url: URL) {
+        appState.open(url)
     }
 
     /// Shows anything a Shortcuts capture wrote while the app was in the background, and retries

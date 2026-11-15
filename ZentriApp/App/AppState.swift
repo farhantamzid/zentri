@@ -19,10 +19,9 @@ final class AppState {
     let parserBuilder: any ParserBuilding
     /// The on-device model client, asked only whether the model can run here.
     let modelClient: any TransactionModelClient
-    /// The refresher that keeps widgets in step with the store.
-    let snapshotRefresher: any WidgetSnapshotRefresher
-    /// Where the widget snapshot is written; "Delete All Data" removes it.
-    private let snapshotStore: any WidgetSnapshotStore
+    /// The refresher that keeps widgets in step with the store: it rewrites the snapshot and reloads
+    /// the widgets, and "Delete All Data" removes the snapshot through it.
+    let snapshotRefresher: WidgetSnapshotPublisher
 
     /// The selected root tab.
     var selectedTab: AppTab = .overview
@@ -41,18 +40,25 @@ final class AppState {
         settingsStore: SettingsStore,
         parserBuilder: any ParserBuilding,
         modelClient: any TransactionModelClient,
-        snapshotStore: any WidgetSnapshotStore
+        snapshotStore: any WidgetSnapshotStore,
+        timelineReloader: any WidgetTimelineReloading
     ) {
         self.container = container
         self.settingsStore = settingsStore
         self.parserBuilder = parserBuilder
         self.modelClient = modelClient
-        self.snapshotStore = snapshotStore
         self.snapshotRefresher = AppComposition.makeSnapshotRefresher(
             container: container,
             settingsStore: settingsStore,
-            snapshotStore: snapshotStore
+            snapshotStore: snapshotStore,
+            timelineReloader: timelineReloader
         )
+    }
+
+    /// Selects the tab a `zentri://` widget link names; any other URL is ignored.
+    func open(_ url: URL) {
+        guard let link = DeepLink(url: url) else { return }
+        selectedTab = AppTab(deepLink: link)
     }
 
     /// The money formatting for the current settings and the caller's locale.
@@ -159,14 +165,15 @@ final class AppState {
     /// Deletes everything Zentri keeps on this device and returns the app to setup.
     ///
     /// The store goes first, in one save: if that fails nothing has changed. Then the widget
-    /// snapshot is removed, so no widget keeps showing a balance from deleted data, and last the
+    /// snapshot is removed and the widgets reloaded, so no widget keeps showing a balance from
+    /// deleted data — they draw their "Open Zentri" placeholder instead — and last the
     /// settings document, which is what sends the root back to onboarding. A failure after the
     /// store is empty leaves a state the person can finish by deleting again. In `-UITestMode` the
     /// store is in memory, the snapshot store is inert, and the settings repository is in memory, so
     /// nothing real is touched.
     func eraseAllData() throws {
         try StoreEraser().eraseAll(in: container.mainContext)
-        try snapshotStore.remove()
+        try snapshotRefresher.removeSnapshot()
         try settingsStore.reset()
         transactionFilter = TransactionFilter()
         selectedTab = .overview

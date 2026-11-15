@@ -40,7 +40,8 @@ private func makeRunningApp(
         settingsStore: settingsStore,
         parserBuilder: RunningAppParserBuilder(result: result),
         modelClient: UnavailableModelClient(),
-        snapshotStore: FileWidgetSnapshotStore(fileURL: nil)
+        snapshotStore: FileWidgetSnapshotStore(fileURL: nil),
+        timelineReloader: InertTimelineReloader()
     )
 }
 
@@ -100,7 +101,8 @@ struct CaptureWhileRunningTests {
             settingsStore: SettingsStore(repository: InMemorySettingsRepository()),
             parserBuilder: RunningAppParserBuilder(result: .transaction(runningAppDraft)),
             modelClient: UnavailableModelClient(),
-            snapshotStore: FileWidgetSnapshotStore(fileURL: nil)
+            snapshotStore: FileWidgetSnapshotStore(fileURL: nil),
+            timelineReloader: InertTimelineReloader()
         )
 
         await appState.sceneDidBecomeActive()

@@ -28,7 +28,8 @@ private func makeAppState() throws -> (AppState, SettingsStore) {
         settingsStore: settingsStore,
         parserBuilder: UnusedParserBuilder(),
         modelClient: UnavailableModelClient(),
-        snapshotStore: FileWidgetSnapshotStore(fileURL: nil)
+        snapshotStore: FileWidgetSnapshotStore(fileURL: nil),
+        timelineReloader: InertTimelineReloader()
     )
     return (appState, settingsStore)
 }
@@ -74,7 +75,8 @@ private func makeAppState() throws -> (AppState, SettingsStore) {
         settingsStore: settingsStore,
         parserBuilder: UnusedParserBuilder(),
         modelClient: UnavailableModelClient(),
-        snapshotStore: snapshotStore
+        snapshotStore: snapshotStore,
+        timelineReloader: InertTimelineReloader()
     )
     var settings = AppSettings.defaultValue
     settings.currencyCode = "BDT"
@@ -106,7 +108,8 @@ private func makeAppState() throws -> (AppState, SettingsStore) {
         settingsStore: settingsStore,
         parserBuilder: UnusedParserBuilder(),
         modelClient: UnavailableModelClient(),
-        snapshotStore: snapshotStore
+        snapshotStore: snapshotStore,
+        timelineReloader: InertTimelineReloader()
     )
     await appState.snapshotRefresher.refresh()
     #expect(snapshotStore.read() != nil)
