@@ -14,7 +14,11 @@ public final class Category {
     public var colorToken: String
     /// The user's preferred ordering.
     public var sortOrder: Int
-    /// Whether the category ships with the app and cannot be deleted.
+    /// Whether the category ships with the app.
+    ///
+    /// Built-in categories can be renamed and deleted like any other, except the fallback category
+    /// (``CategorizationService/fallbackCategoryName``), which ``CategoryMutationService`` protects
+    /// by name.
     public var isSystem: Bool
 
     /// Transactions currently assigned to this category.

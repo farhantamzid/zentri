@@ -384,6 +384,21 @@ private func decimal(_ text: String) -> Decimal {
     #expect(store.read() == nil)
 }
 
+@Test func removeDeletesTheSnapshotAndToleratesAMissingFile() throws {
+    let url = temporarySnapshotURL()
+    defer { try? FileManager.default.removeItem(at: url) }
+    let store = FileWidgetSnapshotStore(fileURL: url)
+    try store.write(buildFixtureSnapshot())
+
+    try store.remove()
+
+    #expect(store.read() == nil)
+    #expect(!FileManager.default.fileExists(atPath: url.path(percentEncoded: false)))
+    // Nothing left to remove is already the requested state.
+    try store.remove()
+    try FileWidgetSnapshotStore(fileURL: nil).remove()
+}
+
 @Test func readReturnsNilForACorruptFile() throws {
     let url = temporarySnapshotURL()
     defer { try? FileManager.default.removeItem(at: url) }

@@ -9,6 +9,11 @@ public protocol WidgetSnapshotStore: Sendable {
     func read() -> WidgetSnapshot?
     /// Replaces the stored snapshot.
     func write(_ snapshot: WidgetSnapshot) throws
+    /// Deletes the stored snapshot, so the widgets fall back to their placeholder.
+    ///
+    /// Removing a snapshot that does not exist is not a failure: no stored snapshot is already the
+    /// requested state.
+    func remove() throws
 }
 
 /// A ``WidgetSnapshotStore`` backed by one JSON file, normally the App Group's.
@@ -64,6 +69,16 @@ public struct FileWidgetSnapshotStore: WidgetSnapshotStore {
         } catch {
             try? FileManager.default.removeItem(at: temporaryURL)
             throw error
+        }
+    }
+
+    public func remove() throws {
+        guard let fileURL else { return }
+        do {
+            try FileManager.default.removeItem(at: fileURL)
+        } catch let error as CocoaError where error.code == .fileNoSuchFile {
+            // Nothing is stored, so the requested state already holds.
+            return
         }
     }
 
