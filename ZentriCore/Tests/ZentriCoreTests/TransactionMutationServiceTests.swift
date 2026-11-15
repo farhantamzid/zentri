@@ -198,6 +198,40 @@ struct TransactionMutationServiceTests {
         #expect(transaction.amount == 99)
     }
 
+    @Test("Editing a manual transaction's date moves it in the balance too")
+    func editManualDate() async throws {
+        let store = try makeStore()
+        let service = makeService(store, refresher: CountingSnapshotRefresher())
+        let saved = try await service.save(edit(accountID: store.account.id), existing: nil)
+        let earlier = now.addingTimeInterval(-86_400)
+
+        try await service.save(edit(accountID: store.account.id, occurredAt: earlier), existing: saved)
+
+        #expect(saved.occurredAt == earlier)
+        #expect(saved.recordedAt == earlier)
+        #expect(saved.parseEngine == .manual)
+    }
+
+    @Test("An edit built from a transaction describes it unchanged")
+    func editFromTransaction() async throws {
+        let store = try makeStore()
+        let transaction = try addIngested(store)
+        transaction.note = "Ride home"
+
+        let current = TransactionEdit(transaction)
+
+        #expect(current == TransactionEdit(
+            accountID: store.account.id,
+            amount: 120,
+            direction: .debit,
+            occurredAt: now.addingTimeInterval(-60),
+            merchant: "Grab",
+            categoryID: store.transport.id,
+            note: "Ride home",
+            isTransfer: false
+        ))
+    }
+
     @Test("Delete removes the transaction, keeps its raw message, and refreshes the snapshot")
     func delete() async throws {
         let store = try makeStore()
