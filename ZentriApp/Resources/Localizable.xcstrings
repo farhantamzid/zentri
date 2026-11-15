@@ -2458,17 +2458,6 @@
         }
       }
     },
-    "": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ""
-          }
-        }
-      }
-    },
     "A rule files every transaction whose merchant contains its keyword in one category.": {
       "extractionState": "manual",
       "localizations": {
@@ -2809,17 +2798,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose a date that isn't in the future."
-          }
-        }
-      }
-    },
-    "Choose the parser engine, write and test regex rules for each account, and review the raw-message inbox. Coming in a later update.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose the parser engine, write and test regex rules for each account, and review the raw-message inbox. Coming in a later update."
           }
         }
       }
@@ -3170,28 +3148,6 @@
         }
       }
     },
-    "Export and import backups. Coming in a later update.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Export and import backups. Coming in a later update."
-          }
-        }
-      }
-    },
-    "Face ID": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Face ID"
-          }
-        }
-      }
-    },
     "Fallback · ^[%lld transaction](inflect: true)": {
       "comment": "The detail line under the Other category in Settings. The number is how many transactions it holds.",
       "extractionState": "manual",
@@ -3480,17 +3436,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Renames the category."
-          }
-        }
-      }
-    },
-    "Require Face ID to open Zentri. Coming in a later update.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Require Face ID to open Zentri. Coming in a later update."
           }
         }
       }
@@ -4901,17 +4846,6 @@
         }
       }
     },
-    "The sample with its captured groups marked": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The sample with its captured groups marked"
-          }
-        }
-      }
-    },
     "Sample message": {
       "extractionState": "manual",
       "localizations": {
@@ -5300,18 +5234,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zentri couldn't open its data. Open Zentri, then try again."
-          }
-        }
-      }
-    },
-    "%@": {
-      "comment": "An account's name, shown as-is in Shortcuts.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@"
           }
         }
       }
@@ -6392,6 +6314,174 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zentri keeps the latest 10 snapshots, so the backups already in this folder are deleted one by one as new ones are saved. Restore from the folder first if you need them."
+          }
+        }
+      }
+    },
+    "Captured groups are highlighted. The extracted fields follow.": {
+      "comment": "VoiceOver hint on the rule editor's sample message, whose captured parts are highlighted visually.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured groups are highlighted. The extracted fields follow."
+          }
+        }
+      }
+    },
+    "Face ID didn't confirm it's you, so the lock is still off.": {
+      "comment": "Settings › Appearance, under the Face ID toggle, after the check that turns the lock on failed or was cancelled.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID didn't confirm it's you, so the lock is still off."
+          }
+        }
+      }
+    },
+    "Face ID didn't unlock Zentri. Try again.": {
+      "comment": "Lock screen, after a failed or cancelled Face ID check.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID didn't unlock Zentri. Try again."
+          }
+        }
+      }
+    },
+    "Set up Face ID or a passcode in the Settings app to lock Zentri.": {
+      "comment": "Settings › Appearance, under the Face ID toggle, on a device with neither Face ID nor a passcode. 'Settings app' is the iOS Settings app.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up Face ID or a passcode in the Settings app to lock Zentri."
+          }
+        }
+      }
+    },
+    "This iPhone has no Face ID or passcode set up, so Zentri can't check it's you. Set one up in the Settings app, or turn the lock off.": {
+      "comment": "Lock screen on a device with neither Face ID nor a passcode. 'Settings app' is the iOS Settings app.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone has no Face ID or passcode set up, so Zentri can't check it's you. Set one up in the Settings app, or turn the lock off."
+          }
+        }
+      }
+    },
+    "transfer": {
+      "comment": "Spoken by VoiceOver in a recent transaction's summary, between the category and the amount, when the transaction is a transfer between the person's own accounts. Lowercase: it sits mid-sentence.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "transfer"
+          }
+        }
+      }
+    },
+    "Turn Off Lock": {
+      "comment": "Lock screen button, offered only when the device cannot check its owner; turns off Zentri's Face ID lock.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn Off Lock"
+          }
+        }
+      }
+    },
+    "Unlock": {
+      "comment": "Lock screen button that asks for Face ID.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock"
+          }
+        }
+      }
+    },
+    "Unlock with Face ID to see your finances.": {
+      "comment": "Lock screen message while waiting for Face ID.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock with Face ID to see your finances."
+          }
+        }
+      }
+    },
+    "Unlock Zentri to see your finances.": {
+      "comment": "The reason iOS shows in the Face ID or passcode prompt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock Zentri to see your finances."
+          }
+        }
+      }
+    },
+    "Zentri": {
+      "comment": "The app's name, shown alone on the privacy cover in the app switcher. Usually not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri"
+          }
+        }
+      }
+    },
+    "Zentri asks for Face ID when it opens and covers your data in the app switcher.": {
+      "comment": "Settings › Appearance, footer under the Face ID toggle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri asks for Face ID when it opens and covers your data in the app switcher."
+          }
+        }
+      }
+    },
+    "Zentri couldn't turn the lock off. Try again.": {
+      "comment": "Lock screen, when saving the setting that turns the lock off failed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't turn the lock off. Try again."
+          }
+        }
+      }
+    },
+    "Zentri is locked": {
+      "comment": "Lock screen title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri is locked"
           }
         }
       }

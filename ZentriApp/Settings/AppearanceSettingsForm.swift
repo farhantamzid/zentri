@@ -67,9 +67,20 @@ struct AppearanceSettingsForm: View {
             }
 
             Section {
-                SettingsLink(destination: .faceID)
+                Toggle("Require Face ID", isOn: $model.faceIDEnabled)
+                    .disabled(model.isCheckingFaceID)
+                    .frame(minHeight: Theme.Layout.minimumTapTarget)
+                    .accessibilityIdentifier("appearance.faceID")
             } header: {
                 Text("Security")
+            } footer: {
+                if let message = model.faceIDMessage {
+                    Text(message)
+                        .foregroundStyle(Theme.spending)
+                        .accessibilityIdentifier("appearance.faceID.message")
+                } else {
+                    Text("Zentri asks for Face ID when it opens and covers your data in the app switcher.")
+                }
             }
         }
         .scrollContentBackground(.hidden)

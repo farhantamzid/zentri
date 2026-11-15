@@ -3,13 +3,17 @@ import SwiftData
 import SwiftUI
 import ZentriCore
 
-/// The app's entry point: it builds the shared state and hands it to the root view.
+/// The app's entry point: it builds the shared state and the Face ID lock and hands them to the root
+/// view.
 @main
 struct ZentriApp: App {
     @State private var appState: AppState?
+    @State private var appLock: AppLockController
 
     init() {
-        _appState = State(initialValue: Self.makeAppState())
+        let appState = Self.makeAppState()
+        _appState = State(initialValue: appState)
+        _appLock = State(initialValue: AppComposition.makeAppLock(settings: appState?.settingsStore.settings))
     }
 
     var body: some Scene {
@@ -18,6 +22,7 @@ struct ZentriApp: App {
                 if let appState {
                     RootView()
                         .environment(appState)
+                        .environment(appLock)
                 } else {
                     ContainerUnavailableView(retry: reload)
                 }
@@ -26,9 +31,11 @@ struct ZentriApp: App {
         }
     }
 
-    /// Rebuilds the shared state after the container could not be opened.
+    /// Rebuilds the shared state after the container could not be opened, and the lock with it, so
+    /// a lock the settings turn on starts locked.
     private func reload() {
         appState = Self.makeAppState()
+        appLock = AppComposition.makeAppLock(settings: appState?.settingsStore.settings)
     }
 
     /// Builds the container, settings, parser, snapshot store, and shared state.

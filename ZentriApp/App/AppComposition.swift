@@ -46,7 +46,11 @@ enum AppComposition {
         }
         let store: SettingsStore
         if UITestSupport.isUITestMode {
-            store = SettingsStore(repository: InMemorySettingsRepository())
+            store = SettingsStore(
+                repository: UITestSupport.startsWithUnreadableSettings
+                    ? UnreadableSettingsRepository()
+                    : InMemorySettingsRepository()
+            )
         } else {
             // The App Group is the settings home. A build that cannot reach it (a missing
             // entitlement) falls back to app-local storage so the app still launches.
@@ -115,6 +119,24 @@ enum AppComposition {
     /// Background time for the backup written as the app leaves the screen; none for a UI test.
     static func makeBackgroundTasks(isUITestMode: Bool = UITestSupport.isUITestMode) -> any BackgroundTaskRunning {
         isUITestMode ? ImmediateBackgroundTasks() : ApplicationBackgroundTasks()
+    }
+
+    /// The device check behind the Face ID lock: LocalAuthentication, or the answer a UI test
+    /// scripted with `-UITestMockBiometrics`.
+    static func makeBiometricAuthenticator() -> any BiometricAuthenticating {
+        if UITestSupport.isUITestMode, let succeeds = UITestSupport.mockBiometricsSucceeds {
+            return UITestBiometrics(succeeds: succeeds)
+        }
+        return LocalAuthenticationService()
+    }
+
+    /// The app lock, locked from the start when the saved settings turn it on, so no data is drawn
+    /// before the first check.
+    static func makeAppLock(settings: AppSettings?) -> AppLockController {
+        AppLockController(
+            biometric: makeBiometricAuthenticator(),
+            faceIDEnabled: settings?.faceIDEnabled ?? false
+        )
     }
 
     /// A capture handler over the shared container and settings, for an intent that runs before any

@@ -2,12 +2,16 @@ import Foundation
 import Observation
 import ZentriCore
 
-/// Currency and number grouping, as Settings › Appearance changes them.
+/// Currency, number grouping, and the Face ID lock, as Settings › Appearance changes them.
 ///
 /// Grouping applies the moment it is picked. A new currency is only staged: the screen asks for
 /// confirmation first, because the stored amounts stay as they are — only the symbol changes. Saving
 /// goes through `apply`, which the app wires to `AppState.updateSettings(_:)` so the widget snapshot
 /// follows; every money label re-renders from the observed settings.
+///
+/// Face ID only turns on after the device's check passes, so nobody can lock themselves out of the
+/// app on a device that cannot check them; turning it off needs no check, since the person is
+/// already in.
 @MainActor
 @Observable
 final class AppearanceSettingsModel {
@@ -17,12 +21,22 @@ final class AppearanceSettingsModel {
     var failureMessage: LocalizedStringResource?
     /// Counts saved changes, which the save haptic watches.
     private(set) var savedCount = 0
+    /// Why Face ID could not be turned on, shown under the toggle.
+    private(set) var faceIDMessage: LocalizedStringResource?
+    /// Whether the check that turns Face ID on is running.
+    private(set) var isCheckingFaceID = false
 
     @ObservationIgnored private let settingsStore: SettingsStore
+    @ObservationIgnored private let biometric: any BiometricAuthenticating
     @ObservationIgnored private let apply: @MainActor (AppSettings) async throws -> Void
 
-    init(settingsStore: SettingsStore, apply: @escaping @MainActor (AppSettings) async throws -> Void) {
+    init(
+        settingsStore: SettingsStore,
+        biometric: any BiometricAuthenticating,
+        apply: @escaping @MainActor (AppSettings) async throws -> Void
+    ) {
         self.settingsStore = settingsStore
+        self.biometric = biometric
         self.apply = apply
     }
 
@@ -67,6 +81,36 @@ final class AppearanceSettingsModel {
         pendingCurrencyCode = nil
         var updated = settings
         updated.currencyCode = currencyCode
+        await save(updated)
+    }
+
+    /// The saved lock setting. Turning it on runs the device check first.
+    var faceIDEnabled: Bool {
+        get { settings.faceIDEnabled }
+        set {
+            guard newValue != settings.faceIDEnabled, !isCheckingFaceID else { return }
+            Task { await setFaceIDEnabled(newValue) }
+        }
+    }
+
+    /// Saves the lock setting; turning it on saves only after the device check passes.
+    func setFaceIDEnabled(_ enabled: Bool) async {
+        faceIDMessage = nil
+        if enabled {
+            guard biometric.canAuthenticate() else {
+                faceIDMessage = "Set up Face ID or a passcode in the Settings app to lock Zentri."
+                return
+            }
+            isCheckingFaceID = true
+            let passed = await biometric.authenticate()
+            isCheckingFaceID = false
+            guard passed else {
+                faceIDMessage = "Face ID didn't confirm it's you, so the lock is still off."
+                return
+            }
+        }
+        var updated = settings
+        updated.faceIDEnabled = enabled
         await save(updated)
     }
 

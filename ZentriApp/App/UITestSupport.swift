@@ -25,6 +25,10 @@ enum UITestSupport {
     static let seedParsingArgument = "-UITestSeedParsing"
     /// Clears the in-memory settings and store state before the test starts.
     static let resetArgument = "-UITestReset"
+    /// Replaces Face ID with a scripted answer: follow it with `success` or `failure`.
+    static let mockBiometricsArgument = "-UITestMockBiometrics"
+    /// Starts with a settings document that cannot be read, so the recovery screen shows.
+    static let unreadableSettingsArgument = "-UITestUnreadableSettings"
 
     /// The settings a UI test starts with when onboarding is skipped.
     static let fixtureSettings = AppSettings.defaultValue
@@ -47,6 +51,20 @@ enum UITestSupport {
     static var seedsParsing: Bool { arguments.contains(seedParsingArgument) }
     /// Whether the test wants an empty start.
     static var resetsState: Bool { arguments.contains(resetArgument) }
+    /// Whether the test wants the settings recovery screen.
+    static var startsWithUnreadableSettings: Bool { arguments.contains(unreadableSettingsArgument) }
+
+    /// The scripted Face ID answer — `true` for `success`, `false` for `failure` — or `nil` when the
+    /// test did not ask for one.
+    static var mockBiometricsSucceeds: Bool? {
+        guard let index = arguments.firstIndex(of: mockBiometricsArgument),
+              arguments.indices.contains(index + 1) else { return nil }
+        return switch arguments[index + 1] {
+        case "success": true
+        case "failure": false
+        default: nil
+        }
+    }
 
     /// Applies the launch switches to the in-memory container and settings store.
     ///

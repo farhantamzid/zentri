@@ -1,11 +1,21 @@
 import SwiftUI
+import ZentriCore
 
-/// The app's root: onboarding, settings recovery, or the tab shell, depending on stored settings.
+/// The app's root: onboarding, settings recovery, or the tab shell, depending on stored settings,
+/// under the Face ID lock's privacy cover.
+///
+/// With the lock on, the cover hides the app while it is locked and whenever the scene is not
+/// active, so the app-switcher snapshot is taken of the cover. The cover is drawn twice: an opaque
+/// layer in this hierarchy, which is present from the first frame of a cold launch, and the lock
+/// screen in a window of its own, which also hides sheets and pickers that sit above this view.
+/// The content beneath is hidden from VoiceOver while covered.
 struct RootView: View {
     @Environment(AppState.self) private var appState
+    @Environment(AppLockController.self) private var appLock
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
+        let isCovered = appLock.isCovering(sceneIsActive: scenePhase == .active)
         Group {
             if appState.settingsStore.loadFailure != nil {
                 SettingsRecoveryView(store: appState.settingsStore)
@@ -13,6 +23,19 @@ struct RootView: View {
                 OnboardingFlow()
             } else {
                 RootTabView()
+            }
+        }
+        .accessibilityHidden(isCovered)
+        .overlay {
+            if isCovered {
+                Theme.canvas
+                    .ignoresSafeArea()
+                    .accessibilityHidden(true)
+            }
+        }
+        .background {
+            PrivacyCoverWindowHost(isPresented: isCovered) {
+                PrivacyCoverView(lock: appLock, onTurnOff: turnOffLock)
             }
         }
         .sensoryFeedback(.success, trigger: appState.settingsStore.loadFailure) { oldValue, newValue in
@@ -34,11 +57,26 @@ struct RootView: View {
         .onChange(of: appState.dataRevision) {
             appState.backupScheduler.schedule()
         }
-        .onChange(of: scenePhase) { _, phase in
+        .onChange(of: appState.settingsStore.settings?.faceIDEnabled ?? false) { _, enabled in
+            appLock.faceIDEnabled = enabled
+        }
+        .onChange(of: appLock.isLocked) { _, isLocked in
+            if !isLocked {
+                openHeldURL()
+            }
+        }
+        .onChange(of: scenePhase, initial: true) { oldPhase, phase in
+            // The first call reports the launch phase: it only lets a locked app ask for Face ID.
+            // The foreground refresh and the backup flush follow real transitions.
+            if phase == .active {
+                requestUnlock()
+            }
+            guard oldPhase != phase else { return }
             switch phase {
             case .active:
                 sceneBecameActive()
             case .background:
+                appLock.lockIfNeeded()
                 appState.sceneDidEnterBackground()
             default:
                 break
@@ -54,9 +92,25 @@ struct RootView: View {
         }
     }
 
-    /// Opens the tab a widget's `zentri://` link names.
+    /// Opens the tab a widget's `zentri://` link names, or holds the link until the app unlocks.
     private func openURL(_ url: URL) {
-        appState.open(url)
+        if !appLock.holdIfLocked(url) {
+            appState.open(url)
+        }
+    }
+
+    /// Opens a link that arrived while the app was locked.
+    private func openHeldURL() {
+        if let url = appLock.takePendingURL() {
+            appState.open(url)
+        }
+    }
+
+    /// Asks for Face ID once after the app locked.
+    private func requestUnlock() {
+        Task {
+            await appLock.sceneDidBecomeActive()
+        }
     }
 
     /// Shows anything a Shortcuts capture wrote while the app was in the background, and retries
@@ -65,5 +119,18 @@ struct RootView: View {
         Task {
             await appState.sceneDidBecomeActive()
         }
+    }
+
+    /// Saves the lock off from the lock screen of a device that cannot check its owner.
+    private func turnOffLock() {
+        Task {
+            await appLock.turnOff(saving: saveLockOff)
+        }
+    }
+
+    private func saveLockOff() async throws {
+        guard var settings = appState.settingsStore.settings else { return }
+        settings.faceIDEnabled = false
+        try await appState.updateSettings(settings)
     }
 }
