@@ -33,25 +33,28 @@ struct ZentriApp: App {
 
     /// Builds the container, settings, parser, snapshot store, and shared state.
     ///
-    /// ``AppComposition`` builds each piece, the same way the Shortcuts capture does; in
+    /// ``AppComposition`` builds each piece and shares the container and settings with the Shortcuts
+    /// capture, which finds this state through ``AppComposition/liveAppState``. In
     /// `-UITestMode` every piece is in memory or inert, and the launch switches seed the fixtures. A
     /// failure to open the container returns nil, which the window shows as a recoverable error
     /// instead of a launch crash.
     private static func makeAppState() -> AppState? {
         do {
-            let container = try AppComposition.makeContainer()
-            let settingsStore = AppComposition.makeSettingsStore()
+            let container = try AppComposition.sharedContainer()
+            let settingsStore = AppComposition.sharedSettingsStore()
             if UITestSupport.isUITestMode {
                 try UITestSupport.prepare(container: container, settingsStore: settingsStore)
             }
             let modelClient = AppComposition.makeModelClient()
-            return AppState(
+            let appState = AppState(
                 container: container,
                 settingsStore: settingsStore,
                 parserBuilder: ParserFactory(modelClient: modelClient),
                 modelClient: modelClient,
                 snapshotStore: AppComposition.makeSnapshotStore()
             )
+            AppComposition.liveAppState = appState
+            return appState
         } catch {
             return nil
         }

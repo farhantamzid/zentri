@@ -207,7 +207,31 @@ struct CaptureSMSHandlerTests {
         #expect(dialog(handler, outcome) == "The message was saved and will finish when Zentri opens.")
     }
 
-    @Test func severalAccountsWithoutAChoiceAskForOneInTheShortcut() async throws {
+    @Test func severalAccountsWithoutAChoiceUseTheMatchedRulesAccount() async throws {
+        let store = try ParsingTestStore()
+        let savings = try store.addAccount("Savings", sortOrder: 1)
+        let rule = try store.addRule("Savings debit", account: savings)
+        let draft = TransactionDraft(
+            direction: .debit,
+            amount: Decimal(string: "12.50") ?? 0,
+            merchant: "KFC",
+            matchedRuleID: rule.id
+        )
+        let handler = makeHandler(store, settings: try completedSettings(), result: .transaction(draft))
+
+        let outcome = await handler.handle(captureRequest())
+
+        guard case .transaction(let id) = outcome else {
+            Issue.record("Expected a transaction, got \(outcome)")
+            return
+        }
+        let transaction = try store.context.fetch(FetchDescriptor<ZentriCore.Transaction>()).first { $0.id == id }
+        #expect(transaction?.account.id == savings.id)
+        #expect(dialog(handler, outcome) == "Recorded $12.50 at KFC.")
+    }
+
+    /// Only an answer no stored rule produced, such as the model's, leaves the account open.
+    @Test func severalAccountsAndNoMatchingRuleAskForAnAccount() async throws {
         let store = try ParsingTestStore()
         try store.addAccount("Savings", sortOrder: 1)
         let handler = makeHandler(store, settings: try completedSettings())
@@ -217,7 +241,7 @@ struct CaptureSMSHandlerTests {
         #expect(try store.context.fetch(FetchDescriptor<RawMessage>()).map(\.status) == [.failed])
         #expect(
             dialog(handler, outcome)
-                == "Zentri couldn't tell which account this message belongs to. Choose an account in the Shortcut. It's saved in the message inbox."
+                == "Zentri couldn't tell which account this message belongs to. Add a rule for it, or choose an account in the Shortcut. It's saved in the message inbox."
         )
     }
 

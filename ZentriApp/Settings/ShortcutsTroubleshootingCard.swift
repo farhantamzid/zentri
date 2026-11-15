@@ -22,7 +22,7 @@ struct ShortcutsTroubleshootingCard: View {
                 OnboardingFeatureRow(
                     symbolName: "building.columns",
                     title: "More than one account",
-                    detail: "Choose the account in the Capture Bank SMS action, so each message lands in the right one. A message Zentri can't place waits in the message inbox."
+                    detail: "A message a rule reads lands in that rule's account. If Apple Intelligence reads it instead, Zentri can't tell the account, so choose one in the Capture Bank SMS action or add a rule. A message Zentri can't place waits in the message inbox."
                 )
                 .accessibilityIdentifier("shortcuts.troubleshooting.account")
             }

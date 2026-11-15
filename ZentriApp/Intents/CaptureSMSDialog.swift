@@ -94,8 +94,8 @@ struct CaptureSMSDialog {
         }
         if has(field: "account") {
             return LocalizedStringResource(
-                "Zentri couldn't tell which account this message belongs to. Choose an account in the Shortcut. It's saved in the message inbox.",
-                comment: "Shortcut dialog when several accounts exist and the Shortcut chose none, or chose one that is unavailable."
+                "Zentri couldn't tell which account this message belongs to. Add a rule for it, or choose an account in the Shortcut. It's saved in the message inbox.",
+                comment: "Shortcut dialog when several accounts exist, the Shortcut chose none, and no rule matched; or the chosen account is unavailable."
             )
         }
         let reason = diagnostics.first.map { String(localized: $0.localizedMessage) }

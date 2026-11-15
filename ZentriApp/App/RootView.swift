@@ -3,6 +3,7 @@ import SwiftUI
 /// The app's root: onboarding, settings recovery, or the tab shell, depending on stored settings.
 struct RootView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
@@ -21,6 +22,19 @@ struct RootView: View {
         }
         .task {
             await appState.retryPendingIngestion()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                sceneBecameActive()
+            }
+        }
+    }
+
+    /// Shows anything a Shortcuts capture wrote while the app was in the background, and retries
+    /// messages a cancelled capture left pending.
+    private func sceneBecameActive() {
+        Task {
+            await appState.sceneDidBecomeActive()
         }
     }
 }

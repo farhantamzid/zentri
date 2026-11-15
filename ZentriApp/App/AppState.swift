@@ -33,6 +33,8 @@ final class AppState {
 
     /// Whether the launch retry has already run, so it runs at most once per session.
     @ObservationIgnored private var hasRetriedPendingIngestion = false
+    /// Whether a retry is running, so a launch retry and a foreground retry never overlap.
+    @ObservationIgnored private var isRetryingPendingIngestion = false
 
     init(
         container: ModelContainer,
@@ -179,14 +181,58 @@ final class AppState {
         dataRevision += 1
     }
 
-    /// Retries messages that an interruption left `processing`.
+    /// Retries messages that an interruption left `processing`, once per session.
     ///
     /// While onboarding is showing there are no settings and nothing to retry, so this is a no-op.
-    /// The service is built per retry with a live settings provider, so a parser-mode change
-    /// applies to the next attempt instead of freezing today's settings into the service.
+    /// Returning to the foreground retries again through ``sceneDidBecomeActive()``.
     func retryPendingIngestion() async {
         guard settingsStore.settings != nil, !hasRetriedPendingIngestion else { return }
         hasRetriedPendingIngestion = true
+        if await !runPendingRetry() {
+            // A retry cancelled because the view went away can run again on the next appearance.
+            hasRetriedPendingIngestion = false
+        }
+    }
+
+    /// Catches up after the app returns to the foreground.
+    ///
+    /// A Shortcuts capture can run while Zentri is suspended in memory. It writes through this state's
+    /// container, so every screen only needs to reload; and a capture that was cancelled left its
+    /// message `processing`, so pending messages are retried now rather than on the next cold launch.
+    func sceneDidBecomeActive() async {
+        mutate()
+        guard settingsStore.settings != nil else { return }
+        hasRetriedPendingIngestion = true
+        _ = await runPendingRetry()
+    }
+
+    /// Runs one Shortcuts capture through this state's container and settings, then tells every
+    /// screen, so a capture made while the app is alive shows without a relaunch.
+    func capture(_ request: IngestionRequest) async -> IngestionOutcome {
+        let outcome = await makeCaptureSMSHandler().handle(request)
+        mutate()
+        return outcome
+    }
+
+    /// A capture handler over this state's container, settings, parser, and widget refresher.
+    func makeCaptureSMSHandler() -> CaptureSMSHandler {
+        CaptureSMSHandler(
+            container: container,
+            settingsStore: settingsStore,
+            parserBuilder: parserBuilder,
+            snapshotRefresher: snapshotRefresher
+        )
+    }
+
+    /// Retries every pending message and tells every screen; returns `false` when cancelled.
+    ///
+    /// Only one retry runs at a time, so a launch retry and a foreground retry can never parse the
+    /// same row twice. The service is built per retry with a live settings provider, so a
+    /// parser-mode change applies to the next attempt instead of freezing today's settings.
+    private func runPendingRetry() async -> Bool {
+        guard !isRetryingPendingIngestion else { return true }
+        isRetryingPendingIngestion = true
+        defer { isRetryingPendingIngestion = false }
 
         let service = IngestionService(
             context: container.mainContext,
@@ -196,11 +242,8 @@ final class AppState {
             now: { .now }
         )
         _ = await service.retryPending()
-        guard !Task.isCancelled else {
-            // A retry cancelled because the view went away can run again on the next appearance.
-            hasRetriedPendingIngestion = false
-            return
-        }
+        guard !Task.isCancelled else { return false }
         mutate()
+        return true
     }
 }

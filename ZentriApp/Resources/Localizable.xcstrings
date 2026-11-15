@@ -5446,18 +5446,6 @@
         }
       }
     },
-    "Zentri couldn't tell which account this message belongs to. Choose an account in the Shortcut. It's saved in the message inbox.": {
-      "comment": "Shortcut dialog when several accounts exist and the Shortcut chose none, or chose one that is unavailable.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zentri couldn't tell which account this message belongs to. Choose an account in the Shortcut. It's saved in the message inbox."
-          }
-        }
-      }
-    },
     "The message couldn't be read.": {
       "comment": "Fallback reason in the Shortcut dialog when a failure carries no explanation.",
       "extractionState": "manual",
@@ -5662,18 +5650,6 @@
         }
       }
     },
-    "Choose the account in the Capture Bank SMS action, so each message lands in the right one. A message Zentri can't place waits in the message inbox.": {
-      "comment": "Troubleshooting detail about choosing an account in the action.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose the account in the Capture Bank SMS action, so each message lands in the right one. A message Zentri can't place waits in the message inbox."
-          }
-        }
-      }
-    },
     "A Shortcuts automation hands each bank message to Zentri, which reads it on this iPhone. iOS doesn't let apps create automations, so you build it once in the Shortcuts app.": {
       "comment": "Introduction at the top of the Shortcuts setup guide.",
       "extractionState": "manual",
@@ -5694,6 +5670,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Read the Setup Guide"
+          }
+        }
+      }
+    },
+    "Zentri couldn't tell which account this message belongs to. Add a rule for it, or choose an account in the Shortcut. It's saved in the message inbox.": {
+      "comment": "Shortcut dialog when several accounts exist, the Shortcut chose none, and no rule matched; or the chosen account is unavailable.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't tell which account this message belongs to. Add a rule for it, or choose an account in the Shortcut. It's saved in the message inbox."
+          }
+        }
+      }
+    },
+    "A message a rule reads lands in that rule's account. If Apple Intelligence reads it instead, Zentri can't tell the account, so choose one in the Capture Bank SMS action or add a rule. A message Zentri can't place waits in the message inbox.": {
+      "comment": "Troubleshooting detail about how a capture picks the account when there are several.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A message a rule reads lands in that rule's account. If Apple Intelligence reads it instead, Zentri can't tell the account, so choose one in the Capture Bank SMS action or add a rule. A message Zentri can't place waits in the message inbox."
           }
         }
       }

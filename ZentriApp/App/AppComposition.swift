@@ -5,20 +5,44 @@ import ZentriCore
 /// Builds the store, settings, model client, and widget snapshot plumbing the app and its intents
 /// share, so a Shortcut capture writes to exactly what the app reads.
 ///
+/// The container and the settings store are built once per process. A Shortcuts capture runs inside
+/// the app's process, often while Zentri is suspended in memory, so it must write through the same
+/// container — and the same main context — the app's screens read; a second container on the same
+/// store would leave those screens showing stale rows. ``liveAppState`` is how a capture finds the
+/// running app to tell it the store changed.
+///
 /// `-UITestMode` swaps the App Group store, the settings file, and the snapshot file for in-memory
 /// or inert equivalents, so a UI test can never read or write real shared state.
+@MainActor
 enum AppComposition {
-    /// The SwiftData container: the App Group store, or an in-memory one for a UI test.
-    static func makeContainer() throws -> ModelContainer {
-        try ZentriContainer.make(inMemory: UITestSupport.isUITestMode)
+    /// The app's shared state once a window has built it, or `nil` when the process was launched
+    /// only to run an intent. Held weakly: the app owns it.
+    static weak var liveAppState: AppState?
+
+    private static var container: ModelContainer?
+    private static var settingsStore: SettingsStore?
+
+    /// The process-wide SwiftData container: the App Group store, or an in-memory one for a UI test.
+    ///
+    /// Built on first use and kept; a failure is not cached, so a later call can try again.
+    static func sharedContainer() throws -> ModelContainer {
+        if let container {
+            return container
+        }
+        let made = try ZentriContainer.make(inMemory: UITestSupport.isUITestMode)
+        container = made
+        return made
     }
 
-    /// The settings store, already loaded: in memory for a UI test, the shared file otherwise.
+    /// The process-wide settings store, loaded on first use: in memory for a UI test, the shared file
+    /// otherwise.
     ///
     /// A document that cannot be read leaves `settings` nil and `loadFailure` set, which the app shows
     /// as recovery and a capture reports as unfinished setup.
-    @MainActor
-    static func makeSettingsStore() -> SettingsStore {
+    static func sharedSettingsStore() -> SettingsStore {
+        if let settingsStore {
+            return settingsStore
+        }
         let store: SettingsStore
         if UITestSupport.isUITestMode {
             store = SettingsStore(repository: InMemorySettingsRepository())
@@ -30,6 +54,7 @@ enum AppComposition {
             store = SettingsStore(repository: FileSettingsStore(fileURL: url))
         }
         try? store.load()
+        settingsStore = store
         return store
     }
 
@@ -53,7 +78,6 @@ enum AppComposition {
 
     /// The refresher that rewrites the widget snapshot from the container's main context, reading the
     /// live settings on every refresh so a currency change reaches the widgets.
-    @MainActor
     static func makeSnapshotRefresher(
         container: ModelContainer,
         settingsStore: SettingsStore,
@@ -65,6 +89,23 @@ enum AppComposition {
             settings: { [weak settingsStore] in settingsStore?.settings ?? .defaultValue },
             now: { .now },
             calendar: .current
+        )
+    }
+
+    /// A capture handler over the shared container and settings, for an intent that runs before any
+    /// window has built the app's state.
+    static func makeStandaloneCaptureHandler() throws -> CaptureSMSHandler {
+        let container = try sharedContainer()
+        let settingsStore = sharedSettingsStore()
+        return CaptureSMSHandler(
+            container: container,
+            settingsStore: settingsStore,
+            parserBuilder: ParserFactory(modelClient: makeModelClient()),
+            snapshotRefresher: makeSnapshotRefresher(
+                container: container,
+                settingsStore: settingsStore,
+                snapshotStore: makeSnapshotStore()
+            )
         )
     }
 }

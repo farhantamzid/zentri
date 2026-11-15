@@ -20,9 +20,12 @@ Shortcuts app. Check it by hand on a simulator or a device after any change to c
    added.", and no second transaction.
 7. Run it with text no rule reads, such as `Your code is 123456.` Expect a "not a transaction" or "couldn't
    read" dialog, and the message in the inbox.
-8. Add a second account, run the action without choosing one, and expect the dialog asking you to choose
-   an account in the Shortcut. Choose an account in the action and run it again: the transaction lands on
-   that account.
+8. Add a second account and a rule for it that reads a new sample message. Run the action with that
+   message without choosing an account: the transaction lands on the rule's account. With a message only
+   Apple Intelligence reads, expect the dialog asking for a rule or an account in the Shortcut; choose an
+   account in the action and run it again, and the transaction lands on that account.
+9. With Zentri open in the background (switch away without closing it), run the action, then switch back:
+   the new transaction shows on Overview without relaunching.
 
 ### Device: real message automation
 
