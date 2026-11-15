@@ -62,7 +62,58 @@ final class InsightsUITests: XCTestCase {
         XCTAssertFalse(transactionRow("Grab", in: app).exists, "The list is not filtered to Dining")
     }
 
+    func testTheMonthArrowsAnswerAcrossTheirWholeTapTarget() {
+        let app = launchedOnInsights()
+        let month = app.staticTexts["insights.month"]
+        XCTAssertTrue(month.waitForExistence(timeout: 10), "The month selector is missing")
+
+        // Near the left edge of the 44-point target, well outside the chevron glyph itself.
+        app.buttons["insights.previousMonth"].coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.5)).tap()
+
+        let lastMonth = Calendar.current.date(byAdding: .month, value: -1, to: Date.now)!
+        XCTAssertTrue(
+            waitForLabel(monthName(lastMonth), of: month),
+            "A tap at the edge of the previous-month target did not change the month; it reads \(month.label)"
+        )
+    }
+
+    func testASelectedSliceStaysSelectedAndOpensItsTransactions() {
+        let app = launchedOnInsights()
+        let chart = app.descendants(matching: .any)["insights.categoryChart"].firstMatch
+        XCTAssertTrue(chart.waitForExistence(timeout: 10), "The category donut is missing")
+        if !chart.isHittable {
+            app.swipeUp()
+        }
+
+        // Dining is the quarter of the donut between nine and twelve o'clock; tap the middle of its ring.
+        chart.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .withOffset(CGVector(dx: -60, dy: -60))
+            .tap()
+
+        // The selection outlives the finger, so its button can be tapped.
+        let show = app.buttons["insights.categoryChart.show"]
+        XCTAssertTrue(show.waitForExistence(timeout: 5), "Selecting a slice offers no way to its transactions")
+        XCTAssertTrue(show.label.contains("Dining"), "The button reads \(show.label)")
+        XCTAssertTrue(show.isHittable, "The slice's button is not tappable")
+        show.tap()
+
+        XCTAssertTrue(
+            waitForSelection(of: app.tabBars.buttons["Transactions"]),
+            "The slice's button did not switch to Transactions"
+        )
+        XCTAssertTrue(transactionRow("Starbucks", in: app).waitForExistence(timeout: 5), "The Dining row is missing")
+        XCTAssertFalse(transactionRow("Grab", in: app).exists, "The list is not filtered to Dining")
+    }
+
     // MARK: - Helpers
+
+    private func launchedOnInsights() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed", "-UITestSeedInsights"]
+        app.launch()
+        app.tabBars.buttons["Insights"].tap()
+        return app
+    }
 
     private func monthName(_ date: Date) -> String {
         date.formatted(.dateTime.month(.wide).year())

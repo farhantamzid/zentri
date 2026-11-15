@@ -11,11 +11,13 @@ struct InsightsFailureState: View {
         } description: {
             Text("Zentri couldn't read your data just now. Try again.")
         } actions: {
-            Button("Try Again", action: onRetry)
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .frame(minHeight: Theme.Layout.minimumTapTarget)
-                .accessibilityIdentifier("insights.retry")
+            Button(action: onRetry) {
+                Text("Try Again")
+                    .frame(minHeight: Theme.Layout.minimumTapTarget)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("insights.retry")
         }
     }
 }

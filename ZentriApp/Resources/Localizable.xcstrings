@@ -2466,7 +2466,7 @@
       }
     },
     "%@: received %@, spent %@": {
-      "comment": "One row of the income and spending chart's table-style VoiceOver summary. The first %@ is a month and year; the others are formatted money amounts.",
+      "comment": "A month's income and spending: one row of the six-month chart's audio graph, and the summary under the chart. The first %@ is a month and year; the others are formatted money amounts.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2497,6 +2497,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "No spending to rank"
+          }
+        }
+      }
+    },
+    "Total %@. Highest: %@ on %@.": {
+      "comment": "The summary under the Insights daily spending chart, also its audio graph's summary. The first two %@ are formatted money amounts; the last is a day, e.g. Monday, Nov 2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total %@. Highest: %@ on %@."
+          }
+        }
+      }
+    },
+    "Largest: %@, %@ of spending.": {
+      "comment": "The summary under the Insights category donut, also its audio graph's summary. The first %@ is a category name; the second is its percentage share, e.g. 75%.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Largest: %@, %@ of spending."
           }
         }
       }

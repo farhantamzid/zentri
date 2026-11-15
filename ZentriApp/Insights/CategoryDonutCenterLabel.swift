@@ -1,23 +1,23 @@
 import SwiftUI
-import ZentriCore
 
 /// What the middle of the category donut says: the selected slice's name, amount, and share, or a
 /// prompt to pick one.
 ///
 /// It repeats what the selected slice already announces, so VoiceOver skips it.
 struct CategoryDonutCenterLabel: View {
-    let category: CategoryTotal?
+    let slice: CategoryDonutChartData.Slice?
 
     var body: some View {
         VStack(spacing: Theme.Spacing.xs / 2) {
-            if let category {
-                Text(category.categoryName)
+            if let slice {
+                Text(slice.category.categoryName)
                     .font(.subheadline)
                     .foregroundStyle(Theme.secondaryInk)
-                MoneyText(category.amount)
+                Text(slice.amountText)
+                    .monospacedDigit()
                     .font(.headline)
                     .foregroundStyle(Theme.ink)
-                Text(category.formattedShare)
+                Text(slice.shareText)
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
             } else {
