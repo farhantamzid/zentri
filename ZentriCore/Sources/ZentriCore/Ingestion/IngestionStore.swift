@@ -14,15 +14,7 @@ struct IngestionStore {
 
     /// The non-archived accounts, in the order an account picker shows them.
     func activeAccounts() -> [Account] {
-        let accounts = (try? context.fetch(FetchDescriptor<Account>())) ?? []
-        return accounts
-            .filter { $0.archivedAt == nil }
-            .sorted { lhs, rhs in
-                if lhs.sortOrder != rhs.sortOrder {
-                    return lhs.sortOrder < rhs.sortOrder
-                }
-                return lhs.id.uuidString < rhs.id.uuidString
-            }
+        (try? AccountLookup.activeAccounts(in: context)) ?? []
     }
 
     /// The account of the rule that produced `draft`, when a stored rule did.
