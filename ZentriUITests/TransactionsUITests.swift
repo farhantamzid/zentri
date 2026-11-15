@@ -91,6 +91,50 @@ final class TransactionsUITests: XCTestCase {
         assertLabel("transactions.balance", contains: usd(startingBalance - 25), in: app)
     }
 
+    func testAnAmountTypedLastIsSavedWithoutLeavingTheField() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed", "-UITestSeedHistory"]
+        app.launch()
+        app.tabBars.buttons["Transactions"].tap()
+
+        let grab = row("Grab", in: app)
+        XCTAssertTrue(grab.waitForExistence(timeout: 10), "The Grab row is missing")
+        grab.tap()
+        app.buttons["transactions.detail.edit"].tap()
+
+        // The amount is the last thing touched: Save is tapped while the field still has focus.
+        let amount = app.textFields["transactions.editor.amount"]
+        XCTAssertTrue(amount.waitForExistence(timeout: 5), "The editor did not open")
+        amount.tap()
+        amount.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 8) + "75")
+        app.buttons["transactions.editor.save"].tap()
+
+        assertLabel("transactions.detail.amount", contains: usd(75), in: app)
+    }
+
+    func testANewTransactionsAmountTypedLastIsSavedWithoutLeavingTheField() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed"]
+        app.launch()
+        app.tabBars.buttons["Transactions"].tap()
+
+        let add = app.buttons["transactions.add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 10), "The add button is missing")
+        add.tap()
+        let merchant = app.textFields["transactions.editor.merchant"]
+        XCTAssertTrue(merchant.waitForExistence(timeout: 5), "The editor did not open")
+        merchant.tap()
+        merchant.typeText("Corner shop")
+        let amount = app.textFields["transactions.editor.amount"]
+        amount.tap()
+        amount.typeText("42")
+        app.buttons["transactions.editor.save"].tap()
+
+        let saved = row("Corner shop", in: app)
+        XCTAssertTrue(saved.waitForExistence(timeout: 5), "The new transaction was not saved")
+        XCTAssertTrue(saved.label.contains(usd(42)), "The row reads \(saved.label)")
+    }
+
     func testAnEmptyStoreExplainsThatMessagesFillTheList() {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding"]

@@ -52,6 +52,7 @@ private struct Fixture {
     let everyday: Account
     let savings: Account
     let dining: ZentriCore.Category
+    let other: ZentriCore.Category
 
     init() throws {
         store = Store(container: try ZentriContainer.make(inMemory: true))
@@ -65,7 +66,7 @@ private struct Fixture {
         dining = ZentriCore.Category(name: "Dining", symbolName: "fork.knife", colorToken: "coral", sortOrder: 0)
         let income = ZentriCore.Category(name: "Income", symbolName: "banknote", colorToken: "green", sortOrder: 1)
         let shopping = ZentriCore.Category(name: "Shopping", symbolName: "bag", colorToken: "violet", sortOrder: 2)
-        let other = ZentriCore.Category(name: "Other", symbolName: "ellipsis", colorToken: "slate", sortOrder: 3)
+        other = ZentriCore.Category(name: "Other", symbolName: "ellipsis", colorToken: "slate", sortOrder: 3)
         for category in [dining, income, shopping, other] {
             context.insert(category)
         }
@@ -161,7 +162,7 @@ struct TransactionsModelTests {
         let grab = try #require(items.first { $0.merchant == "Grab" })
         #expect(grab.isManual)
         #expect(grab.isTransfer)
-        // An uncategorized row is shown as the live Other category but filters as uncategorized.
+        // An uncategorized row keeps no category of its own but is shown as the live Other category.
         #expect(grab.categoryName == "Other")
         #expect(grab.categoryID == nil)
     }
@@ -207,6 +208,17 @@ struct TransactionsModelTests {
 
         model.apply(TransactionFilter(accountID: fixture.everyday.id, direction: .debit))
         #expect(model.merchants == ["Starbucks", "Amazon"])
+    }
+
+    @Test("Filtering by Other includes the uncategorized rows shown as Other")
+    func otherIncludesUncategorized() throws {
+        let fixture = try Fixture()
+        let model = fixture.model()
+        model.refresh(filter: TransactionFilter())
+
+        model.apply(TransactionFilter(categoryID: fixture.other.id))
+
+        #expect(model.merchants == ["Grab"])
     }
 
     @Test("A date range covers both ends' whole days, whatever the times in it")

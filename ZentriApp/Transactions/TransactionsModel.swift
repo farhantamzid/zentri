@@ -30,6 +30,8 @@ final class TransactionsModel {
     @ObservationIgnored private var items: [TransactionListItem] = []
     @ObservationIgnored private var storedTransactions: [UUID: ZentriCore.Transaction] = [:]
     @ObservationIgnored private var ruleNames: [UUID: String] = [:]
+    /// The live `Other` category, which uncategorized rows are shown as and filtered as.
+    @ObservationIgnored private var fallbackCategoryID: UUID?
 
     private let reads: TransactionsStoreReads
     private let calendar: Calendar
@@ -65,6 +67,7 @@ final class TransactionsModel {
             items = []
             storedTransactions = [:]
             ruleNames = [:]
+            fallbackCategoryID = nil
             hasTransactions = false
             balance = nil
             accounts = []
@@ -104,6 +107,7 @@ private extension TransactionsModel {
         rules: [ParsingRule]
     ) {
         let fallback = catalog.first { $0.name == CategorizationService.fallbackCategoryName }
+        fallbackCategoryID = fallback?.id
         items = transactions.map { item(from: $0, fallback: fallback) }
         storedTransactions = Dictionary(transactions.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         ruleNames = Dictionary(rules.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
@@ -116,31 +120,8 @@ private extension TransactionsModel {
         categories = catalog.map {
             TransactionCategoryOption(id: $0.id, name: $0.name, symbolName: $0.symbolName, colorToken: $0.colorToken)
         }
-        balance = active.isEmpty ? nil : combinedBalance(of: active)
-    }
-
-    /// The same balance the Overview shows: each active account's newest checkpoint plus what was
-    /// recorded after it.
-    func combinedBalance(of accounts: [Account]) -> Decimal {
-        BalanceCalculator.combined(
-            accountIDs: accounts.map(\.id),
-            checkpoints: accounts.flatMap(\.checkpoints).map {
-                CheckpointValue(
-                    accountID: $0.account.id,
-                    amount: $0.amount,
-                    recordedAt: $0.recordedAt,
-                    createdAt: $0.createdAt
-                )
-            },
-            transactions: accounts.flatMap(\.transactions).map {
-                TransactionValue(
-                    accountID: $0.account.id,
-                    amount: $0.amount,
-                    direction: $0.direction,
-                    recordedAt: $0.recordedAt
-                )
-            }
-        )
+        // The same shared calculation the Overview hero uses, so the two always agree.
+        balance = active.isEmpty ? nil : BalanceCalculator.combined(accounts: active)
     }
 
     /// The list's copy of a stored transaction. An uncategorized one is shown as the live `Other`
@@ -173,7 +154,9 @@ private extension TransactionsModel {
 private extension TransactionsModel {
     func matches(_ item: TransactionListItem, _ filter: TransactionFilter) -> Bool {
         if let accountID = filter.accountID, item.accountID != accountID { return false }
-        if let categoryID = filter.categoryID, item.categoryID != categoryID { return false }
+        // An uncategorized row is shown as `Other`, and the Overview and Insights count it there,
+        // so filtering by `Other` must include it.
+        if let categoryID = filter.categoryID, (item.categoryID ?? fallbackCategoryID) != categoryID { return false }
         if let direction = filter.direction, item.direction != direction { return false }
         if let engine = filter.engine, item.engine != engine { return false }
         if let range = filter.dateRange, !contains(range, item.occurredAt) { return false }

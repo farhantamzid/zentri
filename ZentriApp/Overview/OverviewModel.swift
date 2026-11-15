@@ -79,32 +79,13 @@ private extension OverviewModel {
     /// The dashboard's numbers for the accounts that were read and the health of the messages.
     func summary(for accounts: [Account], health: IngestionHealth) -> OverviewSummary {
         let instant = now()
-        let checkpoints = accounts.flatMap(\.checkpoints)
         let transactions = accounts.flatMap(\.transactions)
         let fallbackCategory = transactions.isEmpty ? nil : fallbackCategory()
         let snapshots = transactions.map { transactionSnapshot(from: $0, fallback: fallbackCategory) }
         let month = calculateSummary(transactions: snapshots, in: monthPeriod(containing: instant))
 
         return OverviewSummary(
-            balance: BalanceCalculator.combined(
-                accountIDs: accounts.map(\.id),
-                checkpoints: checkpoints.map {
-                    CheckpointValue(
-                        accountID: $0.account.id,
-                        amount: $0.amount,
-                        recordedAt: $0.recordedAt,
-                        createdAt: $0.createdAt
-                    )
-                },
-                transactions: transactions.map {
-                    TransactionValue(
-                        accountID: $0.account.id,
-                        amount: $0.amount,
-                        direction: $0.direction,
-                        recordedAt: $0.recordedAt
-                    )
-                }
-            ),
+            balance: BalanceCalculator.combined(accounts: accounts),
             asOf: asOf(accounts: accounts) ?? instant,
             todaySpend: calculateSummary(
                 transactions: snapshots,
