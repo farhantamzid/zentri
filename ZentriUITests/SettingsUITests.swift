@@ -24,7 +24,7 @@ final class SettingsUITests: XCTestCase {
             ("settings.about", "About"),
         ]
         for (identifier, title) in rows {
-            let row = app.buttons[identifier]
+            let row = app.scrolledTo(app.buttons[identifier])
             XCTAssertTrue(row.waitForExistence(timeout: 5), "Settings has no \(title) row")
             XCTAssertTrue(row.label.contains(title), "The \(identifier) row reads \(row.label)")
         }
@@ -56,7 +56,7 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(savings.label.contains(usd(2_500)), "The new account's row reads \(savings.label)")
 
         // The Overview total includes it.
-        app.tabBars.buttons["Overview"].tap()
+        app.tab("Overview").tap()
         let hero = element("label BEGINSWITH %@", ["Combined balance"], in: app)
         XCTAssertTrue(hero.waitForExistence(timeout: 10), "The balance hero did not appear")
         XCTAssertTrue(
@@ -65,7 +65,7 @@ final class SettingsUITests: XCTestCase {
         )
 
         // Set balance updates the account's balance and the total.
-        app.tabBars.buttons["Settings"].tap()
+        app.tab("Settings").tap()
         accountRow("Savings", in: app).tap()
         let setBalance = app.buttons["accounts.detail.setBalance"]
         XCTAssertTrue(setBalance.waitForExistence(timeout: 5), "The account detail has no Set Balance")
@@ -80,7 +80,7 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(balance.waitForExistence(timeout: 5), "The detail balance is missing")
         XCTAssertTrue(waitForLabel(of: balance, toContain: usd(3_000)), "The detail balance reads \(balance.label)")
 
-        app.tabBars.buttons["Overview"].tap()
+        app.tab("Overview").tap()
         XCTAssertTrue(
             waitForLabel(of: hero, toContain: usd(startingBalance + 3_000)),
             "The hero reads \(hero.label) after setting the balance"
@@ -144,7 +144,7 @@ final class SettingsUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed"]
         app.launch()
-        let settings = app.tabBars.buttons["Settings"]
+        let settings = app.tab("Settings")
         XCTAssertTrue(settings.waitForExistence(timeout: 10), "The tab bar did not appear")
         settings.tap()
         return app

@@ -17,7 +17,7 @@ final class InsightsUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed", "-UITestSeedInsights"]
         app.launch()
-        app.tabBars.buttons["Insights"].tap()
+        app.tab("Insights").tap()
 
         // The selected month is this month.
         let month = app.staticTexts["insights.month"]
@@ -55,7 +55,7 @@ final class InsightsUITests: XCTestCase {
         // Tapping a category opens Transactions filtered to it.
         categoryRow("Dining", in: app).tap()
         XCTAssertTrue(
-            waitForSelection(of: app.tabBars.buttons["Transactions"]),
+            waitForSelection(of: app.tab("Transactions")),
             "Tapping a category did not switch to Transactions"
         )
         XCTAssertTrue(transactionRow("Starbucks", in: app).waitForExistence(timeout: 5), "The Dining row is missing")
@@ -98,7 +98,7 @@ final class InsightsUITests: XCTestCase {
         show.tap()
 
         XCTAssertTrue(
-            waitForSelection(of: app.tabBars.buttons["Transactions"]),
+            waitForSelection(of: app.tab("Transactions")),
             "The slice's button did not switch to Transactions"
         )
         XCTAssertTrue(transactionRow("Starbucks", in: app).waitForExistence(timeout: 5), "The Dining row is missing")
@@ -129,7 +129,7 @@ final class InsightsUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed", "-UITestSeedInsights"]
         app.launch()
-        app.tabBars.buttons["Insights"].tap()
+        app.tab("Insights").tap()
         return app
     }
 

@@ -25,7 +25,7 @@ final class AccessibilityUITests: XCTestCase {
         assertFitsHorizontally(hero, in: window, "The balance hero")
 
         for title in ["Overview", "Transactions", "Insights", "Settings"] {
-            let tab = app.tabBars.buttons[title]
+            let tab = app.tab(title)
             XCTAssertTrue(tab.exists, "The \(title) tab is missing")
             XCTAssertTrue(tab.isHittable, "The \(title) tab is not reachable")
             assertFitsHorizontally(tab, in: window, "The \(title) tab")
@@ -44,7 +44,7 @@ final class AccessibilityUITests: XCTestCase {
         XCTAssertFalse((today.value as? String ?? "").isEmpty, "Today's bar has no amount")
 
         // Insights' daily chart.
-        app.tabBars.buttons["Insights"].tap()
+        app.tab("Insights").tap()
         let daily = app.descendants(matching: .any)["insights.dailyChart"].firstMatch
         XCTAssertTrue(scrollUntilExists(daily, in: app), "The daily spending chart is missing")
         XCTAssertEqual(daily.label, "Daily spending")

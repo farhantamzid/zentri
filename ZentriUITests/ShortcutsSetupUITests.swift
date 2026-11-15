@@ -13,7 +13,7 @@ final class ShortcutsSetupUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed"]
         app.launch()
-        let settings = app.tabBars.buttons["Settings"]
+        let settings = app.tab("Settings")
         XCTAssertTrue(settings.waitForExistence(timeout: 10), "The tab bar did not appear")
         settings.tap()
 
@@ -62,7 +62,7 @@ final class ShortcutsSetupUITests: XCTestCase {
         tapClearOfFooter(app.buttons["onboarding.shortcuts.guide"], in: app)
         assertGuide(in: app)
 
-        app.buttons["shortcuts.guide.done"].tap()
+        app.scrolledBackTo(app.buttons["shortcuts.guide.done"]).tap()
         XCTAssertTrue(
             app.buttons["onboarding.shortcuts.open"].waitForExistence(timeout: 5),
             "Closing the guide did not return to the Shortcuts step"
@@ -126,8 +126,8 @@ final class ShortcutsSetupUITests: XCTestCase {
     /// Scrolls the onboarding step until the element sits above the footer, then taps it.
     private func tapClearOfFooter(_ element: XCUIElement, in app: XCUIApplication) {
         XCTAssertTrue(element.waitForExistence(timeout: 5), "Missing \(element)")
-        // The footer is a 44-point row plus padding above the home indicator, with room to spare.
-        let clearMaxY = app.frame.maxY - 180
+        // Clear of the pinned footer, measured rather than assumed, so a short display works too.
+        let clearMaxY = app.onboardingFooterTop - 8
         var attempts = 0
         while element.frame.maxY > clearMaxY && attempts < 5 {
             app.swipeUp()

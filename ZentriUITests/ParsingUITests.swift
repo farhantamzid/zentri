@@ -54,15 +54,16 @@ final class ParsingUITests: XCTestCase {
         let amount = app.descendants(matching: .any)["tester.rules.amount"]
         XCTAssertTrue(amount.waitForExistence(timeout: 10), "The tester shows no amount")
         XCTAssertTrue(amount.label.contains("42.75"), "The amount reads \(amount.label)")
-        let merchant = app.descendants(matching: .any)["tester.rules.merchant"]
+        let merchant = app.scrolledTo(app.descendants(matching: .any)["tester.rules.merchant"])
         XCTAssertTrue(merchant.label.contains("Fixture Cafe"), "The merchant reads \(merchant.label)")
-        let matched = app.descendants(matching: .any)["tester.rules.matchedRule"]
+        let matched = app.scrolledTo(app.descendants(matching: .any)["tester.rules.matchedRule"])
         XCTAssertTrue(matched.label.contains(ruleName), "The matched rule reads \(matched.label)")
         XCTAssertFalse(app.descendants(matching: .any)["tester.model.status"].exists, "The model ran without being asked")
 
-        let compare = app.switches["tester.compare"]
+        // The switch sits above the results the test just read.
+        let compare = app.scrolledBackTo(app.switches["tester.compare"])
         XCTAssertTrue(compare.exists, "The tester has no Compare with AI switch")
-        compare.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+        compare.switches.firstMatch.tap()
         XCTAssertTrue(waitForValue(of: compare, toBe: "1"), "Compare with AI did not switch on")
 
         let status = app.descendants(matching: .any)["tester.model.status"]
@@ -83,9 +84,9 @@ final class ParsingUITests: XCTestCase {
         reprocess.tap()
         let status = app.descendants(matching: .any)["inbox.detail.status"]
         XCTAssertTrue(waitForLabel(of: status, toContain: "Parsed"), "The message did not become parsed: \(status.label)")
-        XCTAssertTrue(app.buttons["inbox.detail.transaction"].exists, "The parsed message links no transaction")
+        XCTAssertTrue(app.scrolledTo(app.buttons["inbox.detail.transaction"]).exists, "The parsed message links no transaction")
 
-        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.goBack()
         XCTAssertTrue(
             app.descendants(matching: .any)["inbox.empty"].waitForExistence(timeout: 5)
                 || !row("inbox.row", containing: "Fixture Cafe", in: app).exists,
@@ -98,7 +99,7 @@ final class ParsingUITests: XCTestCase {
         )
 
         // The transaction it became is in the history.
-        app.tabBars.buttons["Transactions"].tap()
+        app.tab("Transactions").tap()
         XCTAssertTrue(
             app.descendants(matching: .any)
                 .matching(NSPredicate(format: "label CONTAINS %@", "Fixture Cafe"))
@@ -106,7 +107,7 @@ final class ParsingUITests: XCTestCase {
                 .waitForExistence(timeout: 5),
             "The reprocessed transaction is not in Transactions"
         )
-        app.tabBars.buttons["Settings"].tap()
+        app.tab("Settings").tap()
 
         let clear = app.buttons["inbox.clearArchive"]
         XCTAssertTrue(clear.waitForExistence(timeout: 5), "The inbox has no Clear Archive")
@@ -124,7 +125,7 @@ final class ParsingUITests: XCTestCase {
 
     func testAccountAndOverviewLinkToTheParsingScreens() {
         let app = launchedInParsing()
-        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.goBack()
         app.buttons["settings.accounts"].tap()
         row("accounts.row", containing: "Everyday", in: app).tap()
         let rules = app.buttons["accounts.detail.rules"]
@@ -135,7 +136,7 @@ final class ParsingUITests: XCTestCase {
             "The account's rules are not listed"
         )
 
-        app.tabBars.buttons["Overview"].tap()
+        app.tab("Overview").tap()
         tapScrollingIfNeeded(app.buttons["overview.health.inbox"], in: app)
         XCTAssertTrue(
             row("inbox.row", containing: "Fixture Cafe", in: app).waitForExistence(timeout: 5),
@@ -149,13 +150,13 @@ final class ParsingUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed", "-UITestSeedParsing"]
         app.launch()
-        let settings = app.tabBars.buttons["Settings"]
+        let settings = app.tab("Settings")
         XCTAssertTrue(settings.waitForExistence(timeout: 10), "The tab bar did not appear")
         settings.tap()
-        let parsing = app.buttons["settings.parsing"]
+        let parsing = app.scrolledTo(app.buttons["settings.parsing"])
         XCTAssertTrue(parsing.waitForExistence(timeout: 5), "Settings has no Parsing row")
         parsing.tap()
-        XCTAssertTrue(app.buttons["parsing.rules"].waitForExistence(timeout: 5), "Parsing did not open")
+        XCTAssertTrue(app.scrolledTo(app.buttons["parsing.rules"]).waitForExistence(timeout: 5), "Parsing did not open")
         return app
     }
 
@@ -181,11 +182,8 @@ final class ParsingUITests: XCTestCase {
 
     /// Waits for `element`, scrolling down when the list has not created it yet.
     private func scrollUntilExists(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
-        for _ in 0..<6 {
-            if element.waitForExistence(timeout: 2) { return true }
-            app.swipeUp()
-        }
-        return element.exists
+        if element.waitForExistence(timeout: 2) { return true }
+        return app.scrolledTo(element).waitForExistence(timeout: 2)
     }
 
     /// Scrolls until `element` can be tapped, then taps it.

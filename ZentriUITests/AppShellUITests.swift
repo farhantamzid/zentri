@@ -7,9 +7,9 @@ final class AppShellUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding"]
         app.launch()
-        XCTAssertTrue(app.tabBars.buttons["Overview"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.tabBars.buttons["Transactions"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Insights"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Settings"].exists)
+        XCTAssertTrue(app.tab("Overview").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.tab("Transactions").exists)
+        XCTAssertTrue(app.tab("Insights").exists)
+        XCTAssertTrue(app.tab("Settings").exists)
     }
 }

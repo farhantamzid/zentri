@@ -18,11 +18,11 @@ final class AppLockUITests: XCTestCase {
         // The lock is up and the tabs beneath it cannot be reached.
         let cover = app.descendants(matching: .any)["lock.cover"]
         XCTAssertTrue(cover.waitForExistence(timeout: 5), "Returning to the app did not show the lock")
-        XCTAssertFalse(app.tabBars.buttons["Overview"].isHittable, "The tabs are reachable behind the lock")
+        XCTAssertFalse(app.tab("Overview").isHittable, "The tabs are reachable behind the lock")
 
         // It asks on its own, and the scripted check passes.
         XCTAssertTrue(waitForDisappearance(of: cover), "A passing check did not lift the lock")
-        XCTAssertTrue(app.tabBars.buttons["Overview"].isHittable, "The tabs are not reachable after unlocking")
+        XCTAssertTrue(app.tab("Overview").isHittable, "The tabs are not reachable after unlocking")
     }
 
     func testTheLockCoversAnOpenSheet() {
@@ -30,7 +30,7 @@ final class AppLockUITests: XCTestCase {
         turnOnFaceID(in: app)
 
         // A transaction's detail sheet sits above the tab view, out of reach of an overlay there.
-        app.tabBars.buttons["Transactions"].tap()
+        app.tab("Transactions").tap()
         let row = app.descendants(matching: .any).matching(identifier: "transactions.row").firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 10), "Transactions has no rows")
         row.tap()
@@ -51,8 +51,8 @@ final class AppLockUITests: XCTestCase {
         let app = launched(biometrics: "success")
         turnOnFaceID(in: app)
 
-        XCUIDevice.shared.press(.home)
-        XCTAssertTrue(app.wait(for: .runningBackground, timeout: 10), "Zentri did not go to the background")
+        leaveForSettingsApp()
+        XCTAssertTrue(waitUntilInBackground(app), "Zentri did not go to the background")
         app.open(try XCTUnwrap(URL(string: "zentri://insights")))
 
         // Relaunching for the link can take longer than the scripted check, so the lock may already
@@ -61,7 +61,7 @@ final class AppLockUITests: XCTestCase {
         let cover = app.descendants(matching: .any)["lock.cover"]
         XCTAssertTrue(waitForDisappearance(of: cover), "A passing check did not lift the lock")
 
-        let insights = app.tabBars.buttons["Insights"]
+        let insights = app.tab("Insights")
         XCTAssertTrue(
             insights.waitForExistence(timeout: 5) && waitForSelection(of: insights),
             "The link held while locked did not open Insights after unlocking"
@@ -75,13 +75,20 @@ final class AppLockUITests: XCTestCase {
         // The row's own switch: tapping the label beside it does nothing in a Form.
         toggle.switches.firstMatch.tap()
 
+        // The reason sits in the section footer, which a short display (iPhone Duo's outer one)
+        // may only create once it is scrolled into view.
         let message = app.descendants(matching: .any)["appearance.faceID.message"]
-        XCTAssertTrue(message.waitForExistence(timeout: 5), "A failed check gave no reason")
+        var swipes = 0
+        while !message.waitForExistence(timeout: 3) && swipes < 3 {
+            app.swipeUp()
+            swipes += 1
+        }
+        XCTAssertTrue(message.exists, "A failed check gave no reason")
         XCTAssertEqual(toggle.value as? String, "0", "A failed check turned the lock on")
 
         // Leaving and returning does not lock an app whose lock never turned on.
         leaveAndReturn(app)
-        XCTAssertTrue(app.tabBars.buttons["Settings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.tab("Settings").waitForExistence(timeout: 5))
         XCTAssertFalse(app.descendants(matching: .any)["lock.cover"].exists, "The app locked without the lock on")
     }
 
@@ -96,7 +103,7 @@ final class AppLockUITests: XCTestCase {
 
     /// Opens Settings › Appearance and returns the Face ID toggle, scrolled into view.
     private func openFaceIDToggle(in app: XCUIApplication) -> XCUIElement {
-        let settings = app.tabBars.buttons["Settings"]
+        let settings = app.tab("Settings")
         XCTAssertTrue(settings.waitForExistence(timeout: 10), "The Settings tab is missing")
         settings.tap()
         let appearance = app.buttons["settings.appearance"]
@@ -124,10 +131,21 @@ final class AppLockUITests: XCTestCase {
     }
 
     private func leaveAndReturn(_ app: XCUIApplication) {
-        XCUIDevice.shared.press(.home)
-        XCTAssertTrue(app.wait(for: .runningBackground, timeout: 10), "Zentri did not go to the background")
+        leaveForSettingsApp()
+        XCTAssertTrue(waitUntilInBackground(app), "Zentri did not go to the background")
         app.activate()
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10), "Zentri did not come back")
+    }
+
+    /// Sends Zentri to the background by bringing the Settings app forward. Pressing Home does the
+    /// same on most simulators, but does not background the app on iPhone Duo's simulator.
+    private func leaveForSettingsApp() {
+        XCUIApplication(bundleIdentifier: "com.apple.Preferences").activate()
+    }
+
+    /// Waits until the app has left the foreground; it may be running or already suspended there.
+    private func waitUntilInBackground(_ app: XCUIApplication) -> Bool {
+        app.wait(for: .runningBackground, timeout: 5) || app.wait(for: .runningBackgroundSuspended, timeout: 5)
     }
 
     private func waitForDisappearance(of element: XCUIElement) -> Bool {

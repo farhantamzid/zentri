@@ -18,7 +18,7 @@ final class TransactionsUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed", "-UITestSeedHistory"]
         app.launch()
-        app.tabBars.buttons["Transactions"].tap()
+        app.tab("Transactions").tap()
 
         // Day headers and merchant rows.
         XCTAssertTrue(row("Starbucks", in: app).waitForExistence(timeout: 10), "The Starbucks row is missing")
@@ -43,7 +43,7 @@ final class TransactionsUITests: XCTestCase {
         assertLabel("transactions.detail.amount", contains: usd(120), in: app)
         assertLabel("transactions.detail.merchant", contains: "Grab", in: app)
         XCTAssertTrue(
-            app.staticTexts["Card payment of USD 120.00 at GRAB*TRIP on your Everyday account."]
+            app.scrolledTo(app.staticTexts["Card payment of USD 120.00 at GRAB*TRIP on your Everyday account."])
                 .waitForExistence(timeout: 5),
             "The detail does not show the raw SMS"
         )
@@ -56,14 +56,15 @@ final class TransactionsUITests: XCTestCase {
         XCTAssertTrue(waitForValue("1", of: transfer), "The transfer toggle did not turn on")
 
         // Editing the merchant updates the row.
-        app.buttons["transactions.detail.edit"].tap()
+        app.scrolledBackTo(app.buttons["transactions.detail.edit"]).tap()
         let merchant = app.textFields["transactions.editor.merchant"]
         XCTAssertTrue(merchant.waitForExistence(timeout: 5), "The editor did not open")
         merchant.tap()
         merchant.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Grab Taxi")
         app.buttons["transactions.editor.save"].tap()
+        app.scrolledBackTo(app.descendants(matching: .any)["transactions.detail.merchant"])
         assertLabel("transactions.detail.merchant", contains: "Grab Taxi", in: app)
-        app.buttons["transactions.detail.done"].tap()
+        app.scrolledBackTo(app.buttons["transactions.detail.done"]).tap()
 
         let edited = row("Grab Taxi", in: app)
         XCTAssertTrue(edited.waitForExistence(timeout: 5), "The edited merchant did not reach the list")
@@ -95,12 +96,12 @@ final class TransactionsUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed", "-UITestSeedHistory"]
         app.launch()
-        app.tabBars.buttons["Transactions"].tap()
+        app.tab("Transactions").tap()
 
         let grab = row("Grab", in: app)
         XCTAssertTrue(grab.waitForExistence(timeout: 10), "The Grab row is missing")
         grab.tap()
-        app.buttons["transactions.detail.edit"].tap()
+        app.scrolledBackTo(app.buttons["transactions.detail.edit"]).tap()
 
         // The amount is the last thing touched: Save is tapped while the field still has focus.
         let amount = app.textFields["transactions.editor.amount"]
@@ -116,7 +117,7 @@ final class TransactionsUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed"]
         app.launch()
-        app.tabBars.buttons["Transactions"].tap()
+        app.tab("Transactions").tap()
 
         let add = app.buttons["transactions.add"]
         XCTAssertTrue(add.waitForExistence(timeout: 10), "The add button is missing")
@@ -139,7 +140,7 @@ final class TransactionsUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding"]
         app.launch()
-        app.tabBars.buttons["Transactions"].tap()
+        app.tab("Transactions").tap()
 
         XCTAssertTrue(
             app.staticTexts["No transactions yet"].waitForExistence(timeout: 10),

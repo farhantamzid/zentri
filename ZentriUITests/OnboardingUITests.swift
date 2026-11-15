@@ -76,7 +76,7 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertTrue(goToOverview.exists)
         goToOverview.tap()
 
-        XCTAssertTrue(app.tabBars.buttons["Overview"].waitForExistence(timeout: 5), "The app did not enter the tabs")
+        XCTAssertTrue(app.tab("Overview").waitForExistence(timeout: 5), "The app did not enter the tabs")
     }
 
     /// Taps an element, scrolling it clear of the pinned footer first.
@@ -92,8 +92,8 @@ final class OnboardingUITests: XCTestCase {
         line: UInt = #line
     ) {
         XCTAssertTrue(element.waitForExistence(timeout: 5), "Missing \(element)", file: file, line: line)
-        // The footer is a 44-point row plus padding above the home indicator, with room to spare.
-        let clearMaxY = app.frame.maxY - 180
+        // Clear of the pinned footer, measured rather than assumed, so a short display works too.
+        let clearMaxY = app.onboardingFooterTop - 8
         var attempts = 0
         while element.frame.maxY > clearMaxY && attempts < 5 {
             app.swipeUp()
