@@ -433,3 +433,27 @@ private func fileNames(in folder: borrowing TemporaryFolder) throws -> [String] 
     #expect(first.hasSameContent(as: changed) == false)
     #expect(first.hasSameContent(as: document(transactionCount: 2, exportedAt: start)) == false)
 }
+
+// MARK: - Summaries and outside files
+
+@Test func aDocumentReportsWhenItWasMadeAndTheSpanOfItsTransactions() throws {
+    var made = document(transactionCount: 3, exportedAt: start)
+    made.transactions[0].occurredAt = BackupCodec.dateText(start.addingTimeInterval(-86_400))
+    made.transactions[2].occurredAt = BackupCodec.dateText(start.addingTimeInterval(3_600))
+
+    #expect(made.exportDate == start)
+    #expect(made.transactionDateRange == start.addingTimeInterval(-86_400)...start.addingTimeInterval(3_600))
+    #expect(document(transactionCount: 0, exportedAt: start).transactionDateRange == nil)
+}
+
+@Test func readsAFileOutsideTheBackupFolder() throws {
+    let folder = try TemporaryFolder()
+    let url = folder.url.appending(path: "Zentri-2026-11-18-1106.zentri.json")
+    let data = try snapshotData(transactionCount: 1, exportedAt: start)
+    try data.write(to: url)
+
+    #expect(try BackupFileReader.read(at: url) == data)
+    #expect(throws: BackupFolderError.unreadable) {
+        try BackupFileReader.read(at: folder.url.appending(path: "missing.json"))
+    }
+}

@@ -116,7 +116,7 @@ public struct BackupFolderService: Sendable {
         try withFolderAccess { folder in
             let snapshots = try jsonFiles(in: folder).compactMap { url -> SnapshotInfo? in
                 guard
-                    let data = try? coordinatedRead(url),
+                    let data = try? BackupFileReader.read(at: url),
                     let document = try? BackupCodec.decode(data),
                     let createdAt = try? BackupCodec.date(from: document.exportedAt, field: "exportedAt")
                 else { return nil }
@@ -141,11 +141,7 @@ public struct BackupFolderService: Sendable {
     /// - Throws: ``BackupFolderError/unreadable`` when the file cannot be read, or a resolution error.
     public func readSnapshot(at url: URL) throws -> Data {
         try withFolderAccess { _ in
-            do {
-                return try coordinatedRead(url)
-            } catch {
-                throw BackupFolderError.unreadable
-            }
+            try BackupFileReader.read(at: url)
         }
     }
 
@@ -159,13 +155,7 @@ public struct BackupFolderService: Sendable {
                 .filter({ BackupFileName.isSnapshot($0.lastPathComponent) })
                 .max(by: { $0.lastPathComponent < $1.lastPathComponent })
             else { return nil }
-            let data: Data
-            do {
-                data = try coordinatedRead(newest)
-            } catch {
-                throw BackupFolderError.unreadable
-            }
-            return try BackupCodec.decode(data)
+            return try BackupCodec.decode(BackupFileReader.read(at: newest))
         }
     }
 
@@ -216,23 +206,6 @@ public struct BackupFolderService: Sendable {
         if let error = writeError ?? coordinationError {
             throw Self.folderError(forWriteError: error)
         }
-    }
-
-    /// Reads `url`, coordinated with the file provider so an iCloud file is downloaded first.
-    private func coordinatedRead(_ url: URL) throws -> Data {
-        var coordinationError: NSError?
-        var result: Result<Data, any Error> = .failure(BackupFolderError.unreadable)
-        NSFileCoordinator(filePresenter: nil).coordinate(
-            readingItemAt: url,
-            options: [],
-            error: &coordinationError
-        ) { url in
-            result = Result { try Data(contentsOf: url) }
-        }
-        if let coordinationError {
-            throw coordinationError
-        }
-        return try result.get()
     }
 
     /// Deletes the oldest automatic snapshots beyond the limit, never `kept`.
