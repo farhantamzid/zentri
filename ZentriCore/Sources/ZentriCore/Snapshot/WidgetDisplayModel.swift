@@ -119,24 +119,29 @@ public struct WidgetDisplayModel: Sendable {
         self.moneyFormat = moneyFormat
     }
 
-    /// Reads the stored snapshot and builds its display model with the snapshot's own currency and
-    /// grouping.
+    /// Reads the stored snapshot and builds its display model for an instant, with the snapshot's
+    /// own currency and grouping.
     ///
     /// - Parameters:
     ///   - store: The snapshot store, normally ``FileWidgetSnapshotStore`` over
     ///     ``SharedContainer/widgetSnapshotURL``.
     ///   - hideAmounts: Whether to hide every amount.
+    ///   - date: The instant the widget draws for; a snapshot from an earlier day is rolled over to
+    ///     it (see ``WidgetSnapshot/rolledOver(to:calendar:)``).
+    ///   - calendar: The calendar that defines days and months.
     ///   - locale: The locale for ``NumberGrouping/system`` grouping.
     /// - Returns: `nil` when the snapshot is missing, corrupt, or of an unsupported version; the
     ///   widget then draws ``placeholder``.
     public static func load(
         from store: any WidgetSnapshotStore,
         hideAmounts: Bool,
+        at date: Date = .now,
+        calendar: Calendar = .current,
         locale: Locale = .current
     ) -> WidgetDisplayModel? {
         guard let snapshot = store.read() else { return nil }
         return WidgetDisplayModel(
-            snapshot: snapshot,
+            snapshot: snapshot.rolledOver(to: date, calendar: calendar),
             hideAmounts: hideAmounts,
             moneyFormat: MoneyFormat(currencyCode: snapshot.currencyCode, grouping: snapshot.numberGrouping, locale: locale)
         )

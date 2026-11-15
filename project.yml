@@ -57,6 +57,8 @@ targets:
         excludes:
           - Info.plist
           - ZentriWidgets.entitlements
+      # The widgets draw with the app's palette, so they share its asset catalog.
+      - path: ZentriApp/Resources/Assets.xcassets
     dependencies:
       - package: ZentriCore
         product: ZentriCore

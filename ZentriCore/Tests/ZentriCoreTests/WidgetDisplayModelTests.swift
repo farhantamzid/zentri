@@ -108,9 +108,28 @@ private func makeSnapshot(
     let store = FileWidgetSnapshotStore(fileURL: url)
     try store.write(snapshot)
 
-    let model = try #require(WidgetDisplayModel.load(from: store, hideAmounts: false, locale: Locale(identifier: "en_US")))
+    let model = try #require(WidgetDisplayModel.load(
+        from: store, hideAmounts: false, at: displayNow, calendar: displayCalendar(), locale: Locale(identifier: "en_US")
+    ))
 
     #expect(model.balance == "₹10,00,000.00")
+    #expect(model.todaySpend == "₹82.40")
+}
+
+@Test func loadRollsAnOlderSnapshotOverToTheDrawingDay() throws {
+    let url = FileManager.default.temporaryDirectory.appending(path: "widget-display-\(UUID().uuidString).json")
+    defer { try? FileManager.default.removeItem(at: url) }
+    let store = FileWidgetSnapshotStore(fileURL: url)
+    try store.write(makeSnapshot())
+    let nextDay = displayNow.addingTimeInterval(24 * 60 * 60)
+
+    let model = try #require(WidgetDisplayModel.load(
+        from: store, hideAmounts: false, at: nextDay, calendar: displayCalendar(), locale: Locale(identifier: "en_US")
+    ))
+
+    #expect(model.todaySpend == "$0.00")
+    #expect(model.balance == "$1,000,000.00")
+    #expect(model.trend(days: 7).bars.last?.spend == 0)
 }
 
 @Test func negativeBalanceLeadsWithItsSign() throws {

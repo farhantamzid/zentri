@@ -1,0 +1,462 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@, %@ of spending": {
+      "comment": "VoiceOver for a widget category: its name, then its share of this month's spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@ of spending"
+          }
+        }
+      }
+    },
+    "%@, %@, %@ of spending": {
+      "comment": "VoiceOver for a widget category: name, amount or “Hidden”, then its share of this month's spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@, %@ of spending"
+          }
+        }
+      }
+    },
+    "%@, %@, received %@": {
+      "comment": "VoiceOver for a widget row of money that arrived: merchant, category, then the amount or “Hidden”.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@, received %@"
+          }
+        }
+      }
+    },
+    "%@, %@, spent %@": {
+      "comment": "VoiceOver for a widget row of money that left: merchant, category, then the amount or “Hidden”.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@, spent %@"
+          }
+        }
+      }
+    },
+    "30 Days": {
+      "comment": "A trend period option: the last thirty days.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 Days"
+          }
+        }
+      }
+    },
+    "7 Days": {
+      "comment": "A trend period option: the last seven days.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 Days"
+          }
+        }
+      }
+    },
+    "As of %@": {
+      "comment": "The date the balance was last set. %@ is a short date.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As of %@"
+          }
+        }
+      }
+    },
+    "Balance": {
+      "comment": "The balance widget's name in the widget gallery, and the label over the balance.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balance"
+          }
+        }
+      }
+    },
+    "Balance %@": {
+      "comment": "The inline Lock Screen widget. The argument is the balance, or dots when amounts are hidden.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balance %@"
+          }
+        }
+      }
+    },
+    "Choose whether amounts are hidden and how many days the trend shows.": {
+      "comment": "The description on the widget configuration screen.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose whether amounts are hidden and how many days the trend shows."
+          }
+        }
+      }
+    },
+    "Day": {
+      "comment": "The trend chart's axis for days. Not shown.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day"
+          }
+        }
+      }
+    },
+    "Hidden": {
+      "comment": "VoiceOver in place of an amount the widget hides for privacy.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden"
+          }
+        }
+      }
+    },
+    "Hide Amounts": {
+      "comment": "The widget setting that replaces amounts with dots.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Amounts"
+          }
+        }
+      }
+    },
+    "Income this month": {
+      "comment": "The label over this month's income on a widget.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Income this month"
+          }
+        }
+      }
+    },
+    "Last 30 days": {
+      "comment": "The trend widget's heading for a thirty-day trend.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 30 days"
+          }
+        }
+      }
+    },
+    "Last 7 days": {
+      "comment": "The trend widget's heading for a seven-day trend.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 7 days"
+          }
+        }
+      }
+    },
+    "No spending in this period": {
+      "comment": "Shown on the trend widget when the period has no spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No spending in this period"
+          }
+        }
+      }
+    },
+    "No spending this month": {
+      "comment": "Shown on the categories widget when this month has no spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No spending this month"
+          }
+        }
+      }
+    },
+    "No transactions yet": {
+      "comment": "Shown on the recent transactions widget before any transaction exists.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No transactions yet"
+          }
+        }
+      }
+    },
+    "Open Zentri": {
+      "comment": "Shown on a widget that has no data yet; opening the app writes it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Zentri"
+          }
+        }
+      }
+    },
+    "Recent": {
+      "comment": "The recent transactions widget's heading.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent"
+          }
+        }
+      }
+    },
+    "Recent Transactions": {
+      "comment": "The recent transactions widget's name in the widget gallery.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent Transactions"
+          }
+        }
+      }
+    },
+    "Share": {
+      "comment": "The category share bar's axis. Not shown.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
+          }
+        }
+      }
+    },
+    "Spending chart, last 30 days": {
+      "comment": "VoiceOver for the thirty-day trend chart.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spending chart, last 30 days"
+          }
+        }
+      }
+    },
+    "Spending chart, last 7 days": {
+      "comment": "VoiceOver for the seven-day trend chart.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spending chart, last 7 days"
+          }
+        }
+      }
+    },
+    "Spending Trend": {
+      "comment": "The trend widget's name in the widget gallery.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spending Trend"
+          }
+        }
+      }
+    },
+    "Spent": {
+      "comment": "The trend chart's axis for spend. Not shown.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spent"
+          }
+        }
+      }
+    },
+    "Spent this month": {
+      "comment": "The label over this month's spend on a widget.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spent this month"
+          }
+        }
+      }
+    },
+    "Spent today": {
+      "comment": "The label over today's spend on a widget.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spent today"
+          }
+        }
+      }
+    },
+    "This month": {
+      "comment": "The label over this month's spend on the trend widget.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This month"
+          }
+        }
+      }
+    },
+    "Top Categories": {
+      "comment": "The categories widget's name in the widget gallery.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top Categories"
+          }
+        }
+      }
+    },
+    "Trend Period": {
+      "comment": "The widget setting that picks how many days the trend shows.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trend Period"
+          }
+        }
+      }
+    },
+    "Where your money went this month.": {
+      "comment": "The categories widget's description in the widget gallery.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where your money went this month."
+          }
+        }
+      }
+    },
+    "Your combined balance and today's spending on the Lock Screen.": {
+      "comment": "The Lock Screen balance widget's description in the widget gallery.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your combined balance and today's spending on the Lock Screen."
+          }
+        }
+      }
+    },
+    "Your combined balance and today's spending.": {
+      "comment": "The balance widget's description in the widget gallery.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your combined balance and today's spending."
+          }
+        }
+      }
+    },
+    "Your daily spending over the last 7 or 30 days.": {
+      "comment": "The trend widget's description in the widget gallery.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your daily spending over the last 7 or 30 days."
+          }
+        }
+      }
+    },
+    "Your newest transactions across your accounts.": {
+      "comment": "The recent transactions widget's description in the widget gallery.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your newest transactions across your accounts."
+          }
+        }
+      }
+    },
+    "Zentri Widget": {
+      "comment": "The title of the widget configuration screen.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri Widget"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
