@@ -29,7 +29,10 @@ enum InsightsObservation: Hashable, Sendable {
     static func observations(summary: InsightsSummary, peakDay: PeakDaySpend?) -> [InsightsObservation] {
         let changes = summary.categoryTotals.compactMap { total in
             total.changePercent.map {
-                InsightsObservation.categoryChange(categoryName: total.categoryName, wholePercent: wholePercent($0))
+                InsightsObservation.categoryChange(
+                    categoryName: total.categoryName,
+                    wholePercent: $0.roundedToWholeNumber
+                )
             }
         }
         var observations = Array(changes.prefix(InsightsCalculator.categoryObservationLimit))
@@ -41,13 +44,5 @@ enum InsightsObservation: Hashable, Sendable {
             observations.append(.topMerchant(merchant: top.merchant, transactionCount: top.transactionCount))
         }
         return observations
-    }
-
-    /// The percentage rounded to a whole number, halves away from zero, as the calculator rounds.
-    private static func wholePercent(_ value: Decimal) -> Int {
-        var input = value
-        var result = Decimal()
-        NSDecimalRound(&result, &input, 0, .plain)
-        return NSDecimalNumber(decimal: result).intValue
     }
 }

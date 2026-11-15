@@ -1318,7 +1318,7 @@
       }
     },
     "%@: %@": {
-      "comment": "Two interpolations: a formatted date, then a formatted money amount. One row of the activity chart's table-style VoiceOver summary.",
+      "comment": "Two interpolations: a label such as a formatted date or a category name, then its figures. One row of a chart's table-style VoiceOver summary.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2065,6 +2065,438 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zentri couldn't save your changes. Try again."
+          }
+        }
+      }
+    },
+    "No activity": {
+      "comment": "The title shown when the selected month on the Insights tab has no income or spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No activity"
+          }
+        }
+      }
+    },
+    "Nothing was spent or received in %@.": {
+      "comment": "The Insights tab's empty-month description. %@ is the selected month and year, e.g. November 2026.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing was spent or received in %@."
+          }
+        }
+      }
+    },
+    "Can't show your insights": {
+      "comment": "The title shown when the Insights tab could not read the store.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't show your insights"
+          }
+        }
+      }
+    },
+    "Previous Month": {
+      "comment": "The Insights tab's button that shows the month before the selected one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous Month"
+          }
+        }
+      }
+    },
+    "Next Month": {
+      "comment": "The Insights tab's button that shows the month after the selected one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next Month"
+          }
+        }
+      }
+    },
+    "This Month": {
+      "comment": "The Insights tab's button that returns to the current month.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Month"
+          }
+        }
+      }
+    },
+    "Observations": {
+      "comment": "The heading of the Insights card that lists what stands out about the month.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observations"
+          }
+        }
+      }
+    },
+    "%@ is %lld%% higher than last month.": {
+      "comment": "An Insights observation. %@ is a category name; %lld is a whole percentage of increase from the previous month.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is %lld%% higher than last month."
+          }
+        }
+      }
+    },
+    "%@ is %lld%% lower than last month.": {
+      "comment": "An Insights observation. %@ is a category name; %lld is a whole percentage of decrease from the previous month.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is %lld%% lower than last month."
+          }
+        }
+      }
+    },
+    "%@ is about the same as last month.": {
+      "comment": "An Insights observation. %@ is a category name whose spending changed by less than half a percent.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is about the same as last month."
+          }
+        }
+      }
+    },
+    "You spent %@× your daily average on %@.": {
+      "comment": "An Insights observation. The first %@ is a ratio with one decimal, e.g. 3.2; the second %@ is a day and month, e.g. 12 Oct.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You spent %@× your daily average on %@."
+          }
+        }
+      }
+    },
+    "%@ is your top merchant with ^[%lld transaction](inflect: true).": {
+      "comment": "An Insights observation. %@ is a merchant name; %lld is the number of payments to it, and the noun agrees with it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is your top merchant with ^[%lld transaction](inflect: true)."
+          }
+        }
+      }
+    },
+    "Daily spending": {
+      "comment": "The heading and VoiceOver label of the Insights chart of each day's spending in the month.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily spending"
+          }
+        }
+      }
+    },
+    "No spending to chart": {
+      "comment": "Shown in place of the daily spending chart when the month has no spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No spending to chart"
+          }
+        }
+      }
+    },
+    "Day": {
+      "comment": "The axis name of a chart's days, read by VoiceOver.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day"
+          }
+        }
+      }
+    },
+    "Spending by category": {
+      "comment": "The heading of the Insights category card, and the VoiceOver label of its donut chart.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spending by category"
+          }
+        }
+      }
+    },
+    "No spending by category": {
+      "comment": "Shown in place of the category donut when the month has no spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No spending by category"
+          }
+        }
+      }
+    },
+    "Show %@ Transactions": {
+      "comment": "A button under the category donut. %@ is the selected category's name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show %@ Transactions"
+          }
+        }
+      }
+    },
+    "Tap a slice": {
+      "comment": "The prompt in the middle of the category donut before a slice is selected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap a slice"
+          }
+        }
+      }
+    },
+    "%@, %@": {
+      "comment": "Two interpolations: a formatted money amount, then a percentage share. Read by VoiceOver for a category in the donut chart; also a month and a series name for a bar in the income and spending chart.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@"
+          }
+        }
+      }
+    },
+    "Shows this category's transactions": {
+      "comment": "The VoiceOver hint of a category row on the Insights tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows this category's transactions"
+          }
+        }
+      }
+    },
+    "%@ more than last month": {
+      "comment": "A category's change on the Insights tab. %@ is a whole percentage, e.g. 50%.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ more than last month"
+          }
+        }
+      }
+    },
+    "%@ less than last month": {
+      "comment": "A category's change on the Insights tab. %@ is a whole percentage, e.g. 50%.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ less than last month"
+          }
+        }
+      }
+    },
+    "About the same as last month": {
+      "comment": "A category's change on the Insights tab when it moved by less than half a percent.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About the same as last month"
+          }
+        }
+      }
+    },
+    "Nothing last month": {
+      "comment": "A category's change on the Insights tab when the previous month had no spending in it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing last month"
+          }
+        }
+      }
+    },
+    "Top merchants": {
+      "comment": "The heading of the Insights card that ranks merchants by spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top merchants"
+          }
+        }
+      }
+    },
+    "No merchants to rank": {
+      "comment": "Shown in place of the top merchants when the month has no spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No merchants to rank"
+          }
+        }
+      }
+    },
+    "^[%lld transaction](inflect: true)": {
+      "comment": "How many payments a merchant received; the noun agrees with the number.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "^[%lld transaction](inflect: true)"
+          }
+        }
+      }
+    },
+    "Shows this merchant's transactions": {
+      "comment": "The VoiceOver hint of a merchant row on the Insights tab.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows this merchant's transactions"
+          }
+        }
+      }
+    },
+    "Income and spending": {
+      "comment": "The heading of the Insights chart comparing income and spending by month.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Income and spending"
+          }
+        }
+      }
+    },
+    "Income and spending, last six months": {
+      "comment": "The VoiceOver label of the Insights chart comparing income and spending by month.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Income and spending, last six months"
+          }
+        }
+      }
+    },
+    "Month": {
+      "comment": "The axis name of a chart's months, read by VoiceOver.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Month"
+          }
+        }
+      }
+    },
+    "Series": {
+      "comment": "The name of a chart's grouping of bars into received and spent, read by VoiceOver.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Series"
+          }
+        }
+      }
+    },
+    "%@: received %@, spent %@": {
+      "comment": "One row of the income and spending chart's table-style VoiceOver summary. The first %@ is a month and year; the others are formatted money amounts.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: received %@, spent %@"
+          }
+        }
+      }
+    },
+    "Largest spends": {
+      "comment": "The heading of the Insights card listing the month's largest spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Largest spends"
+          }
+        }
+      }
+    },
+    "No spending to rank": {
+      "comment": "Shown in place of the largest spends when the month has no spending.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No spending to rank"
           }
         }
       }

@@ -1,0 +1,31 @@
+import SwiftUI
+
+/// What stands out about the month, one sentence per observation.
+///
+/// The screen leaves the card out when there is nothing to say, which only happens for a month with
+/// income and no spending.
+struct InsightsObservationsCard: View {
+    let observations: [InsightsObservation]
+
+    var body: some View {
+        SectionCard("Observations") {
+            VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+                ForEach(observations, id: \.self) { observation in
+                    InsightsObservationRow(observation: observation)
+                }
+            }
+        }
+    }
+}
+
+#Preview {
+    InsightsObservationsCard(
+        observations: [
+            .categoryChange(categoryName: "Dining", wholePercent: -24),
+            .peakDay(date: .now, ratio: 3.2),
+            .topMerchant(merchant: "Grab", transactionCount: 14),
+        ]
+    )
+    .padding()
+    .background(Theme.canvas)
+}

@@ -17,6 +17,9 @@ enum UITestSupport {
     static let seedArgument = "-UITestSeed"
     /// Adds ``TransactionsFixture``'s history on top of the dashboard rows; needs `-UITestSeed`.
     static let seedHistoryArgument = "-UITestSeedHistory"
+    /// Adds ``InsightsFixture``'s two months of spending on top of the dashboard rows; needs
+    /// `-UITestSeed`.
+    static let seedInsightsArgument = "-UITestSeedInsights"
     /// Clears the in-memory settings and store state before the test starts.
     static let resetArgument = "-UITestReset"
 
@@ -35,6 +38,8 @@ enum UITestSupport {
     static var seedsStore: Bool { arguments.contains(seedArgument) }
     /// Whether the test wants the Transactions history on top of the dashboard rows.
     static var seedsHistory: Bool { arguments.contains(seedHistoryArgument) }
+    /// Whether the test wants the Insights months on top of the dashboard rows.
+    static var seedsInsights: Bool { arguments.contains(seedInsightsArgument) }
     /// Whether the test wants an empty start.
     static var resetsState: Bool { arguments.contains(resetArgument) }
 
@@ -57,6 +62,9 @@ enum UITestSupport {
             try DashboardFixture.seed(into: container.mainContext)
             if seedsHistory {
                 try TransactionsFixture.seed(into: container.mainContext)
+            }
+            if seedsInsights {
+                try InsightsFixture.seed(into: container.mainContext)
             }
         }
     }
