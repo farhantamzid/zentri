@@ -4,7 +4,7 @@ import SwiftUI
 /// The daily bars, the selected day's callout, and the month's summary.
 ///
 /// Touching or dragging across the chart selects a day and labels its bar with the date and amount;
-/// the selection stays after the finger lifts, and touching the same day again clears it. Every bar
+/// the selection stays after the finger lifts, and the next month starts without one. Every bar
 /// announces its day and amount, the chart offers VoiceOver an audio graph and data table, and the
 /// summary beneath it says the month's total and highest day in words.
 struct DailySpendingChartContent: View {
@@ -69,11 +69,10 @@ struct DailySpendingChartContent: View {
         }
     }
 
-    private func updateSelection(from oldValue: Date?, to newValue: Date?) {
+    private func updateSelection() {
         selectedDay = ChartSelectionRule.selection(
             current: selectedDay,
-            touched: newValue.flatMap(data.point(containing:))?.date,
-            touchBegan: oldValue == nil
+            touched: touchedDate.flatMap(data.point(containing:))?.date
         )
     }
 }

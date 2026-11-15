@@ -18,8 +18,11 @@ struct InsightsCards: View {
             if !observations.isEmpty {
                 InsightsObservationsCard(observations: observations)
             }
+            // A new month is a new chart: its selection starts empty.
             DailySpendingChart(days: summary.dailySpend, total: summary.totalSpend)
+                .id(summary.period.start)
             InsightsCategoriesCard(categories: summary.categoryTotals, onSelect: onSelectCategory)
+                .id(summary.period.start)
             TopMerchantsCard(merchants: summary.merchantTotals, onSelect: onSelectMerchant)
             IncomeExpenseChart(months: summary.monthlyIncomeExpense)
             LargestSpendsCard(spends: largestSpends)

@@ -66,7 +66,7 @@ struct InsightsMonthSelector: View {
         }
         .buttonStyle(.bordered)
         .disabled(isShowingThisMonth)
-            .accessibilityIdentifier("insights.thisMonth")
+        .accessibilityIdentifier("insights.thisMonth")
     }
 }
 

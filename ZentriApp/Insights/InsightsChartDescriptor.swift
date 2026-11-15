@@ -31,29 +31,50 @@ struct InsightsChartDescriptor: AXChartDescriptorRepresentable {
     let moneyFormat: MoneyFormat
 
     func makeChartDescriptor() -> AXChartDescriptor {
-        let largest = series.flatMap(\.points).map(\.value).max() ?? 0
-        let format = moneyFormat
-        return AXChartDescriptor(
+        AXChartDescriptor(
             title: title,
             summary: summary,
-            xAxis: AXCategoricalDataAxisDescriptor(title: xAxisTitle, categoryOrder: categories),
-            yAxis: AXNumericDataAxisDescriptor(
-                title: yAxisTitle,
-                range: 0...max(largest, 1),
-                gridlinePositions: []
-            ) { value in
-                format.currencyString(from: Decimal(value))
-            },
+            xAxis: xAxis,
+            yAxis: yAxis,
             additionalAxes: [],
-            series: series.map { series in
-                AXDataSeriesDescriptor(
-                    name: series.name,
-                    isContinuous: false,
-                    dataPoints: series.points.map {
-                        AXDataPoint(x: $0.category, y: $0.value, additionalValues: [], label: $0.valueText)
-                    }
-                )
-            }
+            series: seriesDescriptors
         )
+    }
+
+    /// Rewrites a descriptor VoiceOver already holds.
+    ///
+    /// SwiftUI asks for a descriptor once per view identity and afterwards only asks to update it, so
+    /// without this a refreshed month or a month's new data would leave the audio graph and its data
+    /// table describing what the chart first showed.
+    func updateChartDescriptor(_ descriptor: AXChartDescriptor) {
+        descriptor.title = title
+        descriptor.summary = summary
+        descriptor.xAxis = xAxis
+        descriptor.yAxis = yAxis
+        descriptor.series = seriesDescriptors
+    }
+
+    private var xAxis: AXCategoricalDataAxisDescriptor {
+        AXCategoricalDataAxisDescriptor(title: xAxisTitle, categoryOrder: categories)
+    }
+
+    private var yAxis: AXNumericDataAxisDescriptor {
+        let largest = series.flatMap(\.points).map(\.value).max() ?? 0
+        let format = moneyFormat
+        return AXNumericDataAxisDescriptor(title: yAxisTitle, range: 0...max(largest, 1), gridlinePositions: []) { value in
+            format.currencyString(from: Decimal(value))
+        }
+    }
+
+    private var seriesDescriptors: [AXDataSeriesDescriptor] {
+        series.map { series in
+            AXDataSeriesDescriptor(
+                name: series.name,
+                isContinuous: false,
+                dataPoints: series.points.map {
+                    AXDataPoint(x: $0.category, y: $0.value, additionalValues: [], label: $0.valueText)
+                }
+            )
+        }
     }
 }

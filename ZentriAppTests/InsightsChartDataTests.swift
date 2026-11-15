@@ -26,17 +26,13 @@ private func category(_ name: String, amount: Decimal, share: Decimal) -> Catego
 
 // MARK: - Selection
 
-@Test func aTouchSelectsLiftingKeepsItAndTouchingTheSameValueAgainClearsIt() {
-    // A touch selects what it is over, and a drag follows the finger.
-    #expect(ChartSelectionRule.selection(current: nil as String?, touched: "Dining", touchBegan: true) == "Dining")
-    #expect(ChartSelectionRule.selection(current: "Dining", touched: "Transport", touchBegan: false) == "Transport")
+@Test func aTouchSelectsWhatItIsOverAndLiftingKeepsIt() {
+    #expect(ChartSelectionRule.selection(current: nil as String?, touched: "Dining") == "Dining")
+    #expect(ChartSelectionRule.selection(current: "Dining", touched: "Transport") == "Transport")
     // Lifting the finger keeps the selection.
-    #expect(ChartSelectionRule.selection(current: "Transport", touched: nil, touchBegan: false) == "Transport")
-    // A new touch elsewhere moves it; a new touch on the selected value clears it.
-    #expect(ChartSelectionRule.selection(current: "Transport", touched: "Dining", touchBegan: true) == "Dining")
-    #expect(ChartSelectionRule.selection(current: "Dining", touched: "Dining", touchBegan: true) == nil)
-    // Dragging within the selected value does not clear it.
-    #expect(ChartSelectionRule.selection(current: "Dining", touched: "Dining", touchBegan: false) == "Dining")
+    #expect(ChartSelectionRule.selection(current: "Transport", touched: nil) == "Transport")
+    // Touching the selected value again keeps it, so a press and the tap that ends it agree.
+    #expect(ChartSelectionRule.selection(current: "Dining", touched: "Dining") == "Dining")
 }
 
 // MARK: - Daily spending
@@ -155,4 +151,28 @@ private func category(_ name: String, amount: Decimal, share: Decimal) -> Catego
     // The hole and the space beside the donut are not slices.
     #expect(data.angleValue(at: CGPoint(x: 150, y: 100), in: size, innerRadiusRatio: 0.6) == nil)
     #expect(data.angleValue(at: CGPoint(x: 10, y: 100), in: size, innerRadiusRatio: 0.6) == nil)
+}
+
+@Test func anAudioGraphVoiceOverAlreadyHoldsIsRewrittenForANewMonth() {
+    let october = IncomeExpenseChartData(
+        months: [MonthlyIncomeExpense(month: day(1, month: 10), income: 0, spend: 800)],
+        moneyFormat: usd,
+        locale: locale
+    )
+    let november = DailySpendingChartData(
+        days: [DailySpend(date: day(1), amount: 30), DailySpend(date: day(2), amount: 0), DailySpend(date: day(3), amount: 5)],
+        total: 35,
+        moneyFormat: usd,
+        locale: locale,
+        calendar: calendar
+    )
+    let held = october.descriptor.makeChartDescriptor()
+
+    november.descriptor.updateChartDescriptor(held)
+
+    #expect(held.title == "Daily spending")
+    #expect(held.summary == november.summary)
+    #expect(held.series.map(\.name) == ["Spent"])
+    #expect(held.series[0].dataPoints.map(\.label) == ["$30.00", "$0.00", "$5.00"])
+    #expect((held.xAxis as? AXCategoricalDataAxisDescriptor)?.categoryOrder == november.points.map(\.dayText))
 }

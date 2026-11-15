@@ -105,6 +105,24 @@ final class InsightsUITests: XCTestCase {
         XCTAssertFalse(transactionRow("Grab", in: app).exists, "The list is not filtered to Dining")
     }
 
+    func testALongPressOnASliceStaysSelectedAfterTheFingerLifts() {
+        let app = launchedOnInsights()
+        let chart = app.descendants(matching: .any)["insights.categoryChart"].firstMatch
+        XCTAssertTrue(chart.waitForExistence(timeout: 10), "The category donut is missing")
+        if !chart.isHittable {
+            app.swipeUp()
+        }
+
+        // Hold well past any tap timing, on Dining's quarter of the ring, then lift.
+        chart.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .withOffset(CGVector(dx: -60, dy: -60))
+            .press(forDuration: 1.0)
+
+        let show = app.buttons["insights.categoryChart.show"]
+        XCTAssertTrue(show.waitForExistence(timeout: 5), "A long press did not leave the slice selected")
+        XCTAssertTrue(show.label.contains("Dining"), "The button reads \(show.label)")
+    }
+
     // MARK: - Helpers
 
     private func launchedOnInsights() -> XCUIApplication {
