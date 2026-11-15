@@ -14,18 +14,26 @@ final class RecordingTimelineReloader: WidgetTimelineReloading {
     }
 }
 
-/// A parser that reads every message as a 12.50 debit at KFC.
+/// A parser that reads every message as a 12.50 debit at KFC, or as not a transaction.
 private struct KFCParserBuilder: ParserBuilding {
+    let result: ParseResult
+
     func makeParser(for mode: ParserMode, rules: [ParsingRuleSpec]) -> any TransactionParsing {
-        KFCParser()
+        KFCParser(result: result)
     }
 }
 
 private struct KFCParser: TransactionParsing {
+    let result: ParseResult
+
     func parse(_ input: ParseInput) async -> ParseResult {
-        .transaction(TransactionDraft(direction: .debit, amount: Decimal(string: "12.50") ?? 0, merchant: "KFC"))
+        result
     }
 }
+
+private let kfcDebit = ParseResult.transaction(
+    TransactionDraft(direction: .debit, amount: Decimal(string: "12.50") ?? 0, merchant: "KFC")
+)
 
 /// The app's state over the parsing test store (one account holding 1,000) and a temporary snapshot
 /// file, with onboarding finished.
@@ -36,7 +44,7 @@ private struct ReloadFixture {
     let snapshotStore: FileWidgetSnapshotStore
     let snapshotURL: URL
 
-    init() throws {
+    init(parseResult: ParseResult = kfcDebit) throws {
         let container = try ParsingTestStore().container
         let settingsStore = SettingsStore(repository: InMemorySettingsRepository())
         try settingsStore.save(AppSettings(parserMode: .rules))
@@ -46,7 +54,7 @@ private struct ReloadFixture {
         appState = AppState(
             container: container,
             settingsStore: settingsStore,
-            parserBuilder: KFCParserBuilder(),
+            parserBuilder: KFCParserBuilder(result: parseResult),
             modelClient: UnavailableModelClient(),
             snapshotStore: snapshotStore,
             timelineReloader: reloader
@@ -96,9 +104,12 @@ struct WidgetReloadTests {
         #expect(fixture.snapshotStore.read()?.balance == "1010")
     }
 
-    @Test func aCaptureReloadsTheWidgets() async throws {
+    @Test func aCapturedTransactionReloadsTheWidgetsExactlyOnce() async throws {
         let fixture = try ReloadFixture()
         defer { fixture.cleanUp() }
+        await fixture.appState.snapshotRefresher.refresh()
+        let before = fixture.reloader.reloadCount
+
         let outcome = await fixture.appState.capture(
             IngestionRequest(text: "MYBANK: USD12.50 spent at KFC.", sender: "MYBANK", receivedAt: .now)
         )
@@ -107,8 +118,33 @@ struct WidgetReloadTests {
             Issue.record("Expected a transaction, got \(outcome)")
             return
         }
-        #expect(fixture.reloader.reloadCount >= 1)
+        #expect(fixture.reloader.reloadCount == before + 1)
         #expect(fixture.snapshotStore.read()?.balance == "987.5")
+    }
+
+    @Test func aMessageThatIsNotATransactionDoesNotReloadTheWidgets() async throws {
+        let fixture = try ReloadFixture(parseResult: .notTransaction)
+        defer { fixture.cleanUp() }
+        await fixture.appState.snapshotRefresher.refresh()
+        let before = fixture.reloader.reloadCount
+
+        let outcome = await fixture.appState.capture(
+            IngestionRequest(text: "Your code is 123456.", sender: "MYBANK", receivedAt: .now)
+        )
+
+        #expect(outcome == .notTransaction)
+        #expect(fixture.reloader.reloadCount == before)
+    }
+
+    @Test func aRefreshThatChangesNothingDoesNotReloadTheWidgets() async throws {
+        let fixture = try ReloadFixture()
+        defer { fixture.cleanUp() }
+        await fixture.appState.snapshotRefresher.refresh()
+
+        // The second snapshot differs only in when it was generated.
+        await fixture.appState.snapshotRefresher.refresh()
+
+        #expect(fixture.reloader.reloadCount == 1)
     }
 
     @Test func eraseAllDataRemovesTheSnapshotAndReloadsTheWidgets() async throws {

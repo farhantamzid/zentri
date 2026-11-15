@@ -1,12 +1,15 @@
 import ZentriCore
 
 /// The one path by which the app changes what its widgets show: it rewrites or removes the widget
-/// snapshot, then reloads every widget timeline.
+/// snapshot, then reloads every widget timeline when that changed what the widgets draw.
 ///
 /// It is the app's ``WidgetSnapshotRefresher``: every mutation service, ingestion, the Shortcuts
-/// capture, and a settings change already await `refresh()`, so each of them reloads the widgets
-/// without calling WidgetKit itself. "Delete All Data" goes through ``removeSnapshot()``, so a
-/// widget never keeps drawing a balance that was erased.
+/// capture, and a settings change already await `refresh()`, so none of them calls WidgetKit
+/// itself. Ingestion refreshes after every message, including one-time passwords and duplicates, and
+/// WidgetKit budgets background reloads, so a refresh reloads only when the snapshot it wrote shows
+/// something different from the one stored before it (``WidgetSnapshot/showsSameContent(as:)``).
+/// "Delete All Data" goes through ``removeSnapshot()``, which always reloads, so a widget never
+/// keeps drawing a balance that was erased.
 @MainActor
 struct WidgetSnapshotPublisher: WidgetSnapshotRefresher {
     private let refresher: any WidgetSnapshotRefresher
@@ -27,13 +30,23 @@ struct WidgetSnapshotPublisher: WidgetSnapshotRefresher {
         self.timelineReloader = timelineReloader
     }
 
-    /// Rewrites the snapshot from the store, then reloads the widgets.
+    /// Rewrites the snapshot from the store, then reloads the widgets if what they show changed.
     ///
-    /// The reload follows even when the write failed: the widgets then read the file they can, or
-    /// fall back to their placeholder, which is still the most current thing they can show.
+    /// "Before" is the snapshot file as it stands just before this write — on the first refresh
+    /// after launch, whatever the previous run left — because that file is what the widgets are
+    /// drawing. A write that failed leaves the file as it was, so it reloads nothing.
     func refresh() async {
+        let before = store.read()
         await refresher.refresh()
-        timelineReloader.reloadAllTimelines()
+        let after = store.read()
+        let unchanged = switch (before, after) {
+        case (nil, nil): true
+        case let (before?, after?): before.showsSameContent(as: after)
+        default: false
+        }
+        if !unchanged {
+            timelineReloader.reloadAllTimelines()
+        }
     }
 
     /// Deletes the snapshot, then reloads the widgets so they draw their placeholder.
