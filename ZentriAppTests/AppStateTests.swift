@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import Testing
 import ZentriCore
 @testable import ZentriApp
@@ -21,11 +22,7 @@ private struct NotATransactionParser: TransactionParsing {
 @MainActor
 private func makeAppState() throws -> (AppState, SettingsStore) {
     let container = try ZentriContainer.make(inMemory: true)
-    let repository = InMemorySettingsRepository()
-    let settingsStore = SettingsStore(
-        repository: repository,
-        deleteStoredSettings: { repository.clear() }
-    )
+    let settingsStore = SettingsStore(repository: InMemorySettingsRepository())
     let appState = AppState(
         container: container,
         settingsStore: settingsStore,
@@ -61,4 +58,67 @@ private func makeAppState() throws -> (AppState, SettingsStore) {
 
     let format = appState.moneyFormat(locale: Locale(identifier: "en_US"))
     #expect(format.currencyString(from: 1_000_000) == "₹10,00,000.00")
+}
+
+@MainActor
+@Test func updateSettingsSavesAndRewritesTheWidgetSnapshot() async throws {
+    let container = try ZentriContainer.make(inMemory: true)
+    let settingsStore = SettingsStore(repository: InMemorySettingsRepository())
+    try settingsStore.save(.defaultValue)
+    let url = FileManager.default.temporaryDirectory.appending(path: "zentri-settings-snapshot-\(UUID().uuidString).json")
+    defer { try? FileManager.default.removeItem(at: url) }
+    let snapshotStore = FileWidgetSnapshotStore(fileURL: url)
+    let appState = AppState(
+        container: container,
+        settingsStore: settingsStore,
+        parserBuilder: UnusedParserBuilder(),
+        snapshotStore: snapshotStore
+    )
+    var settings = AppSettings.defaultValue
+    settings.currencyCode = "BDT"
+    settings.numberGrouping = .indian
+
+    try await appState.updateSettings(settings)
+
+    #expect(settingsStore.settings == settings)
+    #expect(snapshotStore.read()?.currencyCode == "BDT")
+    #expect(snapshotStore.read()?.numberGrouping == .indian)
+}
+
+@MainActor
+@Test func eraseAllDataEmptiesTheStoreSnapshotAndSettings() async throws {
+    let container = try ZentriContainer.make(inMemory: true)
+    let context = container.mainContext
+    try SeedData.seed(into: context)
+    let account = Account(name: "Everyday", sortOrder: 0, createdAt: .now)
+    context.insert(account)
+    context.insert(BalanceCheckpoint(account: account, amount: 10, recordedAt: .now, source: .opening))
+    try context.save()
+    let settingsStore = SettingsStore(repository: InMemorySettingsRepository())
+    try settingsStore.save(.defaultValue)
+    let url = FileManager.default.temporaryDirectory.appending(path: "zentri-erase-snapshot-\(UUID().uuidString).json")
+    defer { try? FileManager.default.removeItem(at: url) }
+    let snapshotStore = FileWidgetSnapshotStore(fileURL: url)
+    let appState = AppState(
+        container: container,
+        settingsStore: settingsStore,
+        parserBuilder: UnusedParserBuilder(),
+        snapshotStore: snapshotStore
+    )
+    await appState.snapshotRefresher.refresh()
+    #expect(snapshotStore.read() != nil)
+    appState.selectedTab = .settings
+    appState.transactionFilter.searchText = "cafe"
+
+    try appState.eraseAllData()
+
+    #expect(try context.fetchCount(FetchDescriptor<Account>()) == 0)
+    #expect(try context.fetchCount(FetchDescriptor<ZentriCore.Category>()) == 0)
+    #expect(try context.fetchCount(FetchDescriptor<CategorizationRule>()) == 0)
+    #expect(snapshotStore.read() == nil)
+    // No settings sends the root back to onboarding.
+    #expect(settingsStore.settings == nil)
+    #expect(appState.selectedTab == .overview)
+    #expect(appState.transactionFilter == TransactionFilter())
+    #expect(appState.dataRevision == 1)
 }

@@ -61,23 +61,12 @@ struct ZentriApp: App {
     /// The settings store for this launch: in memory for a UI test, the shared file otherwise.
     private static func makeSettingsStore() -> SettingsStore {
         if UITestSupport.isUITestMode {
-            let repository = InMemorySettingsRepository()
-            return SettingsStore(
-                repository: repository,
-                deleteStoredSettings: { repository.clear() }
-            )
+            return SettingsStore(repository: InMemorySettingsRepository())
         }
         // The App Group is the settings home. A build that cannot reach it (a missing
         // entitlement) falls back to app-local storage so the app still launches.
         let url = SharedContainer.settingsURL
             ?? URL.applicationSupportDirectory.appending(path: AppGroup.settingsFileName)
-        return SettingsStore(
-            repository: FileSettingsStore(fileURL: url),
-            deleteStoredSettings: {
-                let path = url.path(percentEncoded: false)
-                guard FileManager.default.fileExists(atPath: path) else { return }
-                try FileManager.default.removeItem(at: url)
-            }
-        )
+        return SettingsStore(repository: FileSettingsStore(fileURL: url))
     }
 }

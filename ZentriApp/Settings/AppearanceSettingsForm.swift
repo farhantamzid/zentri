@@ -1,0 +1,82 @@
+import SwiftUI
+import ZentriCore
+
+/// The Appearance form: currency with its confirmation, grouping with its preview, and Face ID.
+struct AppearanceSettingsForm: View {
+    @State private var model: AppearanceSettingsModel
+
+    init(model: AppearanceSettingsModel) {
+        _model = State(initialValue: model)
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                Picker("Currency", selection: $model.currencyCode) {
+                    ForEach(model.currencyCodes, id: \.self) { code in
+                        CurrencyOptionLabel(code: code)
+                            .tag(code)
+                    }
+                }
+                .pickerStyle(.navigationLink)
+                .accessibilityIdentifier("appearance.currency")
+                .confirmationDialog(
+                    "Change the currency?",
+                    item: $model.pendingCurrencyCode,
+                    titleVisibility: .visible
+                ) { code in
+                    Button("Change to \(code)", action: confirmCurrencyChange)
+                    Button("Cancel", role: .cancel, action: model.cancelCurrencyChange)
+                } message: { _ in
+                    Text("Amounts are not converted.")
+                }
+            } footer: {
+                Text("The currency only changes the symbol in front of every amount.")
+            }
+
+            Section {
+                Picker("Number grouping", selection: $model.numberGrouping) {
+                    ForEach(NumberGrouping.allCases, id: \.self) { grouping in
+                        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                            Text(grouping.title)
+                                .foregroundStyle(Theme.ink)
+                            Text(grouping.detail)
+                                .font(.subheadline)
+                                .foregroundStyle(Theme.secondaryInk)
+                        }
+                        .tag(grouping)
+                        .accessibilityIdentifier("appearance.grouping.\(grouping.rawValue)")
+                    }
+                }
+                .pickerStyle(.inline)
+
+                LabeledContent("Preview") {
+                    MoneyText(1_000_000)
+                        .foregroundStyle(Theme.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("appearance.preview")
+            } header: {
+                Text("Number grouping")
+            }
+
+            Section {
+                SettingsLink(destination: .faceID)
+            } header: {
+                Text("Security")
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .alert("Couldn't save your settings", item: $model.failureMessage) { _ in
+        } message: { message in
+            Text(message)
+        }
+        .sensoryFeedback(.success, trigger: model.savedCount)
+    }
+
+    private func confirmCurrencyChange() {
+        Task { await model.confirmCurrencyChange() }
+    }
+}

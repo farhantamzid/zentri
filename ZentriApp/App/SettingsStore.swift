@@ -22,19 +22,14 @@ final class SettingsStore {
     /// The failure from the last `load()`, cleared by a successful load, save, or reset.
     private(set) var loadFailure: LoadFailure?
 
-    /// The repository the settings document is read from and written to.
+    /// The repository the settings document is read from, written to, and removed through.
     ///
     /// Onboarding hands it to `OnboardingCommitter`, which writes the first document itself so the
     /// settings and the store's first account land together.
     let repository: any SettingsRepository
-    private let deleteStoredSettings: @MainActor () throws -> Void
 
-    init(
-        repository: any SettingsRepository,
-        deleteStoredSettings: @escaping @MainActor () throws -> Void
-    ) {
+    init(repository: any SettingsRepository) {
         self.repository = repository
-        self.deleteStoredSettings = deleteStoredSettings
     }
 
     /// Reads the stored settings, recording a failure for the recovery screen.
@@ -63,7 +58,7 @@ final class SettingsStore {
 
     /// Deletes the stored settings so the app returns to onboarding.
     func reset() throws {
-        try deleteStoredSettings()
+        try repository.remove()
         settings = nil
         loadFailure = nil
     }

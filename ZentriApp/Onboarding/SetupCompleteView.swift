@@ -87,7 +87,7 @@ struct SetupCompleteView: View {
 
 #Preview {
     SetupCompleteView(
-        store: SettingsStore(repository: InMemorySettingsRepository(), deleteStoredSettings: {}),
+        store: SettingsStore(repository: InMemorySettingsRepository()),
         settings: .defaultValue,
         accountName: "Everyday",
         openingBalance: 1_000_000

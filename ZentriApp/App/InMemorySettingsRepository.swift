@@ -22,9 +22,4 @@ final class InMemorySettingsRepository: SettingsRepository, Sendable {
     func remove() {
         state.withLock { $0 = nil }
     }
-
-    /// The delete action `SettingsStore` is built with, which is the same as removing the file.
-    func clear() {
-        remove()
-    }
 }

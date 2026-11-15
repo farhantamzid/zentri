@@ -19,6 +19,8 @@ final class AppState {
     let parserBuilder: any ParserBuilding
     /// The refresher that keeps widgets in step with the store.
     let snapshotRefresher: any WidgetSnapshotRefresher
+    /// Where the widget snapshot is written; "Delete All Data" removes it.
+    private let snapshotStore: any WidgetSnapshotStore
 
     /// The selected root tab.
     var selectedTab: AppTab = .overview
@@ -39,6 +41,7 @@ final class AppState {
         self.container = container
         self.settingsStore = settingsStore
         self.parserBuilder = parserBuilder
+        self.snapshotStore = snapshotStore
         self.snapshotRefresher = LiveWidgetSnapshotRefresher(
             context: container.mainContext,
             store: snapshotStore,
@@ -65,6 +68,44 @@ final class AppState {
     /// refreshing the widgets after each one. The caller still calls ``mutate()`` afterwards.
     func makeTransactionMutationService() -> TransactionMutationService {
         TransactionMutationService(context: container.mainContext, snapshotRefresher: snapshotRefresher)
+    }
+
+    /// A service for the person's changes to accounts, refreshing the widgets after each one. The
+    /// caller still calls ``mutate()`` afterwards.
+    func makeAccountMutationService() -> AccountMutationService {
+        AccountMutationService(context: container.mainContext, snapshotRefresher: snapshotRefresher)
+    }
+
+    /// A service for the person's changes to categories and keyword rules. The caller still calls
+    /// ``mutate()`` afterwards.
+    func makeCategoryMutationService() -> CategoryMutationService {
+        CategoryMutationService(context: container.mainContext, snapshotRefresher: snapshotRefresher)
+    }
+
+    /// Saves new settings, then rewrites the widget snapshot, which carries the currency and grouping.
+    ///
+    /// Every money label re-renders on its own: the root reads ``moneyFormat(locale:)`` from the
+    /// observed settings. Changing the currency never converts a stored amount.
+    func updateSettings(_ settings: AppSettings) async throws {
+        try settingsStore.save(settings)
+        await snapshotRefresher.refresh()
+    }
+
+    /// Deletes everything Zentri keeps on this device and returns the app to setup.
+    ///
+    /// The store goes first, in one save: if that fails nothing has changed. Then the widget
+    /// snapshot is removed, so no widget keeps showing a balance from deleted data, and last the
+    /// settings document, which is what sends the root back to onboarding. A failure after the
+    /// store is empty leaves a state the person can finish by deleting again. In `-UITestMode` the
+    /// store is in memory, the snapshot store is inert, and the settings repository is in memory, so
+    /// nothing real is touched.
+    func eraseAllData() throws {
+        try StoreEraser().eraseAll(in: container.mainContext)
+        try snapshotStore.remove()
+        try settingsStore.reset()
+        transactionFilter = TransactionFilter()
+        selectedTab = .overview
+        mutate()
     }
 
     /// Tells every open screen that the store changed.

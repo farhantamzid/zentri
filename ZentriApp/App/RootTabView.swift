@@ -21,8 +21,8 @@ struct RootTabView: View {
                             TransactionsView()
                         case .insights:
                             InsightsView()
-                        default:
-                            TabPlaceholderView(tab: tab)
+                        case .settings:
+                            SettingsView()
                         }
                     }
                 }

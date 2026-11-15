@@ -3,23 +3,15 @@ import Testing
 import ZentriCore
 @testable import ZentriApp
 
-/// A file-backed store whose delete action mirrors the one `ZentriApp` installs.
+/// A file-backed store, as `ZentriApp` builds one.
 @MainActor
 private func makeFileStore(at url: URL) -> SettingsStore {
-    SettingsStore(
-        repository: FileSettingsStore(fileURL: url),
-        deleteStoredSettings: {
-            let path = url.path(percentEncoded: false)
-            guard FileManager.default.fileExists(atPath: path) else { return }
-            try FileManager.default.removeItem(at: url)
-        }
-    )
+    SettingsStore(repository: FileSettingsStore(fileURL: url))
 }
 
 @MainActor
 @Test func settingsLoadReturnsNilWhenNothingIsStored() throws {
-    let repository = InMemorySettingsRepository()
-    let store = SettingsStore(repository: repository, deleteStoredSettings: { repository.clear() })
+    let store = SettingsStore(repository: InMemorySettingsRepository())
     try store.load()
     #expect(store.settings == nil)
     #expect(store.loadFailure == nil)
@@ -55,8 +47,7 @@ private func makeFileStore(at url: URL) -> SettingsStore {
 
 @MainActor
 @Test func completeOnboardingSavesSettingsAndClearsTheFailure() throws {
-    let repository = InMemorySettingsRepository()
-    let store = SettingsStore(repository: repository, deleteStoredSettings: { repository.clear() })
+    let store = SettingsStore(repository: InMemorySettingsRepository())
     var settings = AppSettings.defaultValue
     settings.currencyCode = "BDT"
     settings.numberGrouping = .indian

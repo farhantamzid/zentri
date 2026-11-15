@@ -25,7 +25,7 @@ struct OnboardingGroupingRow: View {
     var body: some View {
         OnboardingChoiceRow(isSelected: isSelected, action: action) {
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                Text(title)
+                Text(grouping.title)
                     .font(.body)
                     .foregroundStyle(Theme.ink)
                 Text(example)
@@ -33,28 +33,12 @@ struct OnboardingGroupingRow: View {
                     .foregroundStyle(Theme.secondaryInk)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
-                Text(detail)
+                Text(grouping.detail)
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
             }
         }
         .accessibilityIdentifier("onboarding.grouping.\(grouping.rawValue)")
-    }
-
-    private var title: LocalizedStringResource {
-        switch grouping {
-        case .system: "System"
-        case .western: "Western"
-        case .indian: "Indian"
-        }
-    }
-
-    private var detail: LocalizedStringResource {
-        switch grouping {
-        case .system: "Follows this device"
-        case .western: "Groups of three digits"
-        case .indian: "Three digits, then groups of two"
-        }
     }
 
     private var example: String {
