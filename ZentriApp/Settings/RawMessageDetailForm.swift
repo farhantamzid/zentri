@@ -13,7 +13,6 @@ struct RawMessageDetailForm: View {
 
     @State private var isConfirmingReprocess = false
     @State private var isChoosingAccount = false
-    @State private var isConfirmingDelete = false
     @State private var isReprocessing = false
     @State private var outcomeMessage: LocalizedStringResource?
     @State private var transactionSelection: TransactionSelection?
@@ -30,9 +29,12 @@ struct RawMessageDetailForm: View {
 
             if message.hasTransaction {
                 Section {
-                    Button("View Transaction", systemImage: "list.bullet.rectangle.portrait", action: showTransaction)
-                        .frame(minHeight: Theme.Layout.minimumTapTarget)
-                        .accessibilityIdentifier("inbox.detail.transaction")
+                    Button(action: showTransaction) {
+                        Label("View Transaction", systemImage: "list.bullet.rectangle.portrait")
+                            .frame(maxWidth: .infinity, minHeight: Theme.Layout.minimumTapTarget, alignment: .leading)
+                            .contentShape(.rect)
+                    }
+                    .accessibilityIdentifier("inbox.detail.transaction")
                 }
             }
 
@@ -41,6 +43,15 @@ struct RawMessageDetailForm: View {
                     Label("Reprocess", systemImage: "arrow.clockwise")
                         .frame(maxWidth: .infinity, minHeight: Theme.Layout.minimumTapTarget, alignment: .leading)
                         .contentShape(.rect)
+                        // The button asks one of two questions; each gets its own anchor so the two
+                        // presentations never compete.
+                        .confirmationDialog("Which account is this message from?", isPresented: $isChoosingAccount, titleVisibility: .visible) {
+                            ForEach(model.accounts) { account in
+                                Button(account.name) {
+                                    reprocess(accountID: account.id)
+                                }
+                            }
+                        }
                 }
                 .disabled(isReprocessing)
                 .accessibilityIdentifier("inbox.detail.reprocess")
@@ -48,13 +59,6 @@ struct RawMessageDetailForm: View {
                     Button("Reprocess", action: reprocessWithoutChoice)
                 } message: {
                     Text("Its transaction is replaced only if the message parses. Your note, transfer setting, and chosen category are kept.")
-                }
-                .confirmationDialog("Which account is this message from?", isPresented: $isChoosingAccount, titleVisibility: .visible) {
-                    ForEach(model.accounts) { account in
-                        Button(account.name) {
-                            reprocess(accountID: account.id)
-                        }
-                    }
                 }
 
                 Button(action: copyText) {
@@ -65,20 +69,7 @@ struct RawMessageDetailForm: View {
                 .accessibilityIdentifier("inbox.detail.copy")
             }
 
-            Section {
-                Button(role: .destructive, action: confirmDelete) {
-                    Label("Delete Message", systemImage: "trash")
-                        .frame(maxWidth: .infinity, minHeight: Theme.Layout.minimumTapTarget, alignment: .leading)
-                        .contentShape(.rect)
-                }
-                .accessibilityIdentifier("inbox.detail.delete")
-                .confirmationDialog("Delete this message?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
-                    Button("Delete Message", role: .destructive, action: delete)
-                } message: {
-                    Text("The message leaves the archive. Any transaction it became is kept.")
-                }
-                .sensoryFeedback(.warning, trigger: isConfirmingDelete) { _, isShowing in isShowing }
-            }
+            RawMessageDeleteSection(onDelete: delete)
         }
         .scrollContentBackground(.hidden)
         .sheet(item: $transactionSelection) { selection in
@@ -135,10 +126,6 @@ struct RawMessageDetailForm: View {
     private func copyText() {
         Clipboard.copy(message.text)
         copiedCount += 1
-    }
-
-    private func confirmDelete() {
-        isConfirmingDelete = true
     }
 
     private func delete() {

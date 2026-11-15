@@ -8,10 +8,6 @@ struct TransactionDetailForm: View {
     let categories: [TransactionCategoryOption]
     let onDelete: @MainActor () -> Void
 
-    private func reprocess() {
-        Task { await model.reprocess() }
-    }
-
     var body: some View {
         if model.isDeleted {
             Color.clear
@@ -32,5 +28,9 @@ struct TransactionDetailForm: View {
                 TransactionDeleteSection(onDelete: onDelete)
             }
         }
+    }
+
+    private func reprocess() {
+        Task { await model.reprocess() }
     }
 }
