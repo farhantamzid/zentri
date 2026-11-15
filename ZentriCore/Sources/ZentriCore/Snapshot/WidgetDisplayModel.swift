@@ -159,6 +159,20 @@ public struct WidgetDisplayModel: Sendable {
         return model
     }()
 
+    /// The amount VoiceOver may speak, or `nil` when it must say "Hidden" instead.
+    ///
+    /// An amount is withheld when the widget hides amounts, and also when the system redacts
+    /// privacy-sensitive content — on a locked device, for instance. The visible text is redacted
+    /// then, but an accessibility label or value is separate text the redaction does not reach.
+    ///
+    /// - Parameters:
+    ///   - amount: The display amount.
+    ///   - amountsHidden: Whether the widget hides amounts (``amountsHidden``).
+    ///   - privacyRedacted: Whether the view's redaction reasons include privacy.
+    public static func spokenAmount(_ amount: String, amountsHidden: Bool, privacyRedacted: Bool) -> String? {
+        amountsHidden || privacyRedacted ? nil : amount
+    }
+
     /// The trend for the last `days` days the snapshot holds, with the period's total.
     ///
     /// - Parameter days: The window, such as 7 or 30; the snapshot holds at most 30 days, so a

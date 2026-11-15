@@ -100,13 +100,15 @@ struct WidgetAmountText: View {
 
 /// A titled figure, such as "Spent today" over its amount, read by VoiceOver as one element.
 ///
-/// The title is the label and the amount the value; a hidden amount is announced as "Hidden" rather
-/// than as a row of dots. Apply the amount's font and color from outside; the title keeps its own.
+/// The title is the label and the amount the value; a hidden or privacy-redacted amount is announced
+/// as "Hidden" rather than as a row of dots or the amount the redaction covers. Apply the amount's font and color from outside; the title keeps its own.
 struct WidgetFigure: View {
     private let title: LocalizedStringResource
     private let amount: String
     private let isHidden: Bool
     private let alignment: HorizontalAlignment
+
+    @Environment(\.redactionReasons) private var redactionReasons
 
     init(
         _ title: LocalizedStringResource,
@@ -131,7 +133,11 @@ struct WidgetFigure: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(title))
-        .accessibilityValue(isHidden ? Text(WidgetStrings.hiddenAmount) : Text(verbatim: amount))
+        .accessibilityValue(Text(verbatim: WidgetStrings.spokenAmount(
+            amount,
+            amountsHidden: isHidden,
+            redactionReasons: redactionReasons
+        )))
     }
 }
 
@@ -142,6 +148,18 @@ enum WidgetStrings {
         "Hidden",
         comment: "VoiceOver in place of an amount the widget hides for privacy."
     )
+
+    /// What VoiceOver says for an amount: the amount, or "Hidden" when the widget hides amounts or
+    /// the system is redacting privacy-sensitive content, as on a locked device. An accessibility
+    /// label or value is separate text that the visible redaction does not reach, so every spoken
+    /// amount goes through here.
+    static func spokenAmount(_ amount: String, amountsHidden: Bool, redactionReasons: RedactionReasons) -> String {
+        WidgetDisplayModel.spokenAmount(
+            amount,
+            amountsHidden: amountsHidden,
+            privacyRedacted: redactionReasons.contains(.privacy)
+        ) ?? String(localized: hiddenAmount)
+    }
 }
 
 /// A category's symbol in its palette color.
@@ -218,6 +236,8 @@ struct RecentTransactionWidgetRow: View {
     /// Whether the category's name shows under the merchant, when there is room for it.
     let showsCategory: Bool
 
+    @Environment(\.redactionReasons) private var redactionReasons
+
     var body: some View {
         HStack {
             WidgetCategoryIcon(symbolName: row.symbolName, colorToken: row.colorToken)
@@ -245,7 +265,11 @@ struct RecentTransactionWidgetRow: View {
 
     /// Merchant, category, and the movement in words.
     private var spokenSummary: Text {
-        let amount = amountsHidden ? String(localized: WidgetStrings.hiddenAmount) : row.spokenAmount
+        let amount = WidgetStrings.spokenAmount(
+            row.spokenAmount,
+            amountsHidden: amountsHidden,
+            redactionReasons: redactionReasons
+        )
         return if row.isCredit {
             Text(
                 "\(row.merchant), \(row.categoryName), received \(amount)",
@@ -293,6 +317,8 @@ struct CategoryWidgetRow: View {
     /// Whether the amount shows beside the share.
     let showsAmount: Bool
 
+    @Environment(\.redactionReasons) private var redactionReasons
+
     var body: some View {
         HStack {
             WidgetCategoryIcon(symbolName: row.symbolName, colorToken: row.colorToken)
@@ -326,7 +352,7 @@ struct CategoryWidgetRow: View {
                 comment: "VoiceOver for a widget category: its name, then its share of this month's spending."
             )
         }
-        let amount = amountsHidden ? String(localized: WidgetStrings.hiddenAmount) : row.amount
+        let amount = WidgetStrings.spokenAmount(row.amount, amountsHidden: amountsHidden, redactionReasons: redactionReasons)
         return Text(
             "\(row.name), \(amount), \(share) of spending",
             comment: "VoiceOver for a widget category: name, amount or “Hidden”, then its share of this month's spending."

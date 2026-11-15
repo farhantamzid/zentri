@@ -25,11 +25,13 @@ struct TrendWidget: Widget {
 
 /// The trend widget's content.
 ///
-/// The chart is one VoiceOver element that names the period and speaks its total — or "Hidden" —
-/// so a hidden widget never reads out a day's amount.
+/// The chart is one VoiceOver element that names the period and speaks its total — or "Hidden" when
+/// amounts are hidden or privacy-redacted — so it never reads out a day's amount.
 struct TrendWidgetView: View {
     let model: WidgetDisplayModel
     let period: WidgetTrendPeriod
+
+    @Environment(\.redactionReasons) private var redactionReasons
 
     var body: some View {
         let trend = model.trend(days: period.dayCount)
@@ -49,9 +51,11 @@ struct TrendWidgetView: View {
                     TrendChart(bars: trend.bars)
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel(Text(chartTitle))
-                        .accessibilityValue(
-                            model.amountsHidden ? Text(WidgetStrings.hiddenAmount) : Text(verbatim: trend.total)
-                        )
+                        .accessibilityValue(Text(verbatim: WidgetStrings.spokenAmount(
+                            trend.total,
+                            amountsHidden: model.amountsHidden,
+                            redactionReasons: redactionReasons
+                        )))
                 } else {
                     WidgetEmptyMessage("No spending in this period")
                 }

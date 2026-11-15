@@ -31,6 +31,7 @@ struct AccessoryBalanceWidgetView: View {
     let model: WidgetDisplayModel
 
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
 
     var body: some View {
         Group {
@@ -40,7 +41,11 @@ struct AccessoryBalanceWidgetView: View {
                 Text("Balance \(model.balance)", comment: "The inline Lock Screen widget. The argument is the balance or dots when hidden.")
                     .privacySensitive()
                     .accessibilityLabel(Text("Balance", comment: "The balance widget's name in the widget gallery."))
-                    .accessibilityValue(model.amountsHidden ? Text(WidgetStrings.hiddenAmount) : Text(verbatim: model.balance))
+                    .accessibilityValue(Text(verbatim: WidgetStrings.spokenAmount(
+                        model.balance,
+                        amountsHidden: model.amountsHidden,
+                        redactionReasons: redactionReasons
+                    )))
             } else {
                 VStack(alignment: .leading, spacing: 0) {
                     WidgetFigure("Balance", amount: model.balance, isHidden: model.amountsHidden)

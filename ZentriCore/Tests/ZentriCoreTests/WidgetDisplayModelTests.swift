@@ -255,3 +255,26 @@ private func makeSnapshot(
     #expect(placeholder.categoryRows.isEmpty == false)
     #expect(placeholder.trend(days: 7).bars.count == 7)
 }
+
+// MARK: - Spoken amounts
+
+@Test func anAmountIsSpokenOnlyWhenNeitherHiddenNorPrivacyRedacted() {
+    #expect(WidgetDisplayModel.spokenAmount("$12.50", amountsHidden: false, privacyRedacted: false) == "$12.50")
+    #expect(WidgetDisplayModel.spokenAmount("••••", amountsHidden: true, privacyRedacted: false) == nil)
+    // A locked device redacts privacy-sensitive text; VoiceOver must not read the amount either.
+    #expect(WidgetDisplayModel.spokenAmount("$12.50", amountsHidden: false, privacyRedacted: true) == nil)
+    #expect(WidgetDisplayModel.spokenAmount("••••", amountsHidden: true, privacyRedacted: true) == nil)
+}
+
+// MARK: - Equivalence
+
+@Test func snapshotsThatDifferOnlyInGenerationTimeShowTheSame() {
+    let snapshot = makeSnapshot()
+    var regenerated = snapshot
+    regenerated.generatedAt = displayNow.addingTimeInterval(60)
+    var changed = snapshot
+    changed.balance = "999"
+
+    #expect(snapshot.showsSameContent(as: regenerated))
+    #expect(!snapshot.showsSameContent(as: changed))
+}
