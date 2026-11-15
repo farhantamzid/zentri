@@ -3506,17 +3506,6 @@
         }
       }
     },
-    "Reopen the Shortcuts setup guide and send test messages from the test console. Coming in a later update.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reopen the Shortcuts setup guide and send test messages from the test console. Coming in a later update."
-          }
-        }
-      }
-    },
     "Require Face ID to open Zentri. Coming in a later update.": {
       "extractionState": "manual",
       "localizations": {
@@ -5273,6 +5262,438 @@
           "stringUnit": {
             "state": "translated",
             "value": "Use this after fixing the rule that read this message."
+          }
+        }
+      }
+    },
+    "Capture Bank SMS": {
+      "comment": "The Shortcuts action that sends a bank message to Zentri.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture Bank SMS"
+          }
+        }
+      }
+    },
+    "Reads a bank message on this iPhone and records its transaction in Zentri.": {
+      "comment": "The Shortcuts description of the Capture Bank SMS action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reads a bank message on this iPhone and records its transaction in Zentri."
+          }
+        }
+      }
+    },
+    "SMS Text": {
+      "comment": "The capture action's parameter for the message text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SMS Text"
+          }
+        }
+      }
+    },
+    "Message Date": {
+      "comment": "The capture action's parameter for when the message arrived.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message Date"
+          }
+        }
+      }
+    },
+    "Zentri couldn't open its data. Open Zentri, then try again.": {
+      "comment": "Shortcut dialog when the store could not be opened.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't open its data. Open Zentri, then try again."
+          }
+        }
+      }
+    },
+    "%@": {
+      "comment": "An account's name, shown as-is in Shortcuts.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        }
+      }
+    },
+    "This message is already in Zentri, so nothing was added.": {
+      "comment": "Shortcut dialog: the captured message repeats one that is already stored.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This message is already in Zentri, so nothing was added."
+          }
+        }
+      }
+    },
+    "This message isn't a transaction, so nothing was added.": {
+      "comment": "Shortcut dialog: the captured message is a code, promotion, or other non-transaction.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This message isn't a transaction, so nothing was added."
+          }
+        }
+      }
+    },
+    "Recorded the transaction.": {
+      "comment": "Shortcut dialog: a transaction was saved but could not be read back to describe it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded the transaction."
+          }
+        }
+      }
+    },
+    "Recorded %@ at %@.": {
+      "comment": "Shortcut dialog after spending is captured. The first %@ is the amount with its currency, the second the merchant.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded %@ at %@."
+          }
+        }
+      }
+    },
+    "Recorded %@ from %@.": {
+      "comment": "Shortcut dialog after income is captured. The first %@ is the amount with its currency, the second the payer.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded %@ from %@."
+          }
+        }
+      }
+    },
+    "Open Zentri to finish setup.": {
+      "comment": "Shortcut dialog when a message arrives before onboarding is finished.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Zentri to finish setup."
+          }
+        }
+      }
+    },
+    "The Shortcut didn't pass any message text. Set SMS Text to the message's content.": {
+      "comment": "Shortcut dialog when the automation passed empty text. SMS Text is the action's parameter name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Shortcut didn't pass any message text. Set SMS Text to the message's content."
+          }
+        }
+      }
+    },
+    "Zentri couldn't save this message. Try again.": {
+      "comment": "Shortcut dialog when the store could not be written.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't save this message. Try again."
+          }
+        }
+      }
+    },
+    "The message was saved and will finish when Zentri opens.": {
+      "comment": "Shortcut dialog when reading the message was interrupted; the app retries it on launch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The message was saved and will finish when Zentri opens."
+          }
+        }
+      }
+    },
+    "Zentri couldn't tell which account this message belongs to. Choose an account in the Shortcut. It's saved in the message inbox.": {
+      "comment": "Shortcut dialog when several accounts exist and the Shortcut chose none, or chose one that is unavailable.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't tell which account this message belongs to. Choose an account in the Shortcut. It's saved in the message inbox."
+          }
+        }
+      }
+    },
+    "The message couldn't be read.": {
+      "comment": "Fallback reason in the Shortcut dialog when a failure carries no explanation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The message couldn't be read."
+          }
+        }
+      }
+    },
+    "Zentri couldn't read this message. %@ It's saved in the message inbox.": {
+      "comment": "Shortcut dialog when parsing failed. %@ is a sentence explaining why.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't read this message. %@ It's saved in the message inbox."
+          }
+        }
+      }
+    },
+    "In Shortcuts, open Automation, tap New Automation, and choose Message.": {
+      "comment": "Shortcuts setup step 1. Automation, New Automation, and Message are Shortcuts app labels.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Shortcuts, open Automation, tap New Automation, and choose Message."
+          }
+        }
+      }
+    },
+    "Choose your bank's sender. Add one automation per bank, or choose several senders in one.": {
+      "comment": "Shortcuts setup step 2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose your bank's sender. Add one automation per bank, or choose several senders in one."
+          }
+        }
+      }
+    },
+    "Choose Run Immediately, so the automation runs without asking you each time.": {
+      "comment": "Shortcuts setup step 3. Run Immediately is a Shortcuts app option.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Run Immediately, so the automation runs without asking you each time."
+          }
+        }
+      }
+    },
+    "Add the Capture Bank SMS action from Zentri.": {
+      "comment": "Shortcuts setup step 4. Capture Bank SMS is Zentri's action name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the Capture Bank SMS action from Zentri."
+          }
+        }
+      }
+    },
+    "Set SMS Text to the message's Content. You can also choose an account, the sender, and the message date.": {
+      "comment": "Shortcuts setup step 5. SMS Text is the action's parameter; Content is the Shortcuts variable.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set SMS Text to the message's Content. You can also choose an account, the sender, and the message date."
+          }
+        }
+      }
+    },
+    "Set up the automation": {
+      "comment": "Heading of the Shortcuts setup guide's numbered steps.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up the automation"
+          }
+        }
+      }
+    },
+    "Try a message first": {
+      "comment": "Heading of the Shortcuts guide card that links to the test console.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try a message first"
+          }
+        }
+      }
+    },
+    "Paste one of your bank's messages into the test console to see what Zentri reads from it. Nothing is saved.": {
+      "comment": "Explains the test console in the Shortcuts setup guide.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste one of your bank's messages into the test console to see what Zentri reads from it. Nothing is saved."
+          }
+        }
+      }
+    },
+    "Open Test Console": {
+      "comment": "Opens the rule tester from the Shortcuts setup guide.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Test Console"
+          }
+        }
+      }
+    },
+    "Troubleshooting": {
+      "comment": "Heading of the Shortcuts guide's troubleshooting notes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Troubleshooting"
+          }
+        }
+      }
+    },
+    "Transactions wait for a tap": {
+      "comment": "Troubleshooting heading: the automation asks before running.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transactions wait for a tap"
+          }
+        }
+      }
+    },
+    "Open the automation and choose Run Immediately. With Run After Confirmation, iOS waits for you before the message reaches Zentri.": {
+      "comment": "Troubleshooting detail. Run Immediately and Run After Confirmation are Shortcuts app options.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the automation and choose Run Immediately. With Run After Confirmation, iOS waits for you before the message reaches Zentri."
+          }
+        }
+      }
+    },
+    "Nothing arrives": {
+      "comment": "Troubleshooting heading: no messages reach Zentri.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing arrives"
+          }
+        }
+      }
+    },
+    "Check that the automation's sender matches how your bank's messages appear in Messages. Banks often send from a short code or a name, not a saved contact. If you're unsure, use Message Contains with a word every bank message includes.": {
+      "comment": "Troubleshooting detail about choosing the sender. Message Contains is a Shortcuts app option.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check that the automation's sender matches how your bank's messages appear in Messages. Banks often send from a short code or a name, not a saved contact. If you're unsure, use Message Contains with a word every bank message includes."
+          }
+        }
+      }
+    },
+    "More than one account": {
+      "comment": "Troubleshooting heading: the person has several accounts.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More than one account"
+          }
+        }
+      }
+    },
+    "Choose the account in the Capture Bank SMS action, so each message lands in the right one. A message Zentri can't place waits in the message inbox.": {
+      "comment": "Troubleshooting detail about choosing an account in the action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the account in the Capture Bank SMS action, so each message lands in the right one. A message Zentri can't place waits in the message inbox."
+          }
+        }
+      }
+    },
+    "A Shortcuts automation hands each bank message to Zentri, which reads it on this iPhone. iOS doesn't let apps create automations, so you build it once in the Shortcuts app.": {
+      "comment": "Introduction at the top of the Shortcuts setup guide.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Shortcuts automation hands each bank message to Zentri, which reads it on this iPhone. iOS doesn't let apps create automations, so you build it once in the Shortcuts app."
+          }
+        }
+      }
+    },
+    "Read the Setup Guide": {
+      "comment": "Onboarding button that opens the full Shortcuts setup guide.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the Setup Guide"
           }
         }
       }

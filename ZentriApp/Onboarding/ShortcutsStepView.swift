@@ -3,10 +3,10 @@ import SwiftUI
 
 /// How bank messages reach Zentri: a Shortcut hands them over, and the app reads them on-device.
 ///
-/// The full setup guide and the test console live in Settings (a later task); for now this screen
-/// explains the idea and offers to open the Shortcuts app, and Continue skips it.
+/// The step explains the idea, offers to open the Shortcuts app, and opens the full setup guide —
+/// the same one Settings › Shortcuts shows — in a sheet. Continue skips it.
 struct ShortcutsStepView: View {
-    @Environment(\.openURL) private var openURL
+    @State private var isShowingGuide = false
 
     var body: some View {
         OnboardingStepLayout(
@@ -26,11 +26,11 @@ struct ShortcutsStepView: View {
                         detail: "The amount, merchant, and date are extracted on this iPhone."
                     )
 
-                    Button("Open Shortcuts", systemImage: "arrow.up.forward.app", action: openShortcuts)
-                        .buttonStyle(.bordered)
-                        .controlSize(.large)
+                    OpenShortcutsButton(accessibilityIdentifier: "onboarding.shortcuts.open")
+
+                    Button("Read the Setup Guide", systemImage: "list.number", action: showGuide)
                         .frame(maxWidth: .infinity, minHeight: Theme.Layout.minimumTapTarget)
-                        .accessibilityIdentifier("onboarding.shortcuts.open")
+                        .accessibilityIdentifier("onboarding.shortcuts.guide")
                 }
             }
 
@@ -38,12 +38,13 @@ struct ShortcutsStepView: View {
                 .font(.footnote)
                 .foregroundStyle(Theme.secondaryInk)
         }
+        .sheet(isPresented: $isShowingGuide) {
+            ShortcutsGuideSheet()
+        }
     }
 
-    /// Hands over to the Shortcuts app so the user can build the automation there.
-    private func openShortcuts() {
-        guard let url = URL(string: "shortcuts://") else { return }
-        openURL(url)
+    private func showGuide() {
+        isShowingGuide = true
     }
 }
 

@@ -64,7 +64,7 @@ final class OverviewModel {
                 return
             }
             let messages = try reads.messages()
-            summary = summary(for: accounts, health: health(from: messages))
+            summary = summary(for: accounts, health: IngestionHealth(messages: messages))
             loadState = .loaded
         } catch {
             summary = nil
@@ -134,15 +134,6 @@ private extension OverviewModel {
                 }?.recordedAt
             }
             .max()
-    }
-
-    /// The newest messages, stated the three ways the health card reports them.
-    func health(from messages: [RawMessage]) -> IngestionHealth {
-        IngestionHealth(
-            lastMessageAt: messages.map(\.receivedAt).max(),
-            lastSuccessAt: messages.filter { $0.status == .parsed }.map(\.ingestedAt).max(),
-            failureCount: messages.count { $0.status == .failed }
-        )
     }
 
     /// The live `Other` category, which an uncategorized transaction is shown as.
