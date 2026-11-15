@@ -22,6 +22,12 @@ final class AppState {
     /// The refresher that keeps widgets in step with the store: it rewrites the snapshot and reloads
     /// the widgets, and "Delete All Data" removes the snapshot through it.
     let snapshotRefresher: WidgetSnapshotPublisher
+    /// The folder automatic backups go to and restores are browsed from.
+    let backupFolder: any BackupFolderAccessing
+    /// Writes automatic snapshots after data changes and when the app goes to the background.
+    let backupScheduler: BackupScheduler
+    /// Keeps the app alive long enough for the background backup to finish.
+    private let backgroundTasks: any BackgroundTaskRunning
 
     /// The selected root tab.
     var selectedTab: AppTab = .overview
@@ -29,6 +35,9 @@ final class AppState {
     var transactionFilter = TransactionFilter()
     /// A counter screens watch to reload after a mutation elsewhere.
     private(set) var dataRevision = 0
+    /// Counts restores that replaced every stored row. The tabs other than Settings rebuild their
+    /// navigation when it changes, so no pushed screen keeps a row that no longer exists.
+    private(set) var storeReplacementCount = 0
 
     /// Whether the launch retry has already run, so it runs at most once per session.
     @ObservationIgnored private var hasRetriedPendingIngestion = false
@@ -41,7 +50,9 @@ final class AppState {
         parserBuilder: any ParserBuilding,
         modelClient: any TransactionModelClient,
         snapshotStore: any WidgetSnapshotStore,
-        timelineReloader: any WidgetTimelineReloading
+        timelineReloader: any WidgetTimelineReloading,
+        backupFolder: any BackupFolderAccessing = InertBackupFolder(),
+        backgroundTasks: any BackgroundTaskRunning = ImmediateBackgroundTasks()
     ) {
         self.container = container
         self.settingsStore = settingsStore
@@ -53,6 +64,93 @@ final class AppState {
             snapshotStore: snapshotStore,
             timelineReloader: timelineReloader
         )
+        self.backupFolder = backupFolder
+        self.backgroundTasks = backgroundTasks
+        self.backupScheduler = BackupScheduler(
+            folder: backupFolder,
+            makeDocument: { [container, settingsStore] in
+                guard let settings = settingsStore.settings else { return nil }
+                return try BackupExporter(settings: settings)
+                    .export(context: container.mainContext, appVersion: AppState.appVersion)
+            },
+            didBackUp: { [settingsStore] date in
+                // The current settings, not the ones exported: a change made during the write stays.
+                // A failure to record the time only leaves the status line behind; the snapshot is safe.
+                guard var settings = settingsStore.settings else { return }
+                settings.lastBackupAt = date
+                try? settingsStore.save(settings)
+            }
+        )
+    }
+
+    /// The marketing version a backup records.
+    static let appVersion: String = {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }()
+
+    /// A backup of everything stored, with the current settings, for a manual export.
+    ///
+    /// - Throws: An error when the store cannot be read.
+    func makeBackupDocument() throws -> BackupDocument {
+        try BackupExporter(settings: settingsStore.settings ?? .defaultValue)
+            .export(context: container.mainContext, appVersion: Self.appVersion)
+    }
+
+    /// Restores a backup and tells every screen, the widgets, and the automatic backup.
+    ///
+    /// Order, chosen so a failure part-way is never silent and never touches data it should not:
+    /// 1. For a replace, the backup's settings are converted first, so a malformed settings block is
+    ///    rejected before any row changes.
+    /// 2. The importer validates the whole document and swaps (or merges) the rows in one save; if
+    ///    it throws, the store is rolled back and nothing has changed.
+    /// 3. For a replace, the settings are saved last. If that save fails the rows are already
+    ///    restored, so every screen is still told, and ``BackupRestoreError/settingsNotSaved`` is
+    ///    thrown so the person learns the previous currency is still in use; restoring again retries.
+    ///
+    /// When this device has settings, its own `lastBackupAt` and `iCloudBackupEnabled` are kept:
+    /// they describe this device's backup folder, not the backup's. A merge never changes settings.
+    /// This works from the settings-recovery screen too, where saving the backup's settings clears
+    /// the load failure.
+    func restoreBackup(_ document: BackupDocument, mode: ImportMode) async throws -> ImportSummary {
+        let restoredSettings = mode == .replace ? try settingsToRestore(from: document) : nil
+        let summary = try BackupImporter().import(document: document, into: container.mainContext, mode: mode)
+        if mode == .replace {
+            storeReplacementCount += 1
+            transactionFilter = TransactionFilter()
+        }
+        var settingsError: (any Error)?
+        if let restoredSettings {
+            do {
+                try settingsStore.save(restoredSettings)
+            } catch {
+                settingsError = error
+            }
+        }
+        await snapshotRefresher.refresh()
+        mutate()
+        if settingsError != nil {
+            throw BackupRestoreError.settingsNotSaved
+        }
+        return summary
+    }
+
+    /// The backup's settings, keeping this device's backup history when it has one.
+    private func settingsToRestore(from document: BackupDocument) throws -> AppSettings {
+        var settings = try document.settings.makeAppSettings()
+        if let current = settingsStore.settings {
+            settings.lastBackupAt = current.lastBackupAt
+            settings.iCloudBackupEnabled = current.iCloudBackupEnabled
+        } else {
+            settings.lastBackupAt = nil
+        }
+        return settings
+    }
+
+    /// Writes a pending automatic backup now, with background time to finish it.
+    func sceneDidEnterBackground() {
+        backgroundTasks.run(named: "Zentri backup") { [backupScheduler] in
+            await backupScheduler.flush()
+        }
     }
 
     /// Selects the tab a `zentri://` widget link names; any other URL is ignored.
@@ -170,10 +268,13 @@ final class AppState {
     /// settings document, which is what sends the root back to onboarding. A failure after the
     /// store is empty leaves a state the person can finish by deleting again. In `-UITestMode` the
     /// store is in memory, the snapshot store is inert, and the settings repository is in memory, so
-    /// nothing real is touched.
+    /// nothing real is touched. The backup folder's bookmark is forgotten as well, so no automatic
+    /// backup follows; the backups already in that folder are the person's files and are kept.
     func eraseAllData() throws {
         try StoreEraser().eraseAll(in: container.mainContext)
         try snapshotRefresher.removeSnapshot()
+        backupScheduler.cancel()
+        backupFolder.forgetFolder()
         try settingsStore.reset()
         transactionFilter = TransactionFilter()
         selectedTab = .overview

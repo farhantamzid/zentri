@@ -11,8 +11,8 @@ import ZentriCore
 /// store would leave those screens showing stale rows. ``liveAppState`` is how a capture finds the
 /// running app to tell it the store changed.
 ///
-/// `-UITestMode` swaps the App Group store, the settings file, the snapshot file, and the widget
-/// reloads for in-memory or inert equivalents, so a UI test can never read or write real shared
+/// `-UITestMode` swaps the App Group store, the settings file, the snapshot file, the widget
+/// reloads, and the backup folder for in-memory or inert equivalents, so a UI test can never read or write real shared
 /// state.
 @MainActor
 enum AppComposition {
@@ -104,6 +104,17 @@ enum AppComposition {
             store: snapshotStore,
             timelineReloader: timelineReloader
         )
+    }
+
+    /// The backup folder: the person's chosen folder, remembered in the app's own defaults, or an
+    /// inert folder for a UI test, which must never read a real bookmark or write a real folder.
+    static func makeBackupFolder(isUITestMode: Bool = UITestSupport.isUITestMode) -> any BackupFolderAccessing {
+        isUITestMode ? InertBackupFolder() : BackupFolderService(bookmarkStore: BackupBookmarkStore())
+    }
+
+    /// Background time for the backup written as the app leaves the screen; none for a UI test.
+    static func makeBackgroundTasks(isUITestMode: Bool = UITestSupport.isUITestMode) -> any BackgroundTaskRunning {
+        isUITestMode ? ImmediateBackgroundTasks() : ApplicationBackgroundTasks()
     }
 
     /// A capture handler over the shared container and settings, for an intent that runs before any

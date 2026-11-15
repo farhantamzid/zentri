@@ -21,13 +21,36 @@ struct RootView: View {
             oldValue != nil && newValue == nil
         }
         .task {
+            // A launch may follow captures the Shortcut made while Zentri was not running; the
+            // scheduler compares the data with the folder's newest snapshot and writes only if it
+            // differs.
+            appState.backupScheduler.schedule()
             await appState.retryPendingIngestion()
         }
+        .task {
+            await cancelBackupOnTermination()
+        }
         .onOpenURL(perform: openURL)
+        .onChange(of: appState.dataRevision) {
+            appState.backupScheduler.schedule()
+        }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
+            switch phase {
+            case .active:
                 sceneBecameActive()
+            case .background:
+                appState.sceneDidEnterBackground()
+            default:
+                break
             }
+        }
+    }
+
+    /// Drops a debounced backup that has not started when the app is about to terminate; the
+    /// background flush has already written anything pending.
+    private func cancelBackupOnTermination() async {
+        for await _ in NotificationCenter.default.notifications(named: UIApplication.willTerminateNotification).map({ _ in () }) {
+            appState.backupScheduler.cancel()
         }
     }
 

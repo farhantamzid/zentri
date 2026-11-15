@@ -2,8 +2,8 @@ import SwiftUI
 
 /// Settings › About: the version, the privacy statement, and deleting everything Zentri keeps.
 ///
-/// "Delete All Data" removes every row in the store, the widget snapshot, and the settings document,
-/// after an explicit confirmation; the app then returns to setup.
+/// "Delete All Data" removes every row in the store, the widget snapshot, the backup-folder bookmark,
+/// and the settings document, after an explicit confirmation; the app then returns to setup.
 struct AboutView: View {
     @Environment(AppState.self) private var appState
 
@@ -51,7 +51,7 @@ struct AboutView: View {
                     ) {
                         Button("Delete All Data", role: .destructive, action: deleteAllData)
                     } message: {
-                        Text("Every account, balance, transaction, saved message, rule, and category on this iPhone is deleted, along with your settings and the widget data. Backups you exported are not touched. This can't be undone.")
+                        Text("Every account, balance, transaction, saved message, rule, and category on this iPhone is deleted, along with your settings and the widget data, and automatic backups stop. Backups you exported or saved to your backup folder are not touched. This can't be undone.")
                     }
             } header: {
                 Text("Your data")

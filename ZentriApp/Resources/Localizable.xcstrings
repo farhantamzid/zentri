@@ -59,17 +59,6 @@
         }
       }
     },
-    "Restoring a backup becomes available after you set up backup in Settings.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restoring a backup becomes available after you set up backup in Settings."
-          }
-        }
-      }
-    },
     "Settings": {
       "extractionState": "manual",
       "localizations": {
@@ -3158,13 +3147,13 @@
         }
       }
     },
-    "Every account, balance, transaction, saved message, rule, and category on this iPhone is deleted, along with your settings and the widget data. Backups you exported are not touched. This can't be undone.": {
+    "Every account, balance, transaction, saved message, rule, and category on this iPhone is deleted, along with your settings and the widget data, and automatic backups stop. Backups you exported or saved to your backup folder are not touched. This can't be undone.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Every account, balance, transaction, saved message, rule, and category on this iPhone is deleted, along with your settings and the widget data. Backups you exported are not touched. This can't be undone."
+            "value": "Every account, balance, transaction, saved message, rule, and category on this iPhone is deleted, along with your settings and the widget data, and automatic backups stop. Backups you exported or saved to your backup folder are not touched. This can't be undone."
           }
         }
       }
@@ -3177,17 +3166,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Everyday Account"
-          }
-        }
-      }
-    },
-    "Export and import backups, choose an iCloud folder, and check when the last backup ran. Coming in a later update.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Export and import backups, choose an iCloud folder, and check when the last backup ran. Coming in a later update."
           }
         }
       }
@@ -5694,6 +5672,666 @@
           "stringUnit": {
             "state": "translated",
             "value": "A message a rule reads lands in that rule's account. If Apple Intelligence reads it instead, Zentri can't tell the account, so choose one in the Capture Bank SMS action or add a rule. A message Zentri can't place waits in the message inbox."
+          }
+        }
+      }
+    },
+    "Folder": {
+      "comment": "Backup and restore (BackupAutomaticSection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder"
+          }
+        }
+      }
+    },
+    "Last backup": {
+      "comment": "Backup and restore (BackupAutomaticSection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last backup"
+          }
+        }
+      }
+    },
+    "Stop Automatic Backups": {
+      "comment": "Backup and restore (BackupAutomaticSection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop Automatic Backups"
+          }
+        }
+      }
+    },
+    "Choose a different folder": {
+      "comment": "Backup and restore (BackupAutomaticSection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a different folder"
+          }
+        }
+      }
+    },
+    "Choose iCloud Drive folder": {
+      "comment": "Backup and restore (BackupAutomaticSection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose iCloud Drive folder"
+          }
+        }
+      }
+    },
+    "Automatic backup": {
+      "comment": "Backup and restore (BackupAutomaticSection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic backup"
+          }
+        }
+      }
+    },
+    "Zentri saves a snapshot to this folder a few seconds after your data changes and when you leave the app, keeping the latest 10. Choose a folder in iCloud Drive so the backups survive deleting the app.": {
+      "comment": "Backup and restore (BackupAutomaticSection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri saves a snapshot to this folder a few seconds after your data changes and when you leave the app, keeping the latest 10. Choose a folder in iCloud Drive so the backups survive deleting the app."
+          }
+        }
+      }
+    },
+    "Made": {
+      "comment": "Backup and restore (BackupCandidateSummarySection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Made"
+          }
+        }
+      }
+    },
+    "Transactions from": {
+      "comment": "Backup and restore (BackupCandidateSummarySection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transactions from"
+          }
+        }
+      }
+    },
+    "Format version": {
+      "comment": "Backup and restore (BackupCandidateSummarySection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Format version"
+          }
+        }
+      }
+    },
+    "This backup holds": {
+      "comment": "Backup and restore (BackupCandidateSummarySection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup holds"
+          }
+        }
+      }
+    },
+    "The file was checked in full. Nothing changes until you choose how to restore it.": {
+      "comment": "Backup and restore (BackupCandidateSummarySection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file was checked in full. Nothing changes until you choose how to restore it."
+          }
+        }
+      }
+    },
+    "This backup was made by a newer version of Zentri (format %lld). Update Zentri to restore it.": {
+      "comment": "%lld is the backup format version the file was written with.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup was made by a newer version of Zentri (format %lld). Update Zentri to restore it."
+          }
+        }
+      }
+    },
+    "This backup is damaged: two records share the same identity. Nothing was changed.": {
+      "comment": "Backup and restore (BackupError+Message).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup is damaged: two records share the same identity. Nothing was changed."
+          }
+        }
+      }
+    },
+    "This backup is damaged: %@ points to a record that isn't in the file. Nothing was changed.": {
+      "comment": "A backup failed validation. %@ names the field in the file that holds the missing reference.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup is damaged: %@ points to a record that isn't in the file. Nothing was changed."
+          }
+        }
+      }
+    },
+    "This backup is damaged: %@ is not a valid amount. Nothing was changed.": {
+      "comment": "A backup failed validation. %@ names the field in the file, such as transaction.amount.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup is damaged: %@ is not a valid amount. Nothing was changed."
+          }
+        }
+      }
+    },
+    "This backup is damaged: %@ is not a valid date. Nothing was changed.": {
+      "comment": "A backup failed validation. %@ names the field in the file, such as transaction.occurredAt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup is damaged: %@ is not a valid date. Nothing was changed."
+          }
+        }
+      }
+    },
+    "This backup is damaged: an account has no starting balance. Nothing was changed.": {
+      "comment": "Backup and restore (BackupError+Message).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup is damaged: an account has no starting balance. Nothing was changed."
+          }
+        }
+      }
+    },
+    "This file isn't a Zentri backup, or it is incomplete. Nothing was changed.": {
+      "comment": "Backup and restore (BackupError+Message).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file isn't a Zentri backup, or it is incomplete. Nothing was changed."
+          }
+        }
+      }
+    },
+    "No backup folder is chosen. Choose an iCloud Drive folder to back up automatically.": {
+      "comment": "Backup and restore (BackupFolderError+Message).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No backup folder is chosen. Choose an iCloud Drive folder to back up automatically."
+          }
+        }
+      }
+    },
+    "Zentri can no longer use the backup folder. Choose it again.": {
+      "comment": "Backup and restore (BackupFolderError+Message).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri can no longer use the backup folder. Choose it again."
+          }
+        }
+      }
+    },
+    "There isn't enough space to save the backup. Your previous backup is unchanged.": {
+      "comment": "Backup and restore (BackupFolderError+Message).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There isn't enough space to save the backup. Your previous backup is unchanged."
+          }
+        }
+      }
+    },
+    "Zentri couldn't read the backup folder. Check that iCloud Drive is available, then try again.": {
+      "comment": "Backup and restore (BackupFolderError+Message).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't read the backup folder. Check that iCloud Drive is available, then try again."
+          }
+        }
+      }
+    },
+    "Zentri couldn't save the backup. Check that iCloud Drive is available. Your previous backup is unchanged.": {
+      "comment": "Backup and restore (BackupFolderError+Message).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't save the backup. Check that iCloud Drive is available. Your previous backup is unchanged."
+          }
+        }
+      }
+    },
+    "None chosen": {
+      "comment": "Backup and restore (BackupFolderStateText).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None chosen"
+          }
+        }
+      }
+    },
+    "Needs choosing again": {
+      "comment": "Backup and restore (BackupFolderStateText).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs choosing again"
+          }
+        }
+      }
+    },
+    "Replace All Data": {
+      "comment": "Backup and restore (BackupRestoreConfirmation).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace All Data"
+          }
+        }
+      }
+    },
+    "Replace all data?": {
+      "comment": "Backup and restore (BackupRestoreConfirmation).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace all data?"
+          }
+        }
+      }
+    },
+    "Merge Into Current Data": {
+      "comment": "Backup and restore (BackupRestoreConfirmation).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merge Into Current Data"
+          }
+        }
+      }
+    },
+    "Every account, transaction, saved message, rule, and category on this iPhone is replaced by the backup's, and the backup's currency and display settings are applied. This can't be undone.": {
+      "comment": "Backup and restore (BackupRestoreConfirmation).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every account, transaction, saved message, rule, and category on this iPhone is replaced by the backup's, and the backup's currency and display settings are applied. This can't be undone."
+          }
+        }
+      }
+    },
+    "Merge keeps everything you have and your settings, and adds only what is missing.": {
+      "comment": "Backup and restore (BackupRestoreConfirmation).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merge keeps everything you have and your settings, and adds only what is missing."
+          }
+        }
+      }
+    },
+    "Restoring replaces Zentri's data and settings with the backup's.": {
+      "comment": "Backup and restore (BackupRestoreConfirmation).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restoring replaces Zentri's data and settings with the backup's."
+          }
+        }
+      }
+    },
+    "Couldn't restore": {
+      "comment": "Backup and restore (BackupRestoreFlow).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't restore"
+          }
+        }
+      }
+    },
+    "Backup restored": {
+      "comment": "Backup and restore (BackupRestoreFlow).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup restored"
+          }
+        }
+      }
+    },
+    "From your backup folder": {
+      "comment": "Backup and restore (BackupRestoreList).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From your backup folder"
+          }
+        }
+      }
+    },
+    "Choose a Backup File": {
+      "comment": "Backup and restore (BackupRestoreList).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a Backup File"
+          }
+        }
+      }
+    },
+    "Pick a backup you exported, or a snapshot from any folder.": {
+      "comment": "Backup and restore (BackupRestoreList).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a backup you exported, or a snapshot from any folder."
+          }
+        }
+      }
+    },
+    "Your data was restored, but its currency and display settings couldn't be saved, so the previous ones are still in use. Restore the backup again to retry.": {
+      "comment": "Backup and restore (BackupRestoreMessage).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your data was restored, but its currency and display settings couldn't be saved, so the previous ones are still in use. Restore the backup again to retry."
+          }
+        }
+      }
+    },
+    "Zentri couldn't restore the backup. Your data is unchanged.": {
+      "comment": "Backup and restore (BackupRestoreMessage).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't restore the backup. Your data is unchanged."
+          }
+        }
+      }
+    },
+    "Your data now matches the backup: ^[%lld account](inflect: true) and ^[%lld transaction](inflect: true).": {
+      "comment": "After a replace restore. The numbers are how many accounts and transactions the backup restored.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your data now matches the backup: ^[%lld account](inflect: true) and ^[%lld transaction](inflect: true)."
+          }
+        }
+      }
+    },
+    "Added ^[%lld record](inflect: true) from the backup. %lld already here were left as they are.": {
+      "comment": "After a merge restore. The first %lld is how many records were added, the second how many were skipped because they already existed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added ^[%lld record](inflect: true) from the backup. %lld already here were left as they are."
+          }
+        }
+      }
+    },
+    "Stop automatic backups?": {
+      "comment": "Backup and restore (BackupSettingsForm).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop automatic backups?"
+          }
+        }
+      }
+    },
+    "Zentri stops writing to this folder. The backups already in it are kept.": {
+      "comment": "Backup and restore (BackupSettingsForm).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri stops writing to this folder. The backups already in it are kept."
+          }
+        }
+      }
+    },
+    "Export Backup": {
+      "comment": "Backup and restore (BackupSettingsForm).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export Backup"
+          }
+        }
+      }
+    },
+    "Import Backup File": {
+      "comment": "Backup and restore (BackupSettingsForm).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import Backup File"
+          }
+        }
+      }
+    },
+    "Manual backup": {
+      "comment": "Backup and restore (BackupSettingsForm).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual backup"
+          }
+        }
+      }
+    },
+    "Export saves one file wherever you choose. Importing shows what the file holds before anything changes.": {
+      "comment": "Backup and restore (BackupSettingsForm).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export saves one file wherever you choose. Importing shows what the file holds before anything changes."
+          }
+        }
+      }
+    },
+    "Zentri couldn't prepare the backup. Try again.": {
+      "comment": "Backup and restore (BackupSettingsModel).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't prepare the backup. Try again."
+          }
+        }
+      }
+    },
+    "Zentri couldn't save the backup file. Try again.": {
+      "comment": "Backup and restore (BackupSettingsModel).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't save the backup file. Try again."
+          }
+        }
+      }
+    },
+    "Shows what this backup holds before restoring it.": {
+      "comment": "Backup and restore (BackupSnapshotRow).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows what this backup holds before restoring it."
+          }
+        }
+      }
+    },
+    "^[%lld transaction](inflect: true) · %@": {
+      "comment": "A backup in the restore list. %lld is how many transactions it holds; %@ is the file size, such as 24 KB.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "^[%lld transaction](inflect: true) · %@"
+          }
+        }
+      }
+    },
+    "This folder holds no Zentri backups yet.": {
+      "comment": "Backup and restore (BackupSnapshotsStateView).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder holds no Zentri backups yet."
+          }
+        }
+      }
+    },
+    "No backup folder is chosen on this iPhone.": {
+      "comment": "Backup and restore (BackupSnapshotsStateView).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No backup folder is chosen on this iPhone."
+          }
+        }
+      }
+    },
+    "Backups are plain JSON files. They are not encrypted and include the full text of your bank SMS messages, so keep them somewhere private.": {
+      "comment": "Backup and restore (BackupWarningSection).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backups are plain JSON files. They are not encrypted and include the full text of your bank SMS messages, so keep them somewhere private."
+          }
+        }
+      }
+    },
+    "Restore from Folder": {
+      "comment": "Backup and restore (SettingsDestination).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore from Folder"
           }
         }
       }

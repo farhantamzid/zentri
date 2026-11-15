@@ -25,6 +25,10 @@ struct RootTabView: View {
                             SettingsView()
                         }
                     }
+                    // A replace restore deletes every row, so the other tabs start their navigation
+                    // afresh rather than keep a pushed screen showing a deleted transaction. Settings,
+                    // where the restore was made, keeps its place.
+                    .id(tab == .settings ? 0 : appState.storeReplacementCount)
                 }
             }
         }

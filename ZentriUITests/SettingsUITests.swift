@@ -29,12 +29,9 @@ final class SettingsUITests: XCTestCase {
             XCTAssertTrue(row.label.contains(title), "The \(identifier) row reads \(row.label)")
         }
 
-        // A feature that arrives later says so instead of showing an empty screen.
+        // Backup opens its own screen (BackupUITests covers what it holds).
         app.buttons["settings.backup"].tap()
-        XCTAssertTrue(
-            element("label CONTAINS %@", ["Coming in a later update"], in: app).waitForExistence(timeout: 5),
-            "The Backup placeholder does not say what is coming"
-        )
+        XCTAssertTrue(app.buttons["backup.export"].waitForExistence(timeout: 5), "Backup did not open")
     }
 
     func testAddingAnAccountAndSettingItsBalanceReachTheOverview() {

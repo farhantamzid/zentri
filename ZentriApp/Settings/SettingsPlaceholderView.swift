@@ -21,9 +21,9 @@ struct SettingsPlaceholderView: View {
 #Preview {
     NavigationStack {
         SettingsPlaceholderView(
-            title: SettingsDestination.backup.title,
-            systemImage: SettingsDestination.backup.systemImage,
-            message: SettingsDestination.backup.placeholderMessage ?? SettingsDestination.backup.title
+            title: SettingsDestination.faceID.title,
+            systemImage: SettingsDestination.faceID.systemImage,
+            message: SettingsDestination.faceID.placeholderMessage ?? SettingsDestination.faceID.title
         )
     }
 }

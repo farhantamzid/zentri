@@ -52,7 +52,9 @@ struct ZentriApp: App {
                 parserBuilder: ParserFactory(modelClient: modelClient),
                 modelClient: modelClient,
                 snapshotStore: AppComposition.makeSnapshotStore(),
-                timelineReloader: AppComposition.makeTimelineReloader()
+                timelineReloader: AppComposition.makeTimelineReloader(),
+                backupFolder: AppComposition.makeBackupFolder(),
+                backgroundTasks: AppComposition.makeBackgroundTasks()
             )
             AppComposition.liveAppState = appState
             return appState
