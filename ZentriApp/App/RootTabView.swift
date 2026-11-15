@@ -17,6 +17,8 @@ struct RootTabView: View {
                         switch tab {
                         case .overview:
                             OverviewView()
+                        case .transactions:
+                            TransactionsView()
                         default:
                             TabPlaceholderView(tab: tab)
                         }

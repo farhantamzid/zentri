@@ -61,6 +61,12 @@ final class AppState {
         )
     }
 
+    /// A service for the person's own changes to transactions, writing to the main context and
+    /// refreshing the widgets after each one. The caller still calls ``mutate()`` afterwards.
+    func makeTransactionMutationService() -> TransactionMutationService {
+        TransactionMutationService(context: container.mainContext, snapshotRefresher: snapshotRefresher)
+    }
+
     /// Tells every open screen that the store changed.
     ///
     /// Mutations call this after saving. It deliberately does not refresh the widget snapshot (the

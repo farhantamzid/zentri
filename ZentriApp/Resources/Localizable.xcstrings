@@ -1352,6 +1352,722 @@
           }
         }
       }
+    },
+    "0.00": {
+      "comment": "Placeholder in the transaction editor's amount field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0.00"
+          }
+        }
+      }
+    },
+    "A rule that no longer exists": {
+      "comment": "Shown as the matched rule when the parsing rule that read a transaction has been deleted.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A rule that no longer exists"
+          }
+        }
+      }
+    },
+    "Account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        }
+      }
+    },
+    "Add Transaction": {
+      "comment": "Button that opens the editor for a transaction entered by hand.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Transaction"
+          }
+        }
+      }
+    },
+    "Add an account in Settings first": {
+      "comment": "Shown in the transaction editor when there is no account to choose.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add an account in Settings first"
+          }
+        }
+      }
+    },
+    "All accounts": {
+      "comment": "Transactions filter option that turns off the account filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All accounts"
+          }
+        }
+      }
+    },
+    "All categories": {
+      "comment": "Transactions filter option that turns off the category filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All categories"
+          }
+        }
+      }
+    },
+    "All sources": {
+      "comment": "Transactions filter option that turns off the source filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All sources"
+          }
+        }
+      }
+    },
+    "Always categorize %@ as %@": {
+      "comment": "Button in a transaction's detail. The first %@ is the merchant, the second the category it should always get.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always categorize %@ as %@"
+          }
+        }
+      }
+    },
+    "Amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount"
+          }
+        }
+      }
+    },
+    "Apple Intelligence": {
+      "comment": "The on-device model as the source of a transaction or its category.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence"
+          }
+        }
+      }
+    },
+    "Apply": {
+      "comment": "Button that applies the chosen transaction filters.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply"
+          }
+        }
+      }
+    },
+    "Bank message": {
+      "comment": "Heading above the raw SMS a transaction was read from.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bank message"
+          }
+        }
+      }
+    },
+    "Bank rule": {
+      "comment": "A user-written parsing rule as the source of a transaction.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bank rule"
+          }
+        }
+      }
+    },
+    "Both": {
+      "comment": "Transactions filter option that shows money spent and received.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Both"
+          }
+        }
+      }
+    },
+    "Can't show your transactions": {
+      "comment": "Title shown when the transactions could not be read from the store.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't show your transactions"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "Category": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category"
+          }
+        }
+      }
+    },
+    "Category from": {
+      "comment": "Label in a transaction's detail for where its category came from.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category from"
+          }
+        }
+      }
+    },
+    "Choose an account.": {
+      "comment": "Why a transaction could not be saved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an account."
+          }
+        }
+      }
+    },
+    "Clear Filters": {
+      "comment": "Button that removes every transactions filter except the search text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Filters"
+          }
+        }
+      }
+    },
+    "Combined balance, %@": {
+      "comment": "VoiceOver label for the balance above the transactions list. %@ is a formatted money amount.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combined balance, %@"
+          }
+        }
+      }
+    },
+    "Couldn't save the change": {
+      "comment": "Alert title when a change to a transaction could not be saved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save the change"
+          }
+        }
+      }
+    },
+    "Couldn't save the transaction": {
+      "comment": "Alert title when the transaction editor could not save.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save the transaction"
+          }
+        }
+      }
+    },
+    "Date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date"
+          }
+        }
+      }
+    },
+    "Default": {
+      "comment": "The fallback category as the source of a transaction's category.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default"
+          }
+        }
+      }
+    },
+    "Delete Transaction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Transaction"
+          }
+        }
+      }
+    },
+    "Delete this transaction?": {
+      "comment": "Title of the confirmation before deleting a transaction.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this transaction?"
+          }
+        }
+      }
+    },
+    "Direction": {
+      "comment": "Whether money was spent or received.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direction"
+          }
+        }
+      }
+    },
+    "Edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        }
+      }
+    },
+    "Edit Transaction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Transaction"
+          }
+        }
+      }
+    },
+    "Enter a merchant.": {
+      "comment": "Why a transaction could not be saved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a merchant."
+          }
+        }
+      }
+    },
+    "Enter an amount greater than zero.": {
+      "comment": "Why a transaction could not be saved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an amount greater than zero."
+          }
+        }
+      }
+    },
+    "Filters": {
+      "comment": "Button and sheet title for narrowing the transactions list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filters"
+          }
+        }
+      }
+    },
+    "From": {
+      "comment": "First day of a date range filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From"
+          }
+        }
+      }
+    },
+    "Future %@ transactions will be categorized as %@.": {
+      "comment": "Confirmation after creating a category rule. The first %@ is the merchant, the second the category.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Future %@ transactions will be categorized as %@."
+          }
+        }
+      }
+    },
+    "Keyword rule": {
+      "comment": "A merchant keyword rule as the source of a transaction's category.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyword rule"
+          }
+        }
+      }
+    },
+    "Limit to dates": {
+      "comment": "Toggle that turns on the date range filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limit to dates"
+          }
+        }
+      }
+    },
+    "Manual": {
+      "comment": "Badge and source for a transaction the person entered by hand.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual"
+          }
+        }
+      }
+    },
+    "Matched rule": {
+      "comment": "Label in a transaction's detail for the parsing rule that read it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matched rule"
+          }
+        }
+      }
+    },
+    "Merchant": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merchant"
+          }
+        }
+      }
+    },
+    "Merchant, note, or message": {
+      "comment": "Prompt in the transactions search field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merchant, note, or message"
+          }
+        }
+      }
+    },
+    "New Transaction": {
+      "comment": "Title of the editor for a transaction entered by hand.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Transaction"
+          }
+        }
+      }
+    },
+    "No bank message is linked to this transaction.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No bank message is linked to this transaction."
+          }
+        }
+      }
+    },
+    "No matching transactions": {
+      "comment": "Title shown when no transaction matches the filters.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching transactions"
+          }
+        }
+      }
+    },
+    "No transactions match the current filters.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No transactions match the current filters."
+          }
+        }
+      }
+    },
+    "None": {
+      "comment": "No category, or no note.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        }
+      }
+    },
+    "Note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note"
+          }
+        }
+      }
+    },
+    "Parsed by": {
+      "comment": "Label in a transaction's detail for the engine that produced it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parsed by"
+          }
+        }
+      }
+    },
+    "Reset Filters": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset Filters"
+          }
+        }
+      }
+    },
+    "Save": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "Source": {
+      "comment": "Where a transaction came from: a bank rule, Apple Intelligence, or manual entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        }
+      }
+    },
+    "That category no longer exists. Choose another.": {
+      "comment": "Why a transaction could not be saved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That category no longer exists. Choose another."
+          }
+        }
+      }
+    },
+    "The balance updates without it. Any bank message it came from stays in the archive.": {
+      "comment": "Message in the confirmation before deleting a transaction.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The balance updates without it. Any bank message it came from stays in the archive."
+          }
+        }
+      }
+    },
+    "To": {
+      "comment": "Last day of a date range filter.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To"
+          }
+        }
+      }
+    },
+    "Transaction": {
+      "comment": "Title of a transaction's detail.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transaction"
+          }
+        }
+      }
+    },
+    "Transactions appear here as the Shortcut passes your bank's SMS messages to Zentri. You can also add one you missed.": {
+      "comment": "Explains the empty transactions list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transactions appear here as the Shortcut passes your bank's SMS messages to Zentri. You can also add one you missed."
+          }
+        }
+      }
+    },
+    "Transfers move money between your own accounts, so spending and income totals leave them out.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfers move money between your own accounts, so spending and income totals leave them out."
+          }
+        }
+      }
+    },
+    "Unknown": {
+      "comment": "Shown when a transaction's source engine is not recorded.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        }
+      }
+    },
+    "You chose it": {
+      "comment": "The person as the source of a transaction's category.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You chose it"
+          }
+        }
+      }
+    },
+    "Zentri couldn't save your changes. Try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't save your changes. Try again."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

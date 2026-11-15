@@ -41,4 +41,19 @@ public struct TransactionEdit: Sendable, Equatable {
         self.note = note
         self.isTransfer = isTransfer
     }
+
+    /// The edit that would leave a stored transaction exactly as it is, which an editor starts from.
+    @MainActor
+    public init(_ transaction: Transaction) {
+        self.init(
+            accountID: transaction.account.id,
+            amount: transaction.amount,
+            direction: transaction.direction,
+            occurredAt: transaction.occurredAt,
+            merchant: transaction.merchantDisplay,
+            categoryID: transaction.category?.id,
+            note: transaction.note,
+            isTransfer: transaction.isTransfer
+        )
+    }
 }
