@@ -133,3 +133,25 @@ private func makeInbox(
     #expect(try store.context.fetchCount(FetchDescriptor<ZentriCore.Transaction>()) == 1)
     #expect(counter.count == 2)
 }
+
+/// A pushed detail reads its message through `message(id:)`, so a reprocess must notify it.
+@MainActor
+@Test func messageDetailIsToldWhenItsMessageChanges() async throws {
+    let store = try ParsingTestStore()
+    try store.addRule("Card debit")
+    let message = try store.addMessage(status: .failed)
+    let inbox = makeInbox(store)
+    inbox.refresh()
+    let changed = ParsingMutationCounter()
+    withObservationTracking {
+        _ = inbox.message(id: message.id)
+    } onChange: {
+        Task { @MainActor in changed.record() }
+    }
+
+    _ = await inbox.reprocess(id: message.id)
+    await Task.yield()
+
+    #expect(changed.count == 1)
+    #expect(inbox.message(id: message.id)?.status == .parsed)
+}

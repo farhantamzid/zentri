@@ -3848,6 +3848,1434 @@
           }
         }
       }
+    },
+    "Parsing Rules": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parsing Rules"
+          }
+        }
+      }
+    },
+    "The patterns that read this account's bank messages.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The patterns that read this account's bank messages."
+          }
+        }
+      }
+    },
+    "Open Message Inbox": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Message Inbox"
+          }
+        }
+      }
+    },
+    "The message was read and its transaction is up to date.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The message was read and its transaction is up to date."
+          }
+        }
+      }
+    },
+    "This message repeats one that's already stored, so no transaction was added.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This message repeats one that's already stored, so no transaction was added."
+          }
+        }
+      }
+    },
+    "The message doesn't describe a transaction. Nothing was changed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The message doesn't describe a transaction. Nothing was changed."
+          }
+        }
+      }
+    },
+    "The message still couldn't be read.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The message still couldn't be read."
+          }
+        }
+      }
+    },
+    "The message is too long to read.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The message is too long to read."
+          }
+        }
+      }
+    },
+    "The rule's pattern isn't a valid regular expression.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The rule's pattern isn't a valid regular expression."
+          }
+        }
+      }
+    },
+    "The rule's pattern has no amount group.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The rule's pattern has no amount group."
+          }
+        }
+      }
+    },
+    "The captured amount isn't a number Zentri can read.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The captured amount isn't a number Zentri can read."
+          }
+        }
+      }
+    },
+    "The amount must be greater than zero.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The amount must be greater than zero."
+          }
+        }
+      }
+    },
+    "The date is more than a day after the message arrived.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The date is more than a day after the message arrived."
+          }
+        }
+      }
+    },
+    "The merchant is missing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The merchant is missing."
+          }
+        }
+      }
+    },
+    "The rule's pattern couldn't be run on this message.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The rule's pattern couldn't be run on this message."
+          }
+        }
+      }
+    },
+    "Apple Intelligence isn't available right now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence isn't available right now."
+          }
+        }
+      }
+    },
+    "Apple Intelligence couldn't read this message.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence couldn't read this message."
+          }
+        }
+      }
+    },
+    "Apple Intelligence took too long and was stopped.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence took too long and was stopped."
+          }
+        }
+      }
+    },
+    "Reading the message was cancelled.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the message was cancelled."
+          }
+        }
+      }
+    },
+    "Choose an account for this message.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an account for this message."
+          }
+        }
+      }
+    },
+    "Zentri couldn't save the result. Try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri couldn't save the result. Try again."
+          }
+        }
+      }
+    },
+    "The rule matched but captured no amount.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The rule matched but captured no amount."
+          }
+        }
+      }
+    },
+    "Something the message needs is missing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something the message needs is missing."
+          }
+        }
+      }
+    },
+    "Rule: %@": {
+      "comment": "Under a parsing problem in the rule tester: the name of the rule the problem came from.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rule: %@"
+          }
+        }
+      }
+    },
+    "Pending": {
+      "comment": "A message's status when an interruption left it waiting to be parsed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending"
+          }
+        }
+      }
+    },
+    "Parsed": {
+      "comment": "A message's status, and an inbox filter: the message became a transaction.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parsed"
+          }
+        }
+      }
+    },
+    "Ignored": {
+      "comment": "A message's status, and an inbox filter: the message is not a transaction, such as a one-time password.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignored"
+          }
+        }
+      }
+    },
+    "Failed": {
+      "comment": "A message's status, and an inbox filter: the message could not be parsed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed"
+          }
+        }
+      }
+    },
+    "Duplicate": {
+      "comment": "A message's status, and an inbox filter: the message repeats one that is already stored.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate"
+          }
+        }
+      }
+    },
+    "Reference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reference"
+          }
+        }
+      }
+    },
+    "Not in message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not in message"
+          }
+        }
+      }
+    },
+    "Enter a name for the rule.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a name for the rule."
+          }
+        }
+      }
+    },
+    "That account no longer exists. Choose another.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That account no longer exists. Choose another."
+          }
+        }
+      }
+    },
+    "The pattern can't be used. Edit it to fix it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pattern can't be used. Edit it to fix it."
+          }
+        }
+      }
+    },
+    "Failures reprocessed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failures reprocessed"
+          }
+        }
+      }
+    },
+    "Tried %lld: %lld became transactions and %lld still failed.": {
+      "comment": "After reprocessing failed messages: how many were tried, how many became transactions, and how many still failed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tried %lld: %lld became transactions and %lld still failed."
+          }
+        }
+      }
+    },
+    "%@ · %@": {
+      "comment": "A rule list section header: the account name, then the direction (Spent or Received).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@"
+          }
+        }
+      }
+    },
+    "Rules run from the lowest priority number up, then oldest first. The first rule whose match passes validation wins.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rules run from the lowest priority number up, then oldest first. The first rule whose match passes validation wins."
+          }
+        }
+      }
+    },
+    "Can't show your rules": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't show your rules"
+          }
+        }
+      }
+    },
+    "No parsing rules": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No parsing rules"
+          }
+        }
+      }
+    },
+    "A rule is a pattern that reads one bank's messages into transactions for an account.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A rule is a pattern that reads one bank's messages into transactions for an account."
+          }
+        }
+      }
+    },
+    "Couldn't change the engine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't change the engine"
+          }
+        }
+      }
+    },
+    "Engine": {
+      "comment": "The parser engine setting: rules, Foundation Models, or hybrid.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engine"
+          }
+        }
+      }
+    },
+    "The engine reads new messages and reprocessed ones. Hybrid falls back to your rules when Apple Intelligence is unavailable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The engine reads new messages and reprocessed ones. Hybrid falls back to your rules when Apple Intelligence is unavailable."
+          }
+        }
+      }
+    },
+    "Unavailable": {
+      "comment": "In place of a count on the Parsing screen when the count could not be read.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable"
+          }
+        }
+      }
+    },
+    "Rule Tester": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rule Tester"
+          }
+        }
+      }
+    },
+    "Each account has its own debit and credit rules. The tester tries a message without saving anything.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each account has its own debit and credit rules. The tester tries a message without saving anything."
+          }
+        }
+      }
+    },
+    "Message Inbox": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message Inbox"
+          }
+        }
+      }
+    },
+    "Messages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages"
+          }
+        }
+      }
+    },
+    "Every message Zentri receives is kept here. The number is how many failed to parse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every message Zentri receives is kept here. The number is how many failed to parse."
+          }
+        }
+      }
+    },
+    "Couldn't delete the message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't delete the message"
+          }
+        }
+      }
+    },
+    "View Transaction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Transaction"
+          }
+        }
+      }
+    },
+    "Reprocess this message?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprocess this message?"
+          }
+        }
+      }
+    },
+    "Which account is this message from?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which account is this message from?"
+          }
+        }
+      }
+    },
+    "Reprocess": {
+      "comment": "Button that reads a stored bank message again with the current rules.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprocess"
+          }
+        }
+      }
+    },
+    "Its transaction is replaced only if the message parses. Your note, transfer setting, and chosen category are kept.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Its transaction is replaced only if the message parses. Your note, transfer setting, and chosen category are kept."
+          }
+        }
+      }
+    },
+    "Copy Text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Text"
+          }
+        }
+      }
+    },
+    "Delete this message?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this message?"
+          }
+        }
+      }
+    },
+    "Delete Message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Message"
+          }
+        }
+      }
+    },
+    "The message leaves the archive. Any transaction it became is kept.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The message leaves the archive. Any transaction it became is kept."
+          }
+        }
+      }
+    },
+    "Message": {
+      "comment": "A section and screen title for one stored bank message, and the tester's message field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message"
+          }
+        }
+      }
+    },
+    "Result": {
+      "comment": "Section title in the message detail: what Zentri made of the message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Result"
+          }
+        }
+      }
+    },
+    "Sender": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender"
+          }
+        }
+      }
+    },
+    "Error": {
+      "comment": "In the message detail: why the message could not be parsed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        }
+      }
+    },
+    "This message is no longer in the archive.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This message is no longer in the archive."
+          }
+        }
+      }
+    },
+    "Message not found": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message not found"
+          }
+        }
+      }
+    },
+    "No failed messages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No failed messages"
+          }
+        }
+      }
+    },
+    "No ignored messages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ignored messages"
+          }
+        }
+      }
+    },
+    "No parsed messages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No parsed messages"
+          }
+        }
+      }
+    },
+    "No duplicates": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No duplicates"
+          }
+        }
+      }
+    },
+    "Every message Zentri received was read or set aside.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every message Zentri received was read or set aside."
+          }
+        }
+      }
+    },
+    "Messages that aren't transactions, such as one-time passwords, appear here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages that aren't transactions, such as one-time passwords, appear here."
+          }
+        }
+      }
+    },
+    "Messages that became transactions appear here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages that became transactions appear here."
+          }
+        }
+      }
+    },
+    "Repeats of a message that's already stored appear here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeats of a message that's already stored appear here."
+          }
+        }
+      }
+    },
+    "%@ (%lld)": {
+      "comment": "A message inbox filter in the compact menu: the status name, then how many messages have it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (%lld)"
+          }
+        }
+      }
+    },
+    "Clear the message archive?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear the message archive?"
+          }
+        }
+      }
+    },
+    "Reprocess failed messages?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprocess failed messages?"
+          }
+        }
+      }
+    },
+    "Couldn't change the archive": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't change the archive"
+          }
+        }
+      }
+    },
+    "Reprocess Failures": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprocess Failures"
+          }
+        }
+      }
+    },
+    "Clear Archive": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Archive"
+          }
+        }
+      }
+    },
+    "Every stored bank message is deleted. Your transactions and balances are kept, but they can no longer be reprocessed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every stored bank message is deleted. Your transactions and balances are kept, but they can no longer be reprocessed."
+          }
+        }
+      }
+    },
+    "Every failed message is read again with your current rules. Messages that now parse become transactions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every failed message is read again with your current rules. Messages that now parse become transactions."
+          }
+        }
+      }
+    },
+    "Can't show your messages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't show your messages"
+          }
+        }
+      }
+    },
+    "Messages are kept until you delete them or clear the archive.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages are kept until you delete them or clear the archive."
+          }
+        }
+      }
+    },
+    "Enter a pattern.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a pattern."
+          }
+        }
+      }
+    },
+    "This isn't a valid regular expression.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This isn't a valid regular expression."
+          }
+        }
+      }
+    },
+    "Add an amount group, such as (?<amount>[0-9.,]+).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add an amount group, such as (?<amount>[0-9.,]+)."
+          }
+        }
+      }
+    },
+    "Reprocess ^[%lld Failed Message](inflect: true)": {
+      "comment": "A button that reads every failed message again. The number is how many failed messages there are.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprocess ^[%lld Failed Message](inflect: true)"
+          }
+        }
+      }
+    },
+    "Your rules changed. Messages that failed before may parse now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your rules changed. Messages that failed before may parse now."
+          }
+        }
+      }
+    },
+    "Debit — card ending 1234": {
+      "comment": "Placeholder in the parsing rule name field: an example rule name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debit — card ending 1234"
+          }
+        }
+      }
+    },
+    "Debit rules record money leaving the account, credit rules money arriving. When several rules match, the lowest priority number runs first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debit rules record money leaving the account, credit rules money arriving. When several rules match, the lowest priority number runs first."
+          }
+        }
+      }
+    },
+    "Pattern": {
+      "comment": "The regular expression a parsing rule matches messages with.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pattern"
+          }
+        }
+      }
+    },
+    "Ignore case": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignore case"
+          }
+        }
+      }
+    },
+    "Dot matches new lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dot matches new lines"
+          }
+        }
+      }
+    },
+    "Date format": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date format"
+          }
+        }
+      }
+    },
+    "A Swift regular expression with named groups. The date format is optional: without one, common formats are tried, then the time the message arrived.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Swift regular expression with named groups. The date format is optional: without one, common formats are tried, then the time the message arrived."
+          }
+        }
+      }
+    },
+    "Paste a bank message to try the pattern": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste a bank message to try the pattern"
+          }
+        }
+      }
+    },
+    "The sample with its captured groups marked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The sample with its captured groups marked"
+          }
+        }
+      }
+    },
+    "Sample message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample message"
+          }
+        }
+      }
+    },
+    "Try it": {
+      "comment": "Section title in the rule editor for trying the pattern on a sample message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try it"
+          }
+        }
+      }
+    },
+    "The sample is only used here and is never saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The sample is only used here and is never saved."
+          }
+        }
+      }
+    },
+    "Copy Example": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Example"
+          }
+        }
+      }
+    },
+    "Use Example": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Example"
+          }
+        }
+      }
+    },
+    "Named groups": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Named groups"
+          }
+        }
+      }
+    },
+    "Required. The amount, such as 1,234.50.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required. The amount, such as 1,234.50."
+          }
+        }
+      }
+    },
+    "Who was paid or who paid you.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who was paid or who paid you."
+          }
+        }
+      }
+    },
+    "The balance after the transaction.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The balance after the transaction."
+          }
+        }
+      }
+    },
+    "The transaction date. Add a date format if it isn't common.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The transaction date. Add a date format if it isn't common."
+          }
+        }
+      }
+    },
+    "The time, combined with the date when the format includes it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The time, combined with the date when the format includes it."
+          }
+        }
+      }
+    },
+    "A reference number.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A reference number."
+          }
+        }
+      }
+    },
+    "Write a group as (?<name>…). Groups other than amount are optional.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write a group as (?<name>…). Groups other than amount are optional."
+          }
+        }
+      }
+    },
+    "The pattern doesn't match the sample.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pattern doesn't match the sample."
+          }
+        }
+      }
+    },
+    "Paste a bank message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste a bank message"
+          }
+        }
+      }
+    },
+    "Compare with AI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare with AI"
+          }
+        }
+      }
+    },
+    "Test Message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test Message"
+          }
+        }
+      }
+    },
+    "Testing never saves anything. Compare with AI also asks Apple Intelligence, which can take several seconds. A slow answer is cancelled after about 15 seconds, though stopping can take a moment longer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Testing never saves anything. Compare with AI also asks Apple Intelligence, which can take several seconds. A slow answer is cancelled after about 15 seconds, though stopping can take a moment longer."
+          }
+        }
+      }
+    },
+    "Testing…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Testing…"
+          }
+        }
+      }
+    },
+    "Apple Intelligence says this isn't a transaction.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence says this isn't a transaction."
+          }
+        }
+      }
+    },
+    "AI unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI unavailable"
+          }
+        }
+      }
+    },
+    "Apple Intelligence can't run on this device right now. In hybrid mode, your rules still read every message.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence can't run on this device right now. In hybrid mode, your rules still read every message."
+          }
+        }
+      }
+    },
+    "No rule matched this message.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No rule matched this message."
+          }
+        }
+      }
+    },
+    "Also matched": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also matched"
+          }
+        }
+      }
+    },
+    "%@ ms": {
+      "comment": "How long one side of the rule tester took. %@ is a number of milliseconds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ms"
+          }
+        }
+      }
+    },
+    "Can't load your rules": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't load your rules"
+          }
+        }
+      }
+    },
+    "Reprocessed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprocessed"
+          }
+        }
+      }
+    },
+    "Reprocess Message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprocess Message"
+          }
+        }
+      }
+    },
+    "This transaction is replaced only if the message parses. Your note, transfer setting, and chosen category are kept.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This transaction is replaced only if the message parses. Your note, transfer setting, and chosen category are kept."
+          }
+        }
+      }
+    },
+    "Use this after fixing the rule that read this message.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this after fixing the rule that read this message."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

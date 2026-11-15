@@ -32,7 +32,7 @@ struct RuleTesterForm: View {
                 .disabled(!model.canRun || model.state == .running)
                 .accessibilityIdentifier("tester.run")
             } footer: {
-                Text("Testing never saves anything. Compare with AI also asks Apple Intelligence, which can take several seconds; a slow answer is stopped after about 15 seconds.")
+                Text("Testing never saves anything. Compare with AI also asks Apple Intelligence, which can take several seconds. A slow answer is cancelled after about 15 seconds, though stopping can take a moment longer.")
             }
 
             switch model.state {

@@ -28,7 +28,8 @@ final class RawMessageInboxModel {
     /// The categories the transaction detail offers.
     private(set) var categories: [TransactionCategoryOption] = []
 
-    @ObservationIgnored private var allItems: [RawMessageListItem] = []
+    /// Every message, newest first; the detail reads its message from here.
+    private var allItems: [RawMessageListItem] = []
     @ObservationIgnored private var storedMessages: [UUID: RawMessage] = [:]
     @ObservationIgnored private var ruleNames: [UUID: String] = [:]
     @ObservationIgnored private let fetchMessages: @MainActor () throws -> [RawMessage]

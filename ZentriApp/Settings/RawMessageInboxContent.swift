@@ -25,12 +25,10 @@ struct RawMessageInboxContent: View {
         RawMessageInboxStateView(model: model)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItemGroup(placement: .primaryAction) {
                     Button("Reprocess Failures", systemImage: "arrow.clockwise", action: confirmReprocess)
                         .disabled(model.failedCount == 0 || isReprocessing)
                         .accessibilityIdentifier("inbox.reprocessFailures")
-                }
-                ToolbarItem(placement: .secondaryAction) {
                     Button("Clear Archive", systemImage: "trash", role: .destructive, action: confirmClear)
                         .disabled(!model.hasMessages)
                         .accessibilityIdentifier("inbox.clearArchive")
