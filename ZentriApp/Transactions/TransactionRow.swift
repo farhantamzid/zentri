@@ -1,8 +1,8 @@
 import SwiftUI
 import ZentriCore
 
-/// One transaction in the list: merchant, category, account, and the signed amount in its
-/// direction's color, with Transfer and Manual badges when they apply.
+/// One transaction in the list: its category tile, merchant, category and account, and the signed
+/// amount, with a Transfer or Manual tag when one applies.
 ///
 /// The row is one accessibility element whose summary spells out the direction, because neither
 /// the minus sign nor the color says "spent" to a listener.
@@ -16,17 +16,11 @@ struct TransactionRow: View {
     }
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.sm) {
-                TransactionRowDetails(item: item)
-                Spacer(minLength: Theme.Spacing.sm)
-                TransactionRowAmount(item: item, alignment: .trailing)
-            }
-
-            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                TransactionRowDetails(item: item)
-                TransactionRowAmount(item: item, alignment: .leading)
-            }
+        HStack(spacing: Theme.Spacing.md) {
+            IconTile(symbolName: item.symbolName, colorToken: item.colorToken)
+            TransactionRowDetails(item: item)
+            Spacer(minLength: Theme.Spacing.sm)
+            TransactionRowAmount(item: item, alignment: .trailing)
         }
         .frame(minHeight: Theme.Layout.minimumTapTarget)
         .contentShape(.rect)

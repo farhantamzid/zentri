@@ -16,7 +16,19 @@ struct DailySpendingChart: View {
     @Environment(\.calendar) private var calendar
 
     var body: some View {
-        ChartCard("Daily spending") {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Daily spending")
+                    .font(.headline)
+                    .foregroundStyle(Theme.ink)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+                if total > 0, !days.isEmpty {
+                    Text("Avg \(moneyFormat.wholeCurrencyString(from: total / Decimal(days.count))) a day")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+            }
             if total > 0 {
                 DailySpendingChartContent(
                     data: DailySpendingChartData(
@@ -31,6 +43,7 @@ struct DailySpendingChart: View {
                 ContentUnavailableView("No spending to chart", systemImage: "chart.bar")
             }
         }
+        .glassCard()
     }
 }
 
@@ -42,5 +55,5 @@ struct DailySpendingChart: View {
         total: 540
     )
     .padding()
-    .background(Theme.canvas)
+    .ambientBackground()
 }

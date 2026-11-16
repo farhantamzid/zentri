@@ -47,7 +47,7 @@ struct ParserAvailabilityView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Theme.Spacing.md)
-        .background(.regularMaterial, in: .rect(cornerRadius: Theme.Radius.card))
+        .glassSurface()
         .accessibilityElement(children: .combine)
     }
 

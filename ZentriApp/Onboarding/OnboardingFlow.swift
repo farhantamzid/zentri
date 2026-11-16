@@ -58,7 +58,7 @@ struct OnboardingFlow: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background { Theme.canvas.ignoresSafeArea() }
+            .ambientBackground()
             .toolbarVisibility(.hidden, for: .navigationBar)
         }
         .environment(\.moneyFormat, model.moneyFormat(locale: locale))

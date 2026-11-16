@@ -37,5 +37,5 @@ struct FaceIDStepView: View {
     ScrollView {
         FaceIDStepView(model: OnboardingModel())
     }
-    .background { Theme.canvas.ignoresSafeArea() }
+    .ambientBackground()
 }

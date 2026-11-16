@@ -45,15 +45,23 @@ struct TransactionDetailView: View {
                 categories: categories,
                 onDelete: delete
             )
+            .ambientBackground()
             .navigationTitle("Transaction")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: close)
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done", systemImage: "xmark", action: close)
                         .accessibilityIdentifier("transactions.detail.done")
+                }
+                ToolbarItem(placement: .principal) {
+                    // The large header names the transaction; the bar stays clear, as the design's
+                    // sheet does.
+                    Color.clear.frame(width: 1, height: 1)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Edit", action: edit)
+                        .fontWeight(.semibold)
+                        .tint(Theme.accent)
                         .disabled(model.isDeleted)
                         .accessibilityIdentifier("transactions.detail.edit")
                 }

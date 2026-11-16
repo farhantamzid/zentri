@@ -18,6 +18,8 @@ final class OverviewModel {
     static let topCategoryLimit = 3
     /// The number of days the activity chart covers, ending today.
     static let chartDayCount = 7
+    /// The number of days the hero's balance line covers, ending today.
+    static let historyDayCount = 30
 
     /// The dashboard's numbers, or `nil` when no active account exists.
     private(set) var summary: OverviewSummary?
@@ -82,9 +84,10 @@ private extension OverviewModel {
         let fallbackCategory = transactions.isEmpty ? nil : fallbackCategory()
         let snapshots = transactions.map { TransactionSnapshot(stored: $0, fallback: fallbackCategory) }
         let month = calculateSummary(transactions: snapshots, in: calendar.monthPeriod(containing: instant))
+        let balance = BalanceCalculator.combined(accounts: accounts)
 
         return OverviewSummary(
-            balance: BalanceCalculator.combined(accounts: accounts),
+            balance: balance,
             asOf: asOf(accounts: accounts) ?? instant,
             todaySpend: calculateSummary(
                 transactions: snapshots,
@@ -98,7 +101,8 @@ private extension OverviewModel {
             ).dailySpend,
             topCategories: Array(month.categoryTotals.prefix(Self.topCategoryLimit)),
             recentTransactions: recentTransactions(from: snapshots),
-            health: health
+            health: health,
+            balanceHistory: balanceHistory(ending: balance, at: instant, snapshots: snapshots)
         )
     }
 }
@@ -164,6 +168,34 @@ private extension OverviewModel {
         in period: InsightsPeriod
     ) -> InsightsSummary {
         InsightsCalculator.summary(transactions: transactions, period: period, calendar: calendar)
+    }
+
+    /// The combined balance at the end of each of the last thirty days, oldest first.
+    ///
+    /// Each day's balance is today's balance with every movement after that day taken back out, so
+    /// the line always ends on the balance the hero shows. Transfers move money between the
+    /// person's own accounts and count like any other movement, as they do in the balance itself.
+    func balanceHistory(ending balance: Decimal, at instant: Date, snapshots: [TransactionSnapshot]) -> [BalancePoint] {
+        let today = calendar.startOfDay(for: instant)
+        let days = (0..<Self.historyDayCount).reversed().compactMap {
+            calendar.date(byAdding: .day, value: -$0, to: today)
+        }
+        guard let first = days.first else { return [] }
+        // Net movement per day, for only the days the line covers.
+        var netByDay: [Date: Decimal] = [:]
+        for snapshot in snapshots where snapshot.occurredAt >= first && snapshot.occurredAt <= instant {
+            let day = calendar.startOfDay(for: snapshot.occurredAt)
+            let signed = snapshot.direction == .credit ? snapshot.amount : -snapshot.amount
+            netByDay[day, default: 0] += signed
+        }
+        var running = balance
+        var points: [BalancePoint] = []
+        points.reserveCapacity(days.count)
+        for day in days.reversed() {
+            points.append(BalancePoint(day: day, balance: running))
+            running -= netByDay[day] ?? 0
+        }
+        return points.reversed()
     }
 
     /// The newest transactions across the active accounts, transfers included, newest first.

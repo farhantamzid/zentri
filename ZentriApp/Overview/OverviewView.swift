@@ -14,13 +14,31 @@ struct OverviewView: View {
         OverviewContent(
             context: appState.container.mainContext,
             dataRevision: appState.dataRevision,
-            onFinishSetup: finishSetup
+            onFinishSetup: finishSetup,
+            onSelectCategory: showTransactions(for:),
+            onSeeAllTransactions: showAllTransactions
         )
-        .background { Theme.canvas.ignoresSafeArea() }
+        .ambientBackground()
         .navigationTitle("Overview")
+        .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: ParsingRoute.self) { route in
             ParsingRouteDestination(route: route)
+                .scrollContentBackground(.hidden)
+                .ambientBackground()
         }
+    }
+
+    /// Opens Transactions filtered to one of this month's top categories.
+    private func showTransactions(for category: CategoryTotal) {
+        guard let id = category.categoryID else { return }
+        appState.transactionFilter = TransactionFilter(categoryID: id)
+        appState.selectedTab = .transactions
+    }
+
+    /// Opens Transactions with no filter.
+    private func showAllTransactions() {
+        appState.transactionFilter = TransactionFilter()
+        appState.selectedTab = .transactions
     }
 
     /// Points a person whose store holds no account at the screen that adds one.

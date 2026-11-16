@@ -1,7 +1,7 @@
 import SwiftUI
 import ZentriCore
 
-/// One recent transaction: merchant, category, and signed amount.
+/// One recent transaction: its category tile, merchant, category and time, and signed amount.
 ///
 /// The row is one accessibility element that says whether the money arrived or left, because the
 /// minus sign the amount carries is not what a listener would call it, and the row's direction color
@@ -16,47 +16,38 @@ struct RecentTransactionRow: View {
     }
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: Theme.Spacing.sm) {
-                details
-                Spacer(minLength: Theme.Spacing.sm)
-                amount
+        HStack(spacing: Theme.Spacing.md) {
+            IconTile(symbolName: transaction.symbolName, colorToken: transaction.colorToken)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(transaction.merchant)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(Theme.ink)
+                    .lineLimit(1)
+                Text(detail)
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryInk)
+                    .lineLimit(1)
             }
-
-            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                details
-                amount
-            }
+            Spacer(minLength: Theme.Spacing.sm)
+            Text(moneyFormat.signedCurrencyString(from: transaction.signedAmount))
+                .font(.callout.weight(.semibold))
+                .monospacedDigit()
+                .foregroundStyle(transaction.direction == .credit ? Theme.income : Theme.ink)
         }
+        .padding(.vertical, 10)
         .accessibilityElement(children: .ignore)
         .accessibilityIdentifier("overview.recent.row")
         .accessibilityLabel(transaction.spokenSummary(moneyFormat: moneyFormat))
     }
 
-    private var details: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-            Text(transaction.merchant)
-                .font(.subheadline)
-                .foregroundStyle(Theme.ink)
-                .lineLimit(1)
-            HStack(spacing: Theme.Spacing.xs) {
-                CategoryBadge(
-                    name: transaction.categoryName,
-                    symbolName: transaction.symbolName,
-                    colorToken: transaction.colorToken
-                )
-                if transaction.isTransfer {
-                    Text("Transfer")
-                        .font(.footnote)
-                        .foregroundStyle(Theme.secondaryInk)
-                }
-            }
-        }
-    }
-
-    private var amount: some View {
-        MoneyText(transaction.signedAmount)
-            .font(.subheadline)
-            .foregroundStyle(transaction.direction == .credit ? Theme.income : Theme.ink)
+    /// "Dining · 8:42 AM", or "Transfer · 8:42 AM" for a transfer.
+    private var detail: String {
+        let time = transaction.occurredAt.formatted(
+            Calendar.current.isDateInToday(transaction.occurredAt)
+                ? .dateTime.hour().minute()
+                : .dateTime.month(.abbreviated).day()
+        )
+        let kind = transaction.isTransfer ? String(localized: "Transfer") : transaction.categoryName
+        return "\(kind) · \(time)"
     }
 }

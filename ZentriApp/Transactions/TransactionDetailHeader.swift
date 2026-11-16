@@ -1,7 +1,8 @@
 import SwiftUI
 import ZentriCore
 
-/// The detail's headline: the signed amount, the merchant, and when it happened.
+/// The detail's headline: the category's tile, the signed amount, the merchant, and when it
+/// happened, centered over the sheet.
 struct TransactionDetailHeader: View {
     let transaction: ZentriCore.Transaction
 
@@ -9,25 +10,40 @@ struct TransactionDetailHeader: View {
 
     var body: some View {
         Section {
-            VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-                MoneyText(signedAmount)
-                    .font(.largeTitle.weight(.semibold))
+            VStack(spacing: Theme.Spacing.xs) {
+                IconTile(
+                    symbolName: transaction.category?.symbolName ?? "ellipsis",
+                    colorToken: transaction.category?.colorToken ?? "slate",
+                    size: 68
+                )
+                .padding(.bottom, Theme.Spacing.sm)
+                Text(moneyFormat.signedCurrencyString(from: signedAmount))
+                    .font(.system(size: 48, weight: .semibold))
+                    .kerning(-1.4)
+                    .monospacedDigit()
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
                     .foregroundStyle(transaction.direction == .credit ? Theme.income : Theme.spending)
                     .accessibilityLabel(Text(spokenAmount))
                     .accessibilityIdentifier("transactions.detail.amount")
+                    .riseIn(delay: 0.12)
                 Text(transaction.merchantDisplay)
-                    .font(.title3)
+                    .font(.title2.weight(.semibold))
                     .foregroundStyle(Theme.ink)
+                    .multilineTextAlignment(.center)
                     .accessibilityLabel(Text(transaction.merchantDisplay))
                     .accessibilityIdentifier("transactions.detail.merchant")
+                    .riseIn(delay: 0.17)
                 Text(transaction.occurredAt, format: .dateTime.weekday(.wide).day().month(.wide).year().hour().minute())
                     .font(.subheadline)
                     .foregroundStyle(Theme.secondaryInk)
+                    .multilineTextAlignment(.center)
+                    .riseIn(delay: 0.2)
             }
+            .frame(maxWidth: .infinity)
             .padding(.vertical, Theme.Spacing.xs)
         }
+        .listRowBackground(Color.clear)
     }
 
     private var signedAmount: Decimal {

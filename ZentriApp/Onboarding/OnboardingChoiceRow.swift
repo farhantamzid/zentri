@@ -22,21 +22,28 @@ struct OnboardingChoiceRow<Label: View>: View {
                 label
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(isSelected ? Theme.accent : Theme.secondaryInk)
+                // A radio: the ring takes the accent and the dot springs in.
+                Circle()
+                    .strokeBorder(isSelected ? Theme.accent : Theme.tertiaryInk, lineWidth: 2)
+                    .frame(width: 24, height: 24)
+                    .overlay {
+                        Circle()
+                            .fill(Theme.accent)
+                            .frame(width: 12, height: 12)
+                            .scaleEffect(isSelected ? 1 : 0.01)
+                    }
+                    .animation(Theme.Motion.snap, value: isSelected)
                     .accessibilityHidden(true)
             }
             .frame(maxWidth: .infinity, minHeight: Theme.Layout.minimumTapTarget, alignment: .leading)
-            .padding(Theme.Spacing.md)
-            .background(.regularMaterial, in: .rect(cornerRadius: Theme.Radius.card))
+            .padding(14)
+            .glassSurface(cornerRadius: Theme.Radius.group, fill: isSelected ? Theme.accentSoft : Theme.glass, shadow: false)
             .overlay {
-                RoundedRectangle(cornerRadius: Theme.Radius.card)
-                    .strokeBorder(
-                        isSelected ? Theme.accent : Theme.secondaryInk.opacity(0.35),
-                        lineWidth: isSelected ? 2 : 1
-                    )
+                RoundedRectangle(cornerRadius: Theme.Radius.group, style: .continuous)
+                    .strokeBorder(isSelected ? Theme.accent : .clear, lineWidth: 1.5)
             }
-            .contentShape(.rect(cornerRadius: Theme.Radius.card))
+            .animation(.easeOut(duration: 0.3), value: isSelected)
+            .contentShape(.rect(cornerRadius: Theme.Radius.group))
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])

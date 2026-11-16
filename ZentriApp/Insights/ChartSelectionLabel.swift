@@ -1,27 +1,24 @@
 import SwiftUI
 
-/// The small callout a chart shows over the value a person has selected: what it is, and how much.
+/// The small callout a chart shows over the value a person has selected: what it is, and how much,
+/// in ink on a dark pill as the design draws it.
 struct ChartSelectionLabel: View {
     let title: Text
     /// The amount, already formatted with the app's money format.
     let amountText: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.xs / 2) {
+        HStack(spacing: 4) {
             title
-                .font(.footnote)
-                .foregroundStyle(Theme.secondaryInk)
+                .fontWeight(.bold)
+            Text(verbatim: "·")
             Text(amountText)
                 .monospacedDigit()
-                .font(.subheadline.bold())
-                .foregroundStyle(Theme.ink)
         }
-        .padding(.horizontal, Theme.Spacing.sm)
-        .padding(.vertical, Theme.Spacing.xs)
-        .background(.background, in: .rect(cornerRadius: Theme.Spacing.sm))
-        .overlay {
-            RoundedRectangle(cornerRadius: Theme.Spacing.sm)
-                .strokeBorder(.separator)
-        }
+        .font(.caption)
+        .foregroundStyle(Theme.canvas)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(Theme.ink, in: .rect(cornerRadius: 10, style: .continuous))
     }
 }

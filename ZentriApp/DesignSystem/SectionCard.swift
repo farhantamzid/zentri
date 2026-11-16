@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// A standard data card: an optional heading over content on a material surface.
+/// A standard data card: an optional heading over content on the design's glass surface.
 ///
-/// Data cards never use glass, so text sits on one material layer instead of glass on glass. The
-/// card's heading is localized and its content is supplied by the feature that owns the data.
+/// The card's heading is localized and its content is supplied by the feature that owns the data.
 struct SectionCard<Content: View>: View {
     private let title: LocalizedStringResource?
     @ContentBuilder let content: Content
@@ -19,16 +18,11 @@ struct SectionCard<Content: View>: View {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(Theme.ink)
+                    .accessibilityAddTraits(.isHeader)
             }
             content
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Theme.Spacing.lg)
-        .background(.regularMaterial, in: .rect(cornerRadius: Theme.Radius.card))
-        .overlay {
-            RoundedRectangle(cornerRadius: Theme.Radius.card)
-                .strokeBorder(.separator)
-        }
+        .glassCard()
     }
 }
 
@@ -38,5 +32,5 @@ struct SectionCard<Content: View>: View {
             .foregroundStyle(Theme.secondaryInk)
     }
     .padding()
-    .background(Theme.canvas)
+    .ambientBackground()
 }

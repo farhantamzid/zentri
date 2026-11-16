@@ -1,11 +1,13 @@
 import SwiftUI
 
-/// What the middle of the category donut says: the selected slice's name, amount, and share, or a
-/// prompt to pick one.
+/// What the middle of the category donut says: the selected slice's name, amount, and share, or the
+/// month's spend.
 ///
 /// It repeats what the selected slice already announces, so VoiceOver skips it.
 struct CategoryDonutCenterLabel: View {
     let slice: CategoryDonutChartData.Slice?
+    /// The month's spend, shown when no slice is selected.
+    var totalText: String = ""
 
     var body: some View {
         VStack(spacing: Theme.Spacing.xs / 2) {
@@ -21,9 +23,13 @@ struct CategoryDonutCenterLabel: View {
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
             } else {
-                Text("Tap a slice")
-                    .font(.footnote)
+                Text("Spent")
+                    .font(.caption)
                     .foregroundStyle(Theme.secondaryInk)
+                Text(totalText)
+                    .monospacedDigit()
+                    .font(.title3.bold())
+                    .foregroundStyle(Theme.ink)
             }
         }
         .multilineTextAlignment(.center)

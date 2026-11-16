@@ -45,5 +45,5 @@ struct RulesStepView: View {
     ScrollView {
         RulesStepView(onContinue: {})
     }
-    .background { Theme.canvas.ignoresSafeArea() }
+    .ambientBackground()
 }

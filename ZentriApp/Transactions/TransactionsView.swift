@@ -9,7 +9,8 @@ struct TransactionsView: View {
 
     var body: some View {
         TransactionsContent(context: appState.container.mainContext)
-            .background { Theme.canvas.ignoresSafeArea() }
+            .ambientBackground()
             .navigationTitle("Transactions")
+            .navigationBarTitleDisplayMode(.large)
     }
 }

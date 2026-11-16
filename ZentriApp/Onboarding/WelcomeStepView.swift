@@ -6,6 +6,8 @@ struct WelcomeStepView: View {
         OnboardingStepLayout(
             "Welcome to Zentri",
             message: "Zentri turns the bank messages you share with it into a clear picture of your money."
+            ,
+            leading: { ZentriMark().riseIn(delay: 0.1) }
         ) {
             VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
                 OnboardingFeatureRow(
@@ -24,12 +26,33 @@ struct WelcomeStepView: View {
                     detail: "Zentri collects no usage data and sends nothing anywhere."
                 )
             }
-            .padding(Theme.Spacing.lg)
+            .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.regularMaterial, in: .rect(cornerRadius: Theme.Radius.card))
+            .glassSurface()
+            .riseIn(delay: 0.2)
             .accessibilityElement(children: .contain)
             .accessibilityLabel(Text("Privacy"))
         }
+    }
+}
+
+/// The app's mark: a white "Z" on a deep teal tile.
+struct ZentriMark: View {
+    var body: some View {
+        Text(verbatim: "Z")
+            .font(.system(size: 40, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(width: 76, height: 76)
+            .background(
+                LinearGradient(
+                    colors: [Color(light: 0x147A73, dark: 0x147A73), Color(light: 0x0E5F5A, dark: 0x0E5F5A)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                in: .rect(cornerRadius: 22, style: .continuous)
+            )
+            .shadow(color: Color(light: 0x0E5F5A, dark: 0x0E5F5A).opacity(0.5), radius: 15, y: 14)
+            .accessibilityHidden(true)
     }
 }
 
@@ -37,5 +60,5 @@ struct WelcomeStepView: View {
     ScrollView {
         WelcomeStepView()
     }
-    .background { Theme.canvas.ignoresSafeArea() }
+    .ambientBackground()
 }

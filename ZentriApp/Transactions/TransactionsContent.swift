@@ -17,6 +17,9 @@ struct TransactionsContent: View {
     @State private var pastedTransactionID: UUID?
     @State private var isShowingFilters = false
     @State private var addedCount = 0
+    @State private var deletedCount = 0
+    @State private var isShowingDeleteError = false
+    @Namespace private var rowTransition
 
     init(context: ModelContext) {
         _model = State(initialValue: TransactionsModel(context: context))
@@ -30,7 +33,10 @@ struct TransactionsContent: View {
             onSelect: select,
             onAdd: startAdding,
             onClearFilters: clearFilters,
-            onRetry: refresh
+            onRetry: refresh,
+            onDelete: delete,
+            onFilterChange: applyFilters,
+            transition: rowTransition
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .searchable(
@@ -51,6 +57,8 @@ struct TransactionsContent: View {
                         .accessibilityIdentifier("transactions.add.manual")
                 }
                 .accessibilityIdentifier("transactions.add")
+                .buttonStyle(.borderedProminent)
+                .tint(Theme.accent)
             }
         }
         .onAppear(perform: refresh)
@@ -69,6 +77,7 @@ struct TransactionsContent: View {
                 onMutation: appState.mutate,
                 onReprocess: appState.reprocess
             )
+            .navigationTransition(.zoom(sourceID: selection.id, in: rowTransition))
         }
         .sheet(isPresented: $isAddingTransaction) {
             TransactionEditorView(
@@ -98,6 +107,12 @@ struct TransactionsContent: View {
             )
         }
         .sensoryFeedback(.success, trigger: addedCount)
+        .sensoryFeedback(.warning, trigger: deletedCount)
+        .alert("Couldn't delete the transaction", isPresented: $isShowingDeleteError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Zentri couldn't save the change. Try again.")
+        }
     }
 
     private var filterSymbol: String {
@@ -152,6 +167,21 @@ struct TransactionsContent: View {
 
     private func applyFilters(_ filter: TransactionFilter) {
         appState.transactionFilter = filter
+    }
+
+    /// Deletes a row the person swiped away, then tells every screen the store changed. Any bank
+    /// message the transaction came from stays in the archive, as it does from the detail.
+    private func delete(_ item: TransactionListItem) {
+        guard let transaction = model.transaction(id: item.id) else { return }
+        Task {
+            do {
+                try await appState.makeTransactionMutationService().delete(transaction)
+                deletedCount += 1
+                appState.mutate()
+            } catch {
+                isShowingDeleteError = true
+            }
+        }
     }
 
     /// Saves a manual transaction, then tells every screen the store changed.

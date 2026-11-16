@@ -26,6 +26,8 @@ final class TransactionsModel {
     private(set) var accounts: [TransactionAccountOption] = []
     /// Every category, in the catalog's order.
     private(set) var categories: [TransactionCategoryOption] = []
+    /// The categories at least one transaction is in, in the catalog's order, for the filter chips.
+    private(set) var chipCategories: [TransactionCategoryOption] = []
 
     @ObservationIgnored private var items: [TransactionListItem] = []
     @ObservationIgnored private var storedTransactions: [UUID: ZentriCore.Transaction] = [:]
@@ -72,6 +74,7 @@ final class TransactionsModel {
             balance = nil
             accounts = []
             categories = []
+            chipCategories = []
             loadState = .failed
         }
         apply(filter)
@@ -120,6 +123,8 @@ private extension TransactionsModel {
         categories = catalog.map {
             TransactionCategoryOption(id: $0.id, name: $0.name, symbolName: $0.symbolName, colorToken: $0.colorToken)
         }
+        let used = Set(items.compactMap { $0.categoryID ?? fallback?.id })
+        chipCategories = categories.filter { used.contains($0.id) }
         // The same shared calculation the Overview hero uses, so the two always agree.
         balance = active.isEmpty ? nil : BalanceCalculator.combined(accounts: active)
     }

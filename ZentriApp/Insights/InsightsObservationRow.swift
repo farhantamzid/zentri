@@ -9,15 +9,19 @@ struct InsightsObservationRow: View {
     @Environment(\.locale) private var locale
 
     var body: some View {
-        Label {
+        HStack(alignment: .top, spacing: Theme.Spacing.md) {
+            Image(systemName: symbolName)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Theme.accent)
+                .frame(width: 30, height: 30)
+                .background(Theme.accentSoft, in: .rect(cornerRadius: 9, style: .continuous))
+                .accessibilityHidden(true)
             sentence
                 .font(.subheadline)
+                .lineSpacing(2)
                 .foregroundStyle(Theme.ink)
                 .fixedSize(horizontal: false, vertical: true)
-        } icon: {
-            Image(systemName: symbolName)
-                .foregroundStyle(Theme.accent)
-                .accessibilityHidden(true)
+                .padding(.top, 5)
         }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("insights.observation")

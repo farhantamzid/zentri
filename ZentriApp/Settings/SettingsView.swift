@@ -7,47 +7,61 @@ import SwiftUI
 /// pushes through the same registration. The parsing screens' ``ParsingRoute`` is registered here
 /// too, so an account's detail can open that account's rules.
 struct SettingsView: View {
+    @Environment(AppState.self) private var appState
+
     var body: some View {
         List {
             Section {
                 SettingsLink(destination: .accounts)
                 SettingsLink(destination: .categories)
             } header: {
-                Text("Money")
+                GroupHeading("Money")
             }
 
             Section {
-                SettingsLink(destination: .appearance)
+                SettingsLink(destination: .appearance, value: appearanceValue)
             } header: {
-                Text("Display")
+                GroupHeading("Display")
             }
 
             Section {
-                SettingsLink(destination: .parsing)
+                SettingsLink(destination: .parsing, value: Text(appState.parserMode.displayName))
                 SettingsLink(destination: .shortcuts)
             } header: {
-                Text("Capture")
+                GroupHeading("Capture")
             }
 
             Section {
                 SettingsLink(destination: .backup)
             } header: {
-                Text("Data")
+                GroupHeading("Data")
             }
 
             Section {
                 SettingsLink(destination: .about)
             }
         }
+        .listSectionSpacing(Theme.Spacing.lg)
         .scrollContentBackground(.hidden)
-        .background { Theme.canvas.ignoresSafeArea() }
+        .ambientBackground()
         .navigationTitle("Settings")
         .navigationDestination(for: SettingsDestination.self) { destination in
             SettingsDestinationView(destination: destination)
+                .scrollContentBackground(.hidden)
+                .ambientBackground()
         }
         .navigationDestination(for: ParsingRoute.self) { route in
             ParsingRouteDestination(route: route)
+                .scrollContentBackground(.hidden)
+                .ambientBackground()
         }
+    }
+}
+
+extension SettingsView {
+    /// The appearance mode the Appearance row shows beside its title.
+    private var appearanceValue: Text? {
+        appState.settingsStore.settings.map { Text($0.appearanceMode.title) }
     }
 }
 

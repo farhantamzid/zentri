@@ -4,8 +4,9 @@ import SwiftUI
 ///
 /// The arrows keep their names for VoiceOver while drawing only their symbols. Every control's
 /// label is at least 44 points tall (and the arrows 44 wide), inside the button, so the whole target
-/// answers a tap rather than only the glyph. "Next month" is disabled on this month, since a month that has not
-/// started has nothing to show; "This month" is disabled when it is already showing.
+/// answers a tap rather than only the glyph. "Next month" is disabled on this month, since a month
+/// that has not started has nothing to show; "This month" is disabled when it is already showing.
+/// The month's name slides in from the side it came from.
 struct InsightsMonthSelector: View {
     let month: Date
     let isShowingThisMonth: Bool
@@ -14,10 +15,11 @@ struct InsightsMonthSelector: View {
     let onThisMonth: @MainActor () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var direction: Edge = .trailing
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: Theme.Spacing.sm) {
+            HStack(spacing: 2) {
                 arrows
                 Spacer(minLength: Theme.Spacing.sm)
                 thisMonthButton
@@ -31,53 +33,85 @@ struct InsightsMonthSelector: View {
     }
 
     private var arrows: some View {
-        HStack(spacing: Theme.Spacing.xs) {
-            Button(action: onPrevious) {
+        HStack(spacing: 2) {
+            Button {
+                direction = .leading
+                withAnimation(Theme.Motion.rise) { onPrevious() }
+            } label: {
                 Label("Previous Month", systemImage: "chevron.left")
                     .labelStyle(.iconOnly)
-                    .frame(minWidth: Theme.Layout.minimumTapTarget, minHeight: Theme.Layout.minimumTapTarget)
+                    .font(.title2.weight(.medium))
+                    .frame(minWidth: 40, minHeight: Theme.Layout.minimumTapTarget)
                     .contentShape(.rect)
             }
+            .buttonStyle(PressableStyle(scale: 0.85))
+            .foregroundStyle(Theme.accent)
             .accessibilityIdentifier("insights.previousMonth")
 
-            Text(month, format: .dateTime.month(.wide).year())
-                .font(.title3.bold())
-                .foregroundStyle(Theme.ink)
-                .contentTransition(reduceMotion ? .identity : .numericText())
-                .accessibilityAddTraits(.isHeader)
-                .accessibilityIdentifier("insights.month")
+            ZStack {
+                Text(month, format: .dateTime.month(.wide).year())
+                    .id(month)
+                    .transition(
+                        reduceMotion
+                            ? .identity
+                            : .asymmetric(
+                                insertion: .move(edge: direction == .leading ? .leading : .trailing).combined(with: .opacity),
+                                removal: .opacity
+                            )
+                    )
+            }
+            .font(.title3.bold())
+            .foregroundStyle(Theme.ink)
+            .lineLimit(1)
+            .frame(minWidth: 150)
+            .clipped()
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityIdentifier("insights.month")
 
-            Button(action: onNext) {
+            Button {
+                direction = .trailing
+                withAnimation(Theme.Motion.rise) { onNext() }
+            } label: {
                 Label("Next Month", systemImage: "chevron.right")
                     .labelStyle(.iconOnly)
-                    .frame(minWidth: Theme.Layout.minimumTapTarget, minHeight: Theme.Layout.minimumTapTarget)
+                    .font(.title2.weight(.medium))
+                    .frame(minWidth: 40, minHeight: Theme.Layout.minimumTapTarget)
                     .contentShape(.rect)
             }
+            .buttonStyle(PressableStyle(scale: 0.85))
+            .foregroundStyle(isShowingThisMonth ? Theme.tertiaryInk : Theme.accent)
             .disabled(isShowingThisMonth)
             .accessibilityIdentifier("insights.nextMonth")
         }
     }
 
     private var thisMonthButton: some View {
-        Button(action: onThisMonth) {
+        Button {
+            direction = .trailing
+            withAnimation(Theme.Motion.rise) { onThisMonth() }
+        } label: {
             Text("This Month")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(isShowingThisMonth ? Theme.tertiaryInk : Theme.accent)
+                .padding(.horizontal, 14)
                 .frame(minHeight: Theme.Layout.minimumTapTarget)
-                .contentShape(.rect)
+                .background {
+                    Capsule()
+                        .fill(Theme.glass)
+                        .overlay { Capsule().strokeBorder(Theme.glassBorder) }
+                        .padding(.vertical, 3)
+                }
+                .contentShape(.capsule)
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(PressableStyle())
         .disabled(isShowingThisMonth)
         .accessibilityIdentifier("insights.thisMonth")
     }
 }
 
 #Preview {
-    InsightsMonthSelector(
-        month: .now,
-        isShowingThisMonth: true,
-        onPrevious: {},
-        onNext: {},
-        onThisMonth: {}
-    )
-    .padding()
-    .background(Theme.canvas)
+    InsightsMonthSelector(month: .now, isShowingThisMonth: true, onPrevious: {}, onNext: {}, onThisMonth: {})
+        .padding()
+        .ambientBackground()
 }

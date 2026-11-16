@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The selected month's headline: what was spent and what was received.
+/// The selected month's headline: what was spent and what was received, side by side.
 ///
 /// Each figure is one accessibility element that names itself, so VoiceOver reads "Spent, $1,000.00"
 /// rather than an unlabelled amount.
@@ -9,16 +9,15 @@ struct InsightsTotalsCard: View {
     let received: Decimal
 
     var body: some View {
-        SectionCard {
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .top, spacing: Theme.Spacing.lg) {
-                    figures
-                }
-                VStack(alignment: .leading, spacing: Theme.Spacing.md) {
-                    figures
-                }
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: Theme.Spacing.lg) {
+                figures
+            }
+            VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+                figures
             }
         }
+        .glassCard()
     }
 
     @ContentBuilder
@@ -33,5 +32,5 @@ struct InsightsTotalsCard: View {
 #Preview {
     InsightsTotalsCard(spent: 1_000, received: 5_000)
         .padding()
-        .background(Theme.canvas)
+        .ambientBackground()
 }

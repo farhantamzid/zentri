@@ -23,7 +23,7 @@ struct InsightsChangeText: View {
         changePercent?.roundedToWholeNumber
     }
 
-    private var text: Text {
+    var text: Text {
         guard let wholePercent else {
             return Text("Nothing last month")
         }

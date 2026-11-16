@@ -57,5 +57,5 @@ struct ParserStepView: View {
     ScrollView {
         ParserStepView(model: OnboardingModel())
     }
-    .background { Theme.canvas.ignoresSafeArea() }
+    .ambientBackground()
 }
