@@ -379,4 +379,42 @@ struct TransactionMutationServiceTests {
         #expect(transaction.isTransfer == false)
         #expect(await refresher.refreshCount == 0)
     }
+
+    @Test("Moving a message transaction to another account moves its SMS balance checkpoint with it")
+    func moveCarriesTheSMSCheckpoint() async throws {
+        let store = try makeStore()
+        let savings = Account(name: "Savings", sortOrder: 1, createdAt: now)
+        store.context.insert(savings)
+        let transaction = try addIngested(store)
+        let smsCheckpoint = BalanceCheckpoint(
+            account: store.account,
+            amount: 880,
+            recordedAt: transaction.recordedAt,
+            source: .sms,
+            sourceTransactionID: transaction.id,
+            createdAt: transaction.recordedAt
+        )
+        let opening = BalanceCheckpoint(
+            account: store.account,
+            amount: 1_000,
+            recordedAt: now.addingTimeInterval(-3_600),
+            source: .opening,
+            createdAt: now.addingTimeInterval(-3_600)
+        )
+        store.context.insert(smsCheckpoint)
+        store.context.insert(opening)
+        try store.context.save()
+        let service = makeService(store, refresher: CountingSnapshotRefresher())
+
+        _ = try await service.save(
+            edit(accountID: savings.id, amount: 120, occurredAt: transaction.occurredAt, merchant: "Grab"),
+            existing: transaction
+        )
+
+        #expect(transaction.account.id == savings.id)
+        #expect(smsCheckpoint.account.id == savings.id)
+        #expect(smsCheckpoint.amount == 880)
+        #expect(opening.account.id == store.account.id)
+        #expect(store.account.checkpoints.allSatisfy { $0.sourceTransactionID != transaction.id })
+    }
 }

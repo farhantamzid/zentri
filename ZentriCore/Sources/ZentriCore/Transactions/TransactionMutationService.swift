@@ -47,8 +47,9 @@ public final class TransactionMutationService {
     /// ``CategorySource/manual``. It counts toward the balance from when it happened, because a missed
     /// transaction is already reflected in any balance the bank reported after it. An edit keeps the
     /// raw message, the engine, the raw merchant, and — for a message-sourced transaction — the
-    /// instant the message arrived, which is what anchors it among the balance checkpoints. Changing
-    /// the category marks it as the person's choice.
+    /// instant the message arrived, which is what anchors it among the balance checkpoints; moving it
+    /// to another account moves the balance checkpoint its message stated as well. Changing the
+    /// category marks it as the person's choice.
     ///
     /// - Throws: ``TransactionMutationError`` when the edit is invalid, before anything changes, or
     ///   the store's error when the save fails.
@@ -73,7 +74,10 @@ public final class TransactionMutationService {
                 transaction.category = category
                 transaction.categorySource = category == nil ? nil : .manual
             }
-            transaction.account = account
+            if transaction.account.id != account.id {
+                moveSMSCheckpoints(of: transaction, from: transaction.account, to: account)
+                transaction.account = account
+            }
             transaction.amount = edit.amount
             transaction.direction = edit.direction
             transaction.occurredAt = edit.occurredAt
@@ -107,6 +111,19 @@ public final class TransactionMutationService {
         try commit()
         await snapshotRefresher.refresh()
         return transaction
+    }
+
+    /// Moves the balance checkpoint a transaction's message stated to the transaction's new account.
+    ///
+    /// The balance an SMS reported belongs to the account the message was about, so it follows the
+    /// transaction when the person files it elsewhere; left behind, it would make the old account
+    /// report the other account's bank balance.
+    private func moveSMSCheckpoints(of transaction: Transaction, from oldAccount: Account, to newAccount: Account) {
+        let transactionID = transaction.id
+        for checkpoint in oldAccount.checkpoints
+        where checkpoint.source == .sms && checkpoint.sourceTransactionID == transactionID {
+            checkpoint.account = newAccount
+        }
     }
 
     /// Deletes a transaction and leaves its raw message in the archive, unlinked.
