@@ -25,8 +25,8 @@ public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
     /// (`+0800`), with and without fractional seconds. Only these formats are tried: a
     /// date-only fallback list would read an ISO timestamp as a different day, so the shape of
     /// the value decides how it is read. Every candidate goes through ``DateParser``, which
-    /// keeps the fixed locale, calendar, time zone, and 2000–2099 year window the rest of
-    /// parsing uses.
+    /// keeps the fixed locale, calendar, and 2000–2099 year window the rest of parsing uses; a
+    /// value without an offset is read in the engine's time zone, like a rule's date.
     private static let iso8601Formats = [
         "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ",
         "yyyy-MM-dd'T'HH:mm:ssZZZZZ",
@@ -40,9 +40,16 @@ public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
     ]
 
     private let client: any TransactionModelClient
+    /// The zone a date without an explicit offset is read in.
+    private let timeZone: TimeZone
 
-    public init(client: any TransactionModelClient) {
+    /// - Parameters:
+    ///   - client: The on-device model.
+    ///   - timeZone: The zone a date without an offset is read in; the device's own by default,
+    ///     because a bank message states local time.
+    public init(client: any TransactionModelClient, timeZone: TimeZone = .autoupdatingCurrent) {
         self.client = client
+        self.timeZone = timeZone
     }
 
     public func parse(_ input: ParseInput) async -> ParseResult {
@@ -143,7 +150,11 @@ public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
     private func occurredAt(from raw: String?, receivedAt: Date) -> Date {
         guard let raw = Self.trimmed(raw) else { return receivedAt }
         for format in Self.iso8601Formats {
-            if let date = DateParser.parse(raw, format: format) { return date }
+            if let date = DateParser.parse(raw, format: format, timeZone: timeZone) {
+                return DateParser.hasTime(format)
+                    ? date
+                    : DateParser.preferringReceipt(date, receivedAt: receivedAt, timeZone: timeZone)
+            }
         }
         return receivedAt
     }

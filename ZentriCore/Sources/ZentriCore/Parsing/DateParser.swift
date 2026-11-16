@@ -1,11 +1,12 @@
 import Foundation
 
-/// Reads the date captured by a rule, using a fixed locale, calendar, and time zone.
+/// Reads the date captured by a rule, using a fixed locale and calendar.
 ///
 /// Bank messages are written for the bank's own locale, so parsing must not follow the
-/// device: month names are read as English and Latin digits are required. Dates are
-/// interpreted in UTC, and two-digit years use a fixed 2000–2099 window, so the same message
-/// always produces the same instant.
+/// device: month names are read as English and Latin digits are required. A bank message
+/// states local time, so a value without an explicit offset is read in the time zone the
+/// caller passes — the device's own by default — while a value that carries an offset keeps
+/// it. Two-digit years use a fixed 2000–2099 window.
 public enum DateParser {
     /// The fixed locale, so month and day names are read identically on every device.
     private static let posixLocale = Locale(identifier: "en_US_POSIX")
@@ -38,14 +39,26 @@ public enum DateParser {
     ///
     /// Returns `receivedAt` when there is no value, when the value does not match the format,
     /// or when no candidate parses to a year in 2000–2099: the receipt time is always a safe
-    /// occurrence time, so a malformed date never blocks an otherwise valid transaction.
-    public static func date(from raw: String?, format: String?, receivedAt: Date) -> Date? {
+    /// occurrence time, so a malformed date never blocks an otherwise valid transaction. A
+    /// date without a time that falls on the receipt's own day also returns `receivedAt`, so
+    /// messages from one day keep the order they arrived in.
+    ///
+    /// - Parameter timeZone: The zone a value without an explicit offset is read in.
+    public static func date(
+        from raw: String?,
+        format: String?,
+        receivedAt: Date,
+        timeZone: TimeZone = .autoupdatingCurrent
+    ) -> Date? {
         guard let raw = cleaned(raw) else { return receivedAt }
         if let format = cleaned(format) {
-            return parse(raw, format: format) ?? receivedAt
+            guard let date = parse(raw, format: format, timeZone: timeZone) else { return receivedAt }
+            return hasTime(format) ? date : preferringReceipt(date, receivedAt: receivedAt, timeZone: timeZone)
         }
         for format in commonFormats {
-            if let date = parse(raw, format: format) { return date }
+            if let date = parse(raw, format: format, timeZone: timeZone) {
+                return preferringReceipt(date, receivedAt: receivedAt, timeZone: timeZone)
+            }
         }
         return receivedAt
     }
@@ -55,22 +68,45 @@ public enum DateParser {
     /// Returns `nil` both for a value the format does not read and for a date whose year is
     /// outside 2000–2099, so a caller can try the next format and finally fall back to the
     /// receipt time.
-    static func parse(_ raw: String, format: String) -> Date? {
+    ///
+    /// - Parameter timeZone: The zone a value without an explicit offset is read in.
+    static func parse(_ raw: String, format: String, timeZone: TimeZone = .autoupdatingCurrent) -> Date? {
         let formatter = DateFormatter()
         formatter.locale = posixLocale
         formatter.calendar = Calendar(identifier: .gregorian)
-        formatter.timeZone = .gmt
+        formatter.timeZone = timeZone
         formatter.dateFormat = format
         formatter.isLenient = false
         formatter.twoDigitStartDate = twoDigitStartDate
-        guard let date = formatter.date(from: raw), isPlausible(date) else { return nil }
+        guard let date = formatter.date(from: raw), isPlausible(date, timeZone: timeZone) else { return nil }
         return date
     }
 
-    /// Whether the date falls in a year a bank message can carry.
-    private static func isPlausible(_ date: Date) -> Bool {
+    /// `receivedAt` when a date-only value names the receipt's own local day, otherwise the
+    /// value: the message gives no time, and the receipt time is the best one available.
+    static func preferringReceipt(_ date: Date, receivedAt: Date, timeZone: TimeZone) -> Date {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = .gmt
+        calendar.timeZone = timeZone
+        return calendar.isDate(date, inSameDayAs: receivedAt) ? receivedAt : date
+    }
+
+    /// Whether a date format reads a time of day, ignoring quoted literal text.
+    static func hasTime(_ format: String) -> Bool {
+        var isQuoted = false
+        for character in format {
+            if character == "'" {
+                isQuoted.toggle()
+            } else if !isQuoted, "HhKkms".contains(character) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /// Whether the date falls in a year a bank message can carry, read in the parse's zone.
+    private static func isPlausible(_ date: Date, timeZone: TimeZone) -> Bool {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
         return plausibleYears.contains(calendar.component(.year, from: date))
     }
 

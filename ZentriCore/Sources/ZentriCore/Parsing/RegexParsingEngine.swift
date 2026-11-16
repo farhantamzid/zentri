@@ -14,9 +14,16 @@ public struct RegexParsingEngine: TransactionParsing, Sendable {
     private static let unknownMerchant = "Unknown merchant"
 
     private let rules: [ParsingRuleSpec]
+    /// The zone a captured date or time without an explicit offset is read in.
+    private let timeZone: TimeZone
 
-    public init(rules: [ParsingRuleSpec]) {
+    /// - Parameters:
+    ///   - rules: The rules to evaluate.
+    ///   - timeZone: The zone message dates are read in; the device's own by default, because a
+    ///     bank message states local time.
+    public init(rules: [ParsingRuleSpec], timeZone: TimeZone = .autoupdatingCurrent) {
         self.rules = rules
+        self.timeZone = timeZone
     }
 
     public func parse(_ input: ParseInput) async -> ParseResult {
@@ -197,10 +204,11 @@ public struct RegexParsingEngine: TransactionParsing, Sendable {
 
         if let format, !format.isEmpty,
            let timeText = capture("time", in: match),
-           let combined = DateParser.parse("\(dateText) \(timeText)", format: format) {
+           let combined = DateParser.parse("\(dateText) \(timeText)", format: format, timeZone: timeZone) {
             return combined
         }
-        return DateParser.date(from: dateText, format: format, receivedAt: receivedAt) ?? receivedAt
+        return DateParser.date(from: dateText, format: format, receivedAt: receivedAt, timeZone: timeZone)
+            ?? receivedAt
     }
 }
 

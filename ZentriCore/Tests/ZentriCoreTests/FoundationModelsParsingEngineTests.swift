@@ -12,6 +12,23 @@ private func utcDate(_ year: Int, _ month: Int, _ day: Int, hour: Int = 0, minut
     return calendar.date(from: components) ?? .distantPast
 }
 
+/// The zone message dates are read in for these tests: UTC+8 all year, neither GMT nor a zone
+/// a test machine is likely to run in, so a test cannot pass by reading dates in either.
+private let testZone = TimeZone(identifier: "Asia/Kuala_Lumpur") ?? .gmt
+
+/// A wall-clock time in ``testZone``.
+private func localDate(_ year: Int, _ month: Int, _ day: Int, hour: Int = 0, minute: Int = 0) -> Date {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = testZone
+    let components = DateComponents(year: year, month: month, day: day, hour: hour, minute: minute)
+    return calendar.date(from: components) ?? .distantPast
+}
+
+/// The model engine reading zone-less dates in ``testZone``.
+private func modelEngine(client: any TransactionModelClient) -> FoundationModelsParsingEngine {
+    FoundationModelsParsingEngine(client: client, timeZone: testZone)
+}
+
 private func modelInput(_ text: String = "MYBANK: RM12.50 spent at KFC") -> ParseInput {
     ParseInput(text: text, sender: "MYBANK", receivedAt: modelReceivedAt)
 }
@@ -64,7 +81,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
         isTransaction: true, direction: "debit", amount: "12.50",
         merchant: "KFC", balance: "1,234.50", date: nil, category: "Dining"
     )
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
     let result = await engine.parse(modelInput("Paid 12.50 at KFC"))
     guard case .transaction(let draft) = result else { Issue.record("expected transaction"); return }
     #expect(draft.amount == Decimal(string: "12.50"))
@@ -77,7 +94,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
         merchant: "  ACME   Corp ", balance: "5,000.00",
         date: "2026-11-14T09:30:00Z", category: "  Salary "
     )
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     guard let draft = draft(from: await engine.parse(modelInput("MYBANK: RM1,234.50 received from ACME Corp"))) else {
         Issue.record("expected a transaction")
@@ -97,13 +114,13 @@ enum ModelTestFailure: Error, Sendable, Equatable {
     let output = ModelTransactionOutput(
         isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC", date: "2026-11-14"
     )
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     guard let draft = draft(from: await engine.parse(modelInput())) else {
         Issue.record("expected a transaction")
         return
     }
-    #expect(draft.occurredAt == utcDate(2026, 11, 14))
+    #expect(draft.occurredAt == localDate(2026, 11, 14))
 }
 
 @Test func parsesAnISO8601TimestampWithoutAZone() async {
@@ -111,13 +128,13 @@ enum ModelTestFailure: Error, Sendable, Equatable {
         isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC",
         date: "2026-11-14T09:30:00"
     )
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     guard let draft = draft(from: await engine.parse(modelInput())) else {
         Issue.record("expected a transaction")
         return
     }
-    #expect(draft.occurredAt == utcDate(2026, 11, 14, hour: 9, minute: 30))
+    #expect(draft.occurredAt == localDate(2026, 11, 14, hour: 9, minute: 30))
 }
 
 @Test func parsesAnISO8601TimestampWithAColonOffset() async {
@@ -126,7 +143,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
         isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC",
         date: "2026-11-14T09:30:00+08:00"
     )
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     guard let draft = draft(from: await engine.parse(modelInput())) else {
         Issue.record("expected a transaction")
@@ -141,7 +158,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
         isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC",
         date: "2026-11-14T09:30:00+0800"
     )
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     guard let draft = draft(from: await engine.parse(modelInput())) else {
         Issue.record("expected a transaction")
@@ -156,7 +173,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
         let output = ModelTransactionOutput(
             isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC", date: date
         )
-        let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+        let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
         guard let draft = draft(from: await engine.parse(modelInput())) else {
             Issue.record("expected a transaction for '\(date)'")
@@ -171,7 +188,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
         let output = ModelTransactionOutput(
             isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC", date: date
         )
-        let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+        let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
         guard let draft = draft(from: await engine.parse(modelInput())) else {
             Issue.record("expected a transaction for '\(date)'")
@@ -186,14 +203,14 @@ enum ModelTestFailure: Error, Sendable, Equatable {
         isTransaction: false, direction: "debit", amount: "12.50", merchant: "KFC",
         balance: "1,234.50", date: "2026-11-14", category: "Dining"
     )
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     #expect(await engine.parse(modelInput()) == .notTransaction)
 }
 
 @Test func missingModelAmountIsAFailure() async {
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", merchant: "KFC")
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput()))
     #expect(diagnostic?.code == .missingField)
@@ -202,7 +219,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func invalidModelAmountIsAFailure() async {
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "12.5O", merchant: "KFC")
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput()))
     #expect(diagnostic?.code == .invalidAmount)
@@ -211,7 +228,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func hallucinatedModelAmountIsNotAccepted() async {
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "999.99", merchant: "KFC")
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput("Paid 12.50 at KFC")))
     #expect(diagnostic?.code == .invalidAmount)
@@ -221,7 +238,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func modelAmountThatMatchesTheMessageIsAccepted() async {
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC")
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     guard let draft = draft(from: await engine.parse(modelInput("Paid 12.50 at KFC"))) else {
         Issue.record("expected a transaction")
@@ -232,7 +249,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func modelAmountMatchesAGroupedMessageAmount() async {
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "1234.50", merchant: "KFC")
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     guard let draft = draft(from: await engine.parse(modelInput("Paid RM 1,234.50"))) else {
         Issue.record("expected a transaction")
@@ -243,7 +260,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func modelAmountWithoutAFractionMatchesAGroupedMessageAmount() async {
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "1250", merchant: "KFC")
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     guard let draft = draft(from: await engine.parse(modelInput("Paid 1,250"))) else {
         Issue.record("expected a transaction")
@@ -255,7 +272,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 @Test func modelAmountIsComparedByValueNotByDigits() async {
     // "1,000" contains the digits of "100", but not its value.
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "100", merchant: "KFC")
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput("Paid 1,000 at KFC")))
     #expect(diagnostic?.code == .invalidAmount)
@@ -263,7 +280,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func nonPositiveModelAmountFailsValidation() async {
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "0.00", merchant: "KFC")
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput("MYBANK: RM0.00 charge at KFC")))
     #expect(diagnostic?.code == .amountNotPositive)
@@ -272,7 +289,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func missingModelDirectionIsAFailure() async {
     let output = ModelTransactionOutput(isTransaction: true, amount: "12.50", merchant: "KFC")
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput()))
     #expect(diagnostic?.code == .missingField)
@@ -281,7 +298,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func unknownModelDirectionIsAFailure() async {
     let output = ModelTransactionOutput(isTransaction: true, direction: "transfer", amount: "12.50", merchant: "KFC")
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput()))
     #expect(diagnostic?.code == .missingField)
@@ -290,7 +307,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func blankModelMerchantFailsValidation() async {
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "12.50", merchant: "   ")
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput()))
     #expect(diagnostic?.code == .missingMerchant)
@@ -302,7 +319,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
     let output = ModelTransactionOutput(
         isTransaction: true, direction: "debit", amount: "12.50", merchant: merchant
     )
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     guard let draft = draft(from: await engine.parse(modelInput())) else {
         Issue.record("expected a transaction")
@@ -316,7 +333,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
     let output = ModelTransactionOutput(
         isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC", balance: "not a number"
     )
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     guard let draft = draft(from: await engine.parse(modelInput())) else {
         Issue.record("expected a transaction")
@@ -334,7 +351,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
         result: .success(output),
         counter: counter
     )
-    let engine = FoundationModelsParsingEngine(client: client)
+    let engine = modelEngine(client: client)
 
     let diagnostics: [ParseDiagnostic]
     if case .failure(let failures) = await engine.parse(modelInput()) {
@@ -350,7 +367,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func unavailableModelWithoutAReasonStillExplainsItself() async {
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC")
-    let engine = FoundationModelsParsingEngine(
+    let engine = modelEngine(
         client: StubModelClient(availabilityValue: .unavailable(""), result: .success(output))
     )
 
@@ -365,7 +382,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
         isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC",
         date: "2026-11-20T11:00:00Z"
     )
-    let engine = FoundationModelsParsingEngine(client: StubModelClient(result: .success(output)))
+    let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput()))
     #expect(diagnostic?.code == .dateTooFarInFuture)
@@ -374,7 +391,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func thrownModelErrorIsAFailure() async {
     let client = StubModelClient(result: .failure(ModelTestFailure.generationFailed))
-    let engine = FoundationModelsParsingEngine(client: client)
+    let engine = modelEngine(client: client)
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput()))
     #expect(diagnostic?.code == .modelFailed)
@@ -383,7 +400,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func modelTimeoutIsAFailure() async {
     let client = StubModelClient(result: .failure(ModelClientError.timedOut))
-    let engine = FoundationModelsParsingEngine(client: client)
+    let engine = modelEngine(client: client)
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput()))
     #expect(diagnostic?.code == .modelTimedOut)
@@ -391,7 +408,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 
 @Test func modelCancellationIsAFailure() async {
     let client = StubModelClient(result: .failure(CancellationError()))
-    let engine = FoundationModelsParsingEngine(client: client)
+    let engine = modelEngine(client: client)
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput()))
     #expect(diagnostic?.code == .cancelled)
@@ -401,7 +418,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
 @Test func cancelledParsingFailsWithoutAskingTheModel() async {
     let counter = CallCounter()
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC")
-    let engine = FoundationModelsParsingEngine(
+    let engine = modelEngine(
         client: StubModelClient(result: .success(output), counter: counter)
     )
 
@@ -423,7 +440,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
     let counter = CallCounter()
     let output = ModelTransactionOutput(isTransaction: true, direction: "debit", amount: "12.50", merchant: "KFC")
     let client = StubModelClient(result: .success(output), counter: counter)
-    let engine = FoundationModelsParsingEngine(client: client)
+    let engine = modelEngine(client: client)
 
     let diagnostic = firstDiagnostic(from: await engine.parse(modelInput(String(repeating: "a", count: 20_001))))
     #expect(diagnostic?.code == .inputTooLong)
