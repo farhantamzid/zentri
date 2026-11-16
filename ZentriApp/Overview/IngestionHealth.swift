@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import ZentriCore
 
 /// What the ingestion health card reports about the message archive.
@@ -24,6 +25,34 @@ extension IngestionHealth {
             lastMessageAt: messages.map(\.receivedAt).max(),
             lastSuccessAt: messages.filter { $0.status == .parsed }.map(\.ingestedAt).max(),
             failureCount: messages.count { $0.status == .failed }
+        )
+    }
+}
+
+extension IngestionHealth {
+    /// The archive's health read straight from the store: a count and two one-row fetches, so the
+    /// Overview never loads every message, with its text, to state three numbers.
+    ///
+    /// - Throws: The store's error when a read fails.
+    @MainActor
+    init(context: ModelContext) throws {
+        var newestMessage = FetchDescriptor<RawMessage>(sortBy: [SortDescriptor(\.receivedAt, order: .reverse)])
+        newestMessage.fetchLimit = 1
+
+        let parsed = ParseStatus.parsed
+        var newestSuccess = FetchDescriptor<RawMessage>(
+            predicate: #Predicate { $0.status == parsed },
+            sortBy: [SortDescriptor(\.ingestedAt, order: .reverse)]
+        )
+        newestSuccess.fetchLimit = 1
+
+        let failed = ParseStatus.failed
+        let failures = FetchDescriptor<RawMessage>(predicate: #Predicate { $0.status == failed })
+
+        self.init(
+            lastMessageAt: try context.fetch(newestMessage).first?.receivedAt,
+            lastSuccessAt: try context.fetch(newestSuccess).first?.ingestedAt,
+            failureCount: try context.fetchCount(failures)
         )
     }
 }

@@ -28,13 +28,23 @@ struct TransactionsStoreReads {
     }
 
     /// Reads every row of each kind from the supplied context.
+    ///
+    /// Each list row carries its message's text for search, so the messages are fetched with the
+    /// transactions in one batch rather than faulted in one by one.
     @MainActor
     init(context: ModelContext) {
         self.init(
-            transactions: { try context.fetch(FetchDescriptor<ZentriCore.Transaction>()) },
+            transactions: { try context.fetch(Self.transactionsDescriptor) },
             accounts: { try context.fetch(FetchDescriptor<Account>()) },
             categories: { try context.fetch(FetchDescriptor<ZentriCore.Category>()) },
             parsingRules: { try context.fetch(FetchDescriptor<ParsingRule>()) }
         )
+    }
+
+    /// Every transaction, with its raw message prefetched.
+    static var transactionsDescriptor: FetchDescriptor<ZentriCore.Transaction> {
+        var descriptor = FetchDescriptor<ZentriCore.Transaction>()
+        descriptor.relationshipKeyPathsForPrefetching = [\.rawMessage]
+        return descriptor
     }
 }

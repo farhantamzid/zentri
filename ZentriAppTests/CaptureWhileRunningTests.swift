@@ -105,9 +105,39 @@ struct CaptureWhileRunningTests {
             timelineReloader: InertTimelineReloader()
         )
 
+        appState.sceneDidEnterBackground()
         await appState.sceneDidBecomeActive()
 
         #expect(appState.dataRevision == 1)
         #expect(pending.status == .processing)
+    }
+
+    // MARK: - One reload per activation (I4)
+
+    /// Coming back from the background reloads every screen once — the day may have changed — and a
+    /// retry with nothing to do adds no second reload.
+    @Test func returningFromTheBackgroundWithNothingPendingReloadsOnce() async throws {
+        let store = try ParsingTestStore()
+        let appState = try makeRunningApp(store)
+        await appState.retryPendingIngestion()
+        appState.sceneDidEnterBackground()
+        let revisionBefore = appState.dataRevision
+
+        await appState.sceneDidBecomeActive()
+
+        #expect(appState.dataRevision == revisionBefore + 1)
+    }
+
+    /// A Face ID prompt or a Control Center pull makes the scene inactive and active again without
+    /// leaving the foreground; with nothing pending, no screen reloads.
+    @Test func becomingActiveWithoutLeavingTheForegroundDoesNotReload() async throws {
+        let store = try ParsingTestStore()
+        let appState = try makeRunningApp(store)
+        await appState.retryPendingIngestion()
+        let revisionBefore = appState.dataRevision
+
+        await appState.sceneDidBecomeActive()
+
+        #expect(appState.dataRevision == revisionBefore)
     }
 }

@@ -43,6 +43,10 @@ final class AppState {
     @ObservationIgnored private var hasRetriedPendingIngestion = false
     /// Whether a retry is running, so a launch retry and a foreground retry never overlap.
     @ObservationIgnored private var isRetryingPendingIngestion = false
+    /// Whether the scene went to the background since it was last active, which is when the screens
+    /// need a reload on return: an inactive spell — a Face ID prompt, Control Center — changes
+    /// nothing a capture has not already reported through ``capture(_:)``.
+    @ObservationIgnored private var hasBeenInBackground = false
 
     init(
         container: ModelContainer,
@@ -148,6 +152,7 @@ final class AppState {
 
     /// Writes a pending automatic backup now, with background time to finish it.
     func sceneDidEnterBackground() {
+        hasBeenInBackground = true
         backgroundTasks.run(named: "Zentri backup") { [backupScheduler] in
             await backupScheduler.flush()
         }
@@ -320,16 +325,20 @@ final class AppState {
         }
     }
 
-    /// Catches up after the app returns to the foreground.
+    /// Catches up after the app becomes active again.
     ///
-    /// A Shortcuts capture can run while Zentri is suspended in memory. It writes through this state's
-    /// container, so every screen only needs to reload; and a capture that was cancelled left its
-    /// message `processing`, so pending messages are retried now rather than on the next cold launch.
+    /// Back from the background, every screen reloads once, since the day may have changed. A capture
+    /// made meanwhile has already told the screens through ``capture(_:)``; one that was cancelled left
+    /// its message `processing`, so pending messages are retried now rather than on the next cold
+    /// launch, and the screens reload a second time only when the retry processed something.
     func sceneDidBecomeActive() async {
-        mutate()
+        if hasBeenInBackground {
+            hasBeenInBackground = false
+            mutate()
+        }
         guard settingsStore.settings != nil else { return }
         hasRetriedPendingIngestion = true
-        _ = await runPendingRetry()
+        _ = await runPendingRetry(reloadsWhenNothingWasPending: false)
     }
 
     /// Runs one Shortcuts capture through this state's container and settings, then tells every
@@ -355,7 +364,10 @@ final class AppState {
     /// Only one retry runs at a time, so a launch retry and a foreground retry can never parse the
     /// same row twice. The service is built per retry with a live settings provider, so a
     /// parser-mode change applies to the next attempt instead of freezing today's settings.
-    private func runPendingRetry() async -> Bool {
+    ///
+    /// - Parameter reloadsWhenNothingWasPending: Whether the screens are told even when no message
+    ///   was pending. The foreground retry passes `false`, having reloaded already if it needed to.
+    private func runPendingRetry(reloadsWhenNothingWasPending: Bool = true) async -> Bool {
         guard !isRetryingPendingIngestion else { return true }
         isRetryingPendingIngestion = true
         defer { isRetryingPendingIngestion = false }
@@ -367,9 +379,11 @@ final class AppState {
             snapshotRefresher: snapshotRefresher,
             now: { .now }
         )
-        _ = await service.retryPending()
+        let outcomes = await service.retryPending()
         guard !Task.isCancelled else { return false }
-        mutate()
+        if reloadsWhenNothingWasPending || !outcomes.isEmpty {
+            mutate()
+        }
         return true
     }
 }

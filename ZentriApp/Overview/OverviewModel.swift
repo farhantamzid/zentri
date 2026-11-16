@@ -63,8 +63,7 @@ final class OverviewModel {
                 loadState = .loaded
                 return
             }
-            let messages = try reads.messages()
-            summary = summary(for: accounts, health: IngestionHealth(messages: messages))
+            summary = summary(for: accounts, health: try reads.health())
             loadState = .loaded
         } catch {
             summary = nil

@@ -120,8 +120,14 @@ public final class IngestionService {
     ///
     /// - Returns: One outcome per retried message, in `receivedAt` order.
     public func retryPending() async -> [IngestionOutcome] {
-        let pending = ((try? context.fetch(FetchDescriptor<RawMessage>())) ?? [])
-            .filter { $0.status == .processing && !Self.inFlightMessageIDs.contains($0.id) }
+        let processing = ParseStatus.processing
+        let descriptor = FetchDescriptor<RawMessage>(
+            predicate: #Predicate { $0.status == processing },
+            sortBy: [SortDescriptor(\.receivedAt)]
+        )
+        // Only the pending rows are read; ties on `receivedAt` are broken by id so the order is stable.
+        let pending = ((try? context.fetch(descriptor)) ?? [])
+            .filter { !Self.inFlightMessageIDs.contains($0.id) }
             .sorted { lhs, rhs in
                 if lhs.receivedAt != rhs.receivedAt {
                     return lhs.receivedAt < rhs.receivedAt

@@ -170,13 +170,13 @@ private final class FlakyAccounts {
 private func reads(
     in context: ModelContext,
     accounts: (@MainActor () throws -> [Account])? = nil,
-    messages: (@MainActor () throws -> [RawMessage])? = nil,
+    health: (@MainActor () throws -> IngestionHealth)? = nil,
     categories: (@MainActor () throws -> [ZentriCore.Category])? = nil
 ) -> OverviewStoreReads {
     let real = OverviewStoreReads(context: context)
     return OverviewStoreReads(
         accounts: accounts ?? real.accounts,
-        messages: messages ?? real.messages,
+        health: health ?? real.health,
         categories: categories ?? real.categories
     )
 }
@@ -514,7 +514,7 @@ private func reads(
     try context.save()
 
     let model = OverviewModel(
-        reads: reads(in: context, messages: { throw ReadFailure() }),
+        reads: reads(in: context, health: { throw ReadFailure() }),
         now: { now },
         calendar: calendar
     )
@@ -584,4 +584,28 @@ private func reads(
     model.refresh()
     #expect(model.loadState == .loaded)
     #expect(try #require(model.summary).balance == 1_000)
+}
+
+// MARK: - Health from counted reads (I4)
+
+/// The health card's numbers are read with a count and two one-row fetches instead of loading every
+/// message, and must say exactly what reading every message says.
+@MainActor
+@Test func healthReadFromTheStoreMatchesHealthBuiltFromEveryMessage() throws {
+    let store = try makeStore()
+    let context = store.context
+    #expect(try IngestionHealth(context: context) == IngestionHealth(messages: []))
+
+    addMessage(in: context, receivedAt: date(2026, 3, 10, hour: 8), ingestedAt: date(2026, 3, 10, hour: 9), status: .parsed)
+    addMessage(in: context, receivedAt: date(2026, 3, 11, hour: 8), ingestedAt: date(2026, 3, 11, hour: 9), status: .parsed)
+    addMessage(in: context, receivedAt: date(2026, 3, 12, hour: 8), ingestedAt: date(2026, 3, 12, hour: 9), status: .failed)
+    addMessage(in: context, receivedAt: date(2026, 3, 13, hour: 8), ingestedAt: date(2026, 3, 13, hour: 9), status: .failed)
+    addMessage(in: context, receivedAt: date(2026, 3, 14, hour: 8), ingestedAt: date(2026, 3, 14, hour: 9), status: .ignored)
+    try context.save()
+
+    let everyMessage = IngestionHealth(messages: try context.fetch(FetchDescriptor<RawMessage>()))
+    #expect(try IngestionHealth(context: context) == everyMessage)
+    #expect(everyMessage.failureCount == 2)
+    #expect(everyMessage.lastSuccessAt == date(2026, 3, 11, hour: 9))
+    #expect(everyMessage.lastMessageAt == date(2026, 3, 14, hour: 8))
 }

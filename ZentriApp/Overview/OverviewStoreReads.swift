@@ -9,30 +9,30 @@ import ZentriCore
 struct OverviewStoreReads {
     /// Every account, archived ones included.
     var accounts: @MainActor () throws -> [Account]
-    /// Every raw message.
-    var messages: @MainActor () throws -> [RawMessage]
+    /// What the health card reports about the message archive.
+    var health: @MainActor () throws -> IngestionHealth
     /// Every category, which is how the live `Other` fallback is resolved.
     var categories: @MainActor () throws -> [ZentriCore.Category]
 
     /// Creates reads from supplied closures.
     init(
         accounts: @escaping @MainActor () throws -> [Account],
-        messages: @escaping @MainActor () throws -> [RawMessage],
+        health: @escaping @MainActor () throws -> IngestionHealth,
         categories: @escaping @MainActor () throws -> [ZentriCore.Category]
     ) {
         self.accounts = accounts
-        self.messages = messages
+        self.health = health
         self.categories = categories
     }
 
-    /// Reads every row of each kind from the supplied context.
+    /// Reads every account and category, and the archive's health, from the supplied context.
     ///
     /// Main-actor isolated because a `ModelContext` may only be captured where it is used.
     @MainActor
     init(context: ModelContext) {
         self.init(
             accounts: { try context.fetch(FetchDescriptor<Account>()) },
-            messages: { try context.fetch(FetchDescriptor<RawMessage>()) },
+            health: { try IngestionHealth(context: context) },
             categories: { try context.fetch(FetchDescriptor<ZentriCore.Category>()) }
         )
     }
