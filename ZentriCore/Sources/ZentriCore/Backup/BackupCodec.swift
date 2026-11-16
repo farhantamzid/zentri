@@ -84,10 +84,27 @@ extension BackupCodec {
     /// - Parameter date: The instant to write.
     /// - Returns: The instant's text in UTC, e.g. `2026-11-18T11:06:40.000Z`.
     static func dateText(_ date: Date) -> String {
+        fractionalDateFormatter.string(from: date)
+    }
+
+    /// The formatter for the fractional form a backup writes, built once.
+    ///
+    /// A store holds tens of thousands of dates, and building an `ISO8601DateFormatter` for each one
+    /// cost seconds per backup. The formatter is never mutated after it is built, and
+    /// `ISO8601DateFormatter` is safe to use from several threads at once.
+    nonisolated(unsafe) private static let fractionalDateFormatter = makeDateFormatter(
+        [.withInternetDateTime, .withFractionalSeconds]
+    )
+
+    /// The formatter for the whole-second form other tools write, built once.
+    nonisolated(unsafe) private static let wholeSecondDateFormatter = makeDateFormatter([.withInternetDateTime])
+
+    /// A UTC ISO-8601 formatter with `options`.
+    private static func makeDateFormatter(_ options: ISO8601DateFormatter.Options) -> ISO8601DateFormatter {
         let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        formatter.formatOptions = options
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        return formatter.string(from: date)
+        return formatter
     }
 
     /// The exact decimal an amount's text denotes.
@@ -119,14 +136,7 @@ extension BackupCodec {
     /// - Returns: The instant.
     /// - Throws: ``BackupError/malformedDate(field:value:)`` when the text is not an ISO-8601 instant.
     static func date(from value: String, field: String) throws -> Date {
-        let acceptedForms: [ISO8601DateFormatter.Options] = [
-            [.withInternetDateTime, .withFractionalSeconds],
-            [.withInternetDateTime],
-        ]
-        for options in acceptedForms {
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = options
-            formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        for formatter in [fractionalDateFormatter, wholeSecondDateFormatter] {
             if let date = formatter.date(from: value) {
                 return date
             }

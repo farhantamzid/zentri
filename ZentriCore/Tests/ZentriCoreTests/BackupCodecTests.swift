@@ -424,3 +424,34 @@ private func decodingError(of document: BackupDocument) -> BackupError? {
     #expect(decoded.rawMessages[0].matchedRuleID == backupID(99))
     #expect(decoded.parsingRules.isEmpty)
 }
+
+// MARK: - Date text (I3)
+
+/// The exact text a backup stores for an instant: UTC, millisecond fractions, `Z`. Pinned so a
+/// faster implementation stays byte-compatible with backups already written.
+@Test func backupDateTextIsUnchanged() throws {
+    let cases: [(Date, String)] = [
+        (Date(timeIntervalSince1970: 1_795_000_000), "2026-11-18T11:06:40.000Z"),
+        (Date(timeIntervalSince1970: 1_795_000_000.125), "2026-11-18T11:06:40.125Z"),
+        (Date(timeIntervalSince1970: 0), "1970-01-01T00:00:00.000Z"),
+        (Date(timeIntervalSince1970: 951_782_400.5), "2000-02-29T00:00:00.500Z"),
+    ]
+    for (date, text) in cases {
+        #expect(BackupCodec.dateText(date) == text)
+        #expect(try BackupCodec.date(from: text, field: "test") == date)
+    }
+    // The whole-second form other tools write is still read, and nonsense is still refused.
+    #expect(try BackupCodec.date(from: "2026-11-18T11:06:40Z", field: "test") == Date(timeIntervalSince1970: 1_795_000_000))
+    #expect(throws: BackupError.self) { try BackupCodec.date(from: "18/11/2026", field: "test") }
+}
+
+/// A coarse guard: a store of a few thousand rows holds tens of thousands of dates, and writing and
+/// reading them must not take seconds. Building a formatter per date did.
+@Test func backupDatesAreWrittenAndReadQuickly() throws {
+    let start = ContinuousClock.now
+    for index in 0..<20_000 {
+        let text = BackupCodec.dateText(Date(timeIntervalSince1970: 1_795_000_000 + Double(index)))
+        _ = try BackupCodec.date(from: text, field: "test")
+    }
+    #expect(ContinuousClock.now - start < .seconds(3))
+}
