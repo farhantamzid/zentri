@@ -96,7 +96,7 @@ enum ModelTestFailure: Error, Sendable, Equatable {
     )
     let engine = modelEngine(client: StubModelClient(result: .success(output)))
 
-    guard let draft = draft(from: await engine.parse(modelInput("MYBANK: RM1,234.50 received from ACME Corp"))) else {
+    guard let draft = draft(from: await engine.parse(modelInput("MYBANK: RM1,234.50 received from ACME Corp. Bal RM5,000.00"))) else {
         Issue.record("expected a transaction")
         return
     }
