@@ -289,4 +289,123 @@ struct CaptureSMSHandlerTests {
 
         #expect(recorder.modes == [.rules, .hybrid])
     }
+
+    // MARK: - Hybrid model failure (I5)
+
+    /// A model that timed out on a message no rule covers leaves it failed and retryable, and the
+    /// Shortcut says it could not be read — never that it is not a transaction.
+    @Test func aHybridModelTimeoutIsReportedAsAFailureNotAsNotATransaction() async throws {
+        let store = try ParsingTestStore()
+        let timeout = ParseDiagnostic(
+            code: .modelTimedOut,
+            field: "model",
+            message: "The on-device model took too long to answer."
+        )
+        let handler = CaptureSMSHandler(
+            container: store.container,
+            settingsStore: try completedSettings(mode: .hybrid),
+            parserBuilder: CaptureHybridBuilder(model: .failure([timeout])),
+            snapshotRefresher: CaptureSpyRefresher()
+        )
+
+        let outcome = await handler.handle(captureRequest(text: "MYBANK: a new format nobody wrote a rule for."))
+
+        #expect(outcome == .failed([timeout]))
+        #expect(try store.context.fetch(FetchDescriptor<RawMessage>()).map(\.status) == [.failed])
+        let text = dialog(handler, outcome)
+        #expect(text.hasPrefix("Zentri couldn't read this message."))
+        #expect(text.hasSuffix("It's saved in the message inbox."))
+        #expect(text != "This message isn't a transaction, so nothing was added.")
+    }
+
+    // MARK: - Unreadable settings (I8)
+
+    /// Settings that exist but cannot be read are not unfinished setup: the accounts and rules are
+    /// still there, so the message is archived for the retry that runs once the settings are fixed.
+    @Test func unreadableSettingsArchiveTheMessageForALaterRetry() async throws {
+        let store = try ParsingTestStore()
+        let refresher = CaptureSpyRefresher()
+        let settings = SettingsStore(repository: UnreadableSettingsRepository())
+        try? settings.load()
+        let handler = makeHandler(store, settings: settings, refresher: refresher)
+        let request = captureRequest()
+
+        let outcome = await handler.handle(request)
+
+        let messages = try store.context.fetch(FetchDescriptor<RawMessage>())
+        #expect(messages.map(\.status) == [.processing])
+        #expect(messages.first?.text == request.text)
+        #expect(try store.context.fetchCount(FetchDescriptor<ZentriCore.Transaction>()) == 0)
+        #expect(
+            dialog(handler, outcome)
+                == "Zentri saved this message. Open Zentri to fix its settings, and the message will be read then."
+        )
+        #expect(await refresher.refreshCount == 1)
+    }
+
+    /// A settings file that became readable since the last attempt is read again, so one failed
+    /// read does not refuse every later capture in the same process.
+    @Test func settingsThatBecameReadableAreReadAgainBeforeCapturing() async throws {
+        let store = try ParsingTestStore()
+        let repository = UnreadableSettingsRepository()
+        let settings = SettingsStore(repository: repository)
+        try? settings.load()
+        repository.save(AppSettings(parserMode: .rules))
+        let handler = makeHandler(store, settings: settings)
+
+        let outcome = await handler.handle(captureRequest())
+
+        guard case .transaction = outcome else {
+            Issue.record("Expected a transaction, got \(outcome)")
+            return
+        }
+        #expect(settings.loadFailure == nil)
+    }
+
+    /// The retry the app runs once the settings are readable finishes the archived message.
+    @Test func aMessageArchivedWhileSettingsWereUnreadableIsReadByTheRetry() async throws {
+        let store = try ParsingTestStore()
+        let settings = SettingsStore(repository: UnreadableSettingsRepository())
+        try? settings.load()
+        _ = await makeHandler(store, settings: settings).handle(captureRequest())
+
+        let service = IngestionService(
+            context: store.context,
+            settings: { .defaultValue },
+            parserBuilder: CaptureStubParserBuilder(result: .transaction(kfcDraft)),
+            snapshotRefresher: CaptureSpyRefresher(),
+            now: { .now }
+        )
+        let outcomes = await service.retryPending()
+
+        guard case .transaction = outcomes.first else {
+            Issue.record("Expected the retry to record a transaction, got \(outcomes)")
+            return
+        }
+        #expect(try store.context.fetch(FetchDescriptor<RawMessage>()).map(\.status) == [.parsed])
+    }
+
+    /// Empty text is still not a message, even while the settings are unreadable.
+    @Test func emptyTextIsNotArchivedWhileSettingsAreUnreadable() async throws {
+        let store = try ParsingTestStore()
+        let settings = SettingsStore(repository: UnreadableSettingsRepository())
+        try? settings.load()
+        let handler = makeHandler(store, settings: settings)
+
+        _ = await handler.handle(captureRequest(text: "   "))
+
+        #expect(try store.context.fetchCount(FetchDescriptor<RawMessage>()) == 0)
+    }
+}
+
+/// A builder whose hybrid parser finds no rule match and gets `model` from the on-device model.
+private struct CaptureHybridBuilder: ParserBuilding {
+    let model: ParseResult
+
+    func makeParser(for mode: ParserMode, rules: [ParsingRuleSpec]) -> any TransactionParsing {
+        HybridParsingEngine(
+            rules: CaptureStubParser(result: .notTransaction),
+            model: CaptureStubParser(result: model)
+        )
+    }
 }

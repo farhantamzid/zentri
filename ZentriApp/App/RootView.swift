@@ -48,6 +48,10 @@ struct RootView: View {
             // scheduler compares the data with the folder's newest snapshot and writes only if it
             // differs.
             appState.backupScheduler.schedule()
+        }
+        .task(id: appState.settingsStore.settings != nil) {
+            // Runs at launch, and again once settings become readable after recovery, so a message a
+            // capture archived while the settings were unreadable is read without another relaunch.
             await appState.retryPendingIngestion()
         }
         .task {

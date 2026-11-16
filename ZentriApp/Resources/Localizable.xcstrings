@@ -6485,6 +6485,18 @@
           }
         }
       }
+    },
+    "Zentri saved this message. Open Zentri to fix its settings, and the message will be read then.": {
+      "comment": "Shortcut dialog when the saved settings could not be read; the message is kept and read after the settings are repaired.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zentri saved this message. Open Zentri to fix its settings, and the message will be read then."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

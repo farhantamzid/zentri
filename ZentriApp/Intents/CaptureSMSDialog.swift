@@ -80,6 +80,12 @@ struct CaptureSMSDialog {
                 comment: "Shortcut dialog when the automation passed empty text. SMS Text is the action's parameter name."
             )
         }
+        if has(field: CaptureSMSDiagnostics.settingsField), !has(field: "storage") {
+            return LocalizedStringResource(
+                "Zentri saved this message. Open Zentri to fix its settings, and the message will be read then.",
+                comment: "Shortcut dialog when the saved settings could not be read; the message is kept and read after the settings are repaired."
+            )
+        }
         if has(field: "storage") {
             return LocalizedStringResource(
                 "Zentri couldn't save this message. Try again.",

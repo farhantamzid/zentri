@@ -32,8 +32,17 @@ final class CaptureSMSHandler {
     /// A capture before onboarding has finished is refused, since there are no settings and no account
     /// to file it under, and so is empty text. Neither is archived. When the request names no account
     /// the pipeline resolves one itself.
+    ///
+    /// Settings that exist but could not be read are read again first, since the failure is
+    /// remembered for the life of the process. If they are still unreadable the message is archived
+    /// unparsed, as `processing`: the accounts and rules are intact, and the retry that runs once the
+    /// settings are fixed reads it. A real message is never dropped.
     func handle(_ request: IngestionRequest) async -> IngestionOutcome {
-        guard settingsStore.settings != nil else {
+        if settingsStore.settings == nil, settingsStore.loadFailure != nil {
+            try? settingsStore.load()
+        }
+        let settingsAreUnreadable = settingsStore.settings == nil && settingsStore.loadFailure != nil
+        guard settingsStore.settings != nil || settingsAreUnreadable else {
             return .failed([CaptureSMSDiagnostics.setupIncomplete])
         }
         guard !request.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -47,6 +56,9 @@ final class CaptureSMSHandler {
             snapshotRefresher: snapshotRefresher,
             now: { .now }
         )
+        if settingsAreUnreadable {
+            return await service.archiveForRetry(request, reporting: CaptureSMSDiagnostics.settingsUnreadable)
+        }
         return await service.ingest(request)
     }
 
