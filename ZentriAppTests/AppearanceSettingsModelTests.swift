@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Testing
 import ZentriCore
 @testable import ZentriApp
@@ -140,4 +141,57 @@ private func makeStore() throws -> SettingsStore {
     #expect(store.settings?.faceIDEnabled == false)
     // Nothing else changes.
     #expect(store.settings?.currencyCode == settings.currencyCode)
+}
+
+@MainActor
+@Test func appearanceModeSavesStraightAwayAndKeepsEverythingElse() async throws {
+    let store = try makeStore()
+    var applied: [AppSettings] = []
+    let model = AppearanceSettingsModel(settingsStore: store, biometric: StubBiometrics()) { settings in
+        applied.append(settings)
+        try store.save(settings)
+    }
+    #expect(model.appearanceMode == .system)
+
+    await model.setAppearanceMode(.dark)
+
+    #expect(store.settings?.appearanceMode == .dark)
+    #expect(model.appearanceMode == .dark)
+    #expect(model.savedCount == 1)
+    var expected = AppSettings.defaultValue
+    expected.appearanceMode = .dark
+    #expect(applied == [expected])
+
+    await model.setAppearanceMode(.system)
+    #expect(store.settings == .defaultValue)
+}
+
+@MainActor
+@Test func pickingTheSavedAppearanceModeDoesNotSave() throws {
+    let store = try makeStore()
+    let model = AppearanceSettingsModel(settingsStore: store, biometric: StubBiometrics()) { _ in
+        Issue.record("Picking the saved mode must not save.")
+    }
+
+    model.appearanceMode = .system
+
+    #expect(model.savedCount == 0)
+}
+
+@MainActor
+@Test func aFailedAppearanceSaveKeepsTheOldModeAndReportsIt() async throws {
+    let store = try makeStore()
+    let model = AppearanceSettingsModel(settingsStore: store, biometric: StubBiometrics()) { _ in throw SaveFailure.unwritable }
+
+    await model.setAppearanceMode(.light)
+
+    #expect(store.settings?.appearanceMode == .system)
+    #expect(model.appearanceMode == .system)
+    #expect(model.failureMessage != nil)
+}
+
+@Test func appearanceModesMapToColorSchemes() {
+    #expect(AppearanceMode.system.colorScheme == nil)
+    #expect(AppearanceMode.light.colorScheme == .light)
+    #expect(AppearanceMode.dark.colorScheme == .dark)
 }

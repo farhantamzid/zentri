@@ -57,3 +57,13 @@ public enum ImportMode: String, Codable, CaseIterable, Sendable {
     case replace
     case merge
 }
+
+/// Whether the app draws in light or dark, or follows the device.
+public enum AppearanceMode: String, Codable, CaseIterable, Sendable {
+    /// Follow the device's appearance setting.
+    case system
+    /// Always draw in the light appearance.
+    case light
+    /// Always draw in the dark appearance.
+    case dark
+}

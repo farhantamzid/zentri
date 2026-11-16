@@ -1,7 +1,7 @@
 import SwiftUI
 import ZentriCore
 
-/// Settings › Appearance: the display currency, number grouping with a live preview, and Face ID.
+/// Settings › Appearance: light or dark mode, the display currency, number grouping with a live preview, and Face ID.
 ///
 /// A currency change asks for confirmation first — amounts are never converted — while a grouping
 /// change applies at once, and the preview re-formats from the saved settings straight away.

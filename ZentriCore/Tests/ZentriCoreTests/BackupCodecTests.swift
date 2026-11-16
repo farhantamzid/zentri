@@ -21,6 +21,7 @@ private func fixtureSettings() -> BackupSettings {
     BackupSettings(
         currencyCode: "MYR",
         numberGrouping: .indian,
+        appearanceMode: .dark,
         parserMode: .rules,
         faceIDEnabled: true,
         iCloudBackupEnabled: true,
@@ -232,8 +233,8 @@ private func decodingError(of document: BackupDocument) -> BackupError? {
     // Settings travel as their own shape, which is what keeps a device-specific folder bookmark out.
     let settings = try #require(json["settings"] as? [String: Any])
     #expect(Set(settings.keys) == Set([
-        "currencyCode", "numberGrouping", "parserMode", "faceIDEnabled", "iCloudBackupEnabled",
-        "lastBackupAt", "schemaVersion",
+        "currencyCode", "numberGrouping", "appearanceMode", "parserMode", "faceIDEnabled",
+        "iCloudBackupEnabled", "lastBackupAt", "schemaVersion",
     ]))
 }
 
@@ -454,4 +455,43 @@ private func decodingError(of document: BackupDocument) -> BackupError? {
         _ = try BackupCodec.date(from: text, field: "test")
     }
     #expect(ContinuousClock.now - start < .seconds(3))
+}
+
+// MARK: - Appearance mode
+
+@Test func backupsCarryTheAppearanceModeIntoTheRestoredSettings() throws {
+    let decoded = try BackupCodec.decode(try BackupCodec.encode(fixtureDocument()))
+    #expect(decoded.settings.appearanceMode == .dark)
+    #expect(try decoded.settings.makeAppSettings().appearanceMode == .dark)
+    #expect(BackupSettings(try decoded.settings.makeAppSettings()) == decoded.settings)
+}
+
+/// A backup written before the appearance mode existed still restores, following the device.
+@Test func aBackupWithoutAnAppearanceModeRestoresFollowingTheDevice() throws {
+    for stored: Any? in [nil, "sepia"] {
+        let data = try BackupCodec.encode(fixtureDocument())
+        var json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var settings = try #require(json["settings"] as? [String: Any])
+        settings["appearanceMode"] = stored
+        json["settings"] = settings
+        let edited = try JSONSerialization.data(withJSONObject: json)
+
+        let decoded = try BackupCodec.decode(edited)
+
+        #expect(decoded.settings.appearanceMode == .system)
+        #expect(decoded.settings.currencyCode == "MYR")
+        #expect(try decoded.settings.makeAppSettings().appearanceMode == .system)
+    }
+}
+
+/// The fields a backup has always carried stay required.
+@Test func aBackupSettingsBlockMissingAnOlderFieldIsStillRejected() throws {
+    let data = try BackupCodec.encode(fixtureDocument())
+    var json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+    var settings = try #require(json["settings"] as? [String: Any])
+    settings["currencyCode"] = nil
+    json["settings"] = settings
+    let edited = try JSONSerialization.data(withJSONObject: json)
+
+    #expect(throws: BackupError.self) { try BackupCodec.decode(edited) }
 }

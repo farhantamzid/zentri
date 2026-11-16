@@ -6,6 +6,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var currencyCode: String
     /// How amounts are grouped for display.
     public var numberGrouping: NumberGrouping
+    /// Whether the app draws in light or dark, or follows the device.
+    public var appearanceMode: AppearanceMode
     /// The parser engine used for new raw messages.
     public var parserMode: ParserMode
     /// Whether the app requires Face ID to unlock.
@@ -20,6 +22,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public init(
         currencyCode: String = "USD",
         numberGrouping: NumberGrouping = .western,
+        appearanceMode: AppearanceMode = .system,
         parserMode: ParserMode = .hybrid,
         faceIDEnabled: Bool = false,
         iCloudBackupEnabled: Bool = false,
@@ -28,6 +31,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     ) {
         self.currencyCode = currencyCode
         self.numberGrouping = numberGrouping
+        self.appearanceMode = appearanceMode
         self.parserMode = parserMode
         self.faceIDEnabled = faceIDEnabled
         self.iCloudBackupEnabled = iCloudBackupEnabled
@@ -41,6 +45,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case currencyCode
         case numberGrouping
+        case appearanceMode
         case parserMode
         case faceIDEnabled
         case iCloudBackupEnabled
@@ -65,6 +70,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         self.init(
             currencyCode: value(.currencyCode, default: defaults.currencyCode),
             numberGrouping: value(.numberGrouping, default: defaults.numberGrouping),
+            appearanceMode: value(.appearanceMode, default: defaults.appearanceMode),
             parserMode: value(.parserMode, default: defaults.parserMode),
             faceIDEnabled: value(.faceIDEnabled, default: defaults.faceIDEnabled),
             iCloudBackupEnabled: value(.iCloudBackupEnabled, default: defaults.iCloudBackupEnabled),

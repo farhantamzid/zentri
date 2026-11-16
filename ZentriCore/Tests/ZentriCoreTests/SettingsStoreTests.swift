@@ -26,6 +26,7 @@ import Testing
     let settings = AppSettings.defaultValue
     #expect(settings.currencyCode == "USD")
     #expect(settings.numberGrouping == .western)
+    #expect(settings.appearanceMode == .system)
     #expect(settings.parserMode == .hybrid)
     #expect(settings.faceIDEnabled == false)
     #expect(settings.iCloudBackupEnabled == false)
@@ -88,7 +89,45 @@ import Testing
         try JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any]
     )
     #expect(Set(object.keys) == [
-        "currencyCode", "numberGrouping", "parserMode", "faceIDEnabled",
+        "currencyCode", "numberGrouping", "appearanceMode", "parserMode", "faceIDEnabled",
         "iCloudBackupEnabled", "lastBackupAt", "schemaVersion",
     ])
+}
+
+// MARK: - Appearance mode
+
+/// A settings file written before the appearance mode existed follows the device.
+@Test func settingsWithoutAnAppearanceModeFollowTheDevice() throws {
+    let json = """
+    {
+      "currencyCode": "BDT",
+      "numberGrouping": "indian",
+      "parserMode": "rules",
+      "faceIDEnabled": true,
+      "iCloudBackupEnabled": false,
+      "schemaVersion": 1
+    }
+    """
+    let decoded = try JSONDecoder().decode(AppSettings.self, from: Data(json.utf8))
+    #expect(decoded.appearanceMode == .system)
+    #expect(decoded.currencyCode == "BDT")
+    #expect(decoded.faceIDEnabled == true)
+}
+
+@Test func anUnknownAppearanceModeFollowsTheDevice() throws {
+    let json = #"{ "currencyCode": "EUR", "appearanceMode": "sepia" }"#
+    let decoded = try JSONDecoder().decode(AppSettings.self, from: Data(json.utf8))
+    #expect(decoded.appearanceMode == .system)
+    #expect(decoded.currencyCode == "EUR")
+}
+
+@Test(arguments: AppearanceMode.allCases)
+func appearanceModeRoundTrips(_ mode: AppearanceMode) throws {
+    let url = FileManager.default.temporaryDirectory.appending(path: "settings-\(UUID()).json")
+    defer { try? FileManager.default.removeItem(at: url) }
+    let store = FileSettingsStore(fileURL: url)
+    var settings = AppSettings.defaultValue
+    settings.appearanceMode = mode
+    try store.save(settings)
+    #expect(try store.load()?.appearanceMode == mode)
 }

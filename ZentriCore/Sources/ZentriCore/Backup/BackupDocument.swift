@@ -68,6 +68,8 @@ public struct BackupSettings: Codable, Equatable, Sendable {
     public var currencyCode: String
     /// How amounts are grouped for display.
     public var numberGrouping: NumberGrouping
+    /// Whether the app draws in light or dark, or follows the device.
+    public var appearanceMode: AppearanceMode
     /// The parser engine used for new raw messages.
     public var parserMode: ParserMode
     /// Whether the app requires Face ID to unlock.
@@ -82,6 +84,7 @@ public struct BackupSettings: Codable, Equatable, Sendable {
     public init(
         currencyCode: String,
         numberGrouping: NumberGrouping,
+        appearanceMode: AppearanceMode = .system,
         parserMode: ParserMode,
         faceIDEnabled: Bool,
         iCloudBackupEnabled: Bool,
@@ -90,6 +93,7 @@ public struct BackupSettings: Codable, Equatable, Sendable {
     ) {
         self.currencyCode = currencyCode
         self.numberGrouping = numberGrouping
+        self.appearanceMode = appearanceMode
         self.parserMode = parserMode
         self.faceIDEnabled = faceIDEnabled
         self.iCloudBackupEnabled = iCloudBackupEnabled
@@ -104,11 +108,43 @@ public struct BackupSettings: Codable, Equatable, Sendable {
         self.init(
             currencyCode: settings.currencyCode,
             numberGrouping: settings.numberGrouping,
+            appearanceMode: settings.appearanceMode,
             parserMode: settings.parserMode,
             faceIDEnabled: settings.faceIDEnabled,
             iCloudBackupEnabled: settings.iCloudBackupEnabled,
             lastBackupAt: settings.lastBackupAt.map(BackupCodec.dateText),
             schemaVersion: settings.schemaVersion
+        )
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case currencyCode
+        case numberGrouping
+        case appearanceMode
+        case parserMode
+        case faceIDEnabled
+        case iCloudBackupEnabled
+        case lastBackupAt
+        case schemaVersion
+    }
+
+    /// Reads a backup's settings block.
+    ///
+    /// Every field a backup has always carried is required, as before. The appearance mode arrived
+    /// later, so a backup written before it — or one naming a mode this version cannot read — follows
+    /// the device instead of failing the whole restore.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            currencyCode: try container.decode(String.self, forKey: .currencyCode),
+            numberGrouping: try container.decode(NumberGrouping.self, forKey: .numberGrouping),
+            appearanceMode: ((try? container.decodeIfPresent(AppearanceMode.self, forKey: .appearanceMode)) ?? nil)
+                ?? .system,
+            parserMode: try container.decode(ParserMode.self, forKey: .parserMode),
+            faceIDEnabled: try container.decode(Bool.self, forKey: .faceIDEnabled),
+            iCloudBackupEnabled: try container.decode(Bool.self, forKey: .iCloudBackupEnabled),
+            lastBackupAt: try container.decodeIfPresent(String.self, forKey: .lastBackupAt),
+            schemaVersion: try container.decode(Int.self, forKey: .schemaVersion)
         )
     }
 
@@ -120,6 +156,7 @@ public struct BackupSettings: Codable, Equatable, Sendable {
         AppSettings(
             currencyCode: currencyCode,
             numberGrouping: numberGrouping,
+            appearanceMode: appearanceMode,
             parserMode: parserMode,
             faceIDEnabled: faceIDEnabled,
             iCloudBackupEnabled: iCloudBackupEnabled,
