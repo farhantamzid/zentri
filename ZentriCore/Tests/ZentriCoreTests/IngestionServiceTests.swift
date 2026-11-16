@@ -120,6 +120,73 @@ private struct CancellingParser: TransactionParsing {
     }
 }
 
+/// A parser that holds its first call until the test releases it, so a test can act while a capture
+/// is suspended in the parser. Later calls answer at once with the same result.
+private final class GatedParser: @unchecked Sendable, TransactionParsing {
+    private let lock = NSLock()
+    private let result: ParseResult
+    private var calls = 0
+    private var hasEntered = false
+    private var isReleased = false
+    private var gate: CheckedContinuation<Void, Never>?
+    private var enteredWaiter: CheckedContinuation<Void, Never>?
+
+    init(result: ParseResult) {
+        self.result = result
+    }
+
+    func parse(_ input: ParseInput) async -> ParseResult {
+        let isFirst = lock.withLock { () -> Bool in
+            calls += 1
+            return calls == 1
+        }
+        if isFirst {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                let (waiter, releaseNow) = lock.withLock { () -> (CheckedContinuation<Void, Never>?, Bool) in
+                    hasEntered = true
+                    let waiter = enteredWaiter
+                    enteredWaiter = nil
+                    if !isReleased {
+                        gate = continuation
+                    }
+                    return (waiter, isReleased)
+                }
+                waiter?.resume()
+                if releaseNow {
+                    continuation.resume()
+                }
+            }
+        }
+        return result
+    }
+
+    /// Returns once the first parse is suspended at the gate.
+    func waitUntilEntered() async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            let entered = lock.withLock { () -> Bool in
+                if !hasEntered {
+                    enteredWaiter = continuation
+                }
+                return hasEntered
+            }
+            if entered {
+                continuation.resume()
+            }
+        }
+    }
+
+    /// Lets the first parse finish.
+    func release() {
+        let continuation = lock.withLock { () -> CheckedContinuation<Void, Never>? in
+            isReleased = true
+            let continuation = gate
+            gate = nil
+            return continuation
+        }
+        continuation?.resume()
+    }
+}
+
 /// A parser builder that hands back one scripted parser and records what it was asked for.
 private struct StubParserBuilder: ParserBuilding {
     let parser: any TransactionParsing
@@ -155,25 +222,29 @@ private enum SaveFailure: Error {
     case storeIsUnwritable
 }
 
-/// A save hook that fails a set number of times and then saves normally.
+/// A save hook that fails chosen saves and lets every other one write.
 ///
-/// A store that is briefly unwritable is what the fallback path defends against, so the first save
-/// is made to throw while the retry is allowed to succeed: that is the only combination where a
+/// A store that is briefly unwritable is what the fallback path defends against, so one save is made
+/// to throw while the following ones are allowed to succeed: that is the only combination where a
 /// half-written row would become visible.
 @MainActor
 private final class FailingSaveScript {
-    /// The number of saves that throw before the context is allowed to write.
-    private let failures: Int
+    /// The 1-based numbers of the saves that throw.
+    private let failingSaves: Set<Int>
     /// How many times the service asked the script to save.
     private(set) var invocations = 0
 
     init(failingTimes failures: Int) {
-        self.failures = failures
+        self.failingSaves = Set(1...max(failures, 1)).filter { _ in failures > 0 }
+    }
+
+    init(failingSaves: Set<Int>) {
+        self.failingSaves = failingSaves
     }
 
     func save(_ context: ModelContext) throws {
         invocations += 1
-        guard invocations > failures else { throw SaveFailure.storeIsUnwritable }
+        guard !failingSaves.contains(invocations) else { throw SaveFailure.storeIsUnwritable }
         try context.save()
     }
 }
@@ -240,13 +311,14 @@ private func insertProcessingMessage(
     text: String = "MYBANK: RM12.50 spent at KFC on 17/11/26",
     sender: String? = "MYBANK",
     receivedAt: Date = ingestNow,
+    ingestedAt: Date? = nil,
     accountID: UUID? = nil
 ) throws -> RawMessage {
     let message = RawMessage(
         text: text,
         sender: sender,
         receivedAt: receivedAt,
-        ingestedAt: receivedAt,
+        ingestedAt: ingestedAt ?? receivedAt,
         status: .processing,
         fingerprint: Dedupe.fingerprint(
             text: text, sender: sender, accountID: accountID, receivedAt: receivedAt
@@ -587,10 +659,11 @@ private func fetchCheckpoints(_ context: ModelContext) throws -> [BalanceCheckpo
 
 /// A save failure must leave the archive with one `failed` row and nothing else.
 ///
-/// The parser succeeds here, so the message and its transaction are inserted before the save is
-/// made to throw. Only the rollback can remove them; if it leaves them attached, the fallback save
-/// writes the `parsed` row and its transaction alongside the `failed` one and the message is counted
-/// twice. One save after the failure is also the contract: the fallback stores the message once.
+/// Here the very first save — the `processing` row stored before parsing — is made to throw. Only
+/// the rollback can remove that row; if it leaves it attached, the fallback save writes it alongside
+/// the `failed` one and the message is counted twice. One save after the failure is also the
+/// contract: the fallback stores the message once. A failure of the later transaction save is
+/// covered by `ingestMarksTheStoredMessageFailedWhenTheTransactionCannotBeSaved`.
 @Test @MainActor func ingestStoresOneFailedMessageWhenTheSaveThrows() async throws {
     let store = try makeStore()
     let refresher = SpySnapshotRefresher()
@@ -1103,4 +1176,137 @@ private func makeTwoAccountStoreWithSavingsRule() throws -> (store: TestStore, s
     #expect(failed.status == .failed)
     #expect(try store.context.fetchCount(FetchDescriptor<Transaction>()) == 0)
     #expect(await refresher.refreshCount == 0)
+}
+
+// MARK: - Store before parsing (I1)
+
+@Test @MainActor func ingestStoresTheMessageAsProcessingBeforeParsing() async throws {
+    let store = try makeStore()
+    let parser = GatedParser(result: .transaction(sampleDraft()))
+    let service = store.service(parser: parser, refresher: SpySnapshotRefresher())
+    let request = sampleRequest()
+
+    let capture = Task { @MainActor in await service.ingest(request) }
+    await parser.waitUntilEntered()
+
+    // The process could be killed here: the message must already be in the archive, retryable.
+    let pending = try fetchMessages(store.context)
+    #expect(pending.count == 1)
+    #expect(pending.first?.status == .processing)
+    #expect(pending.first?.text == request.text)
+    #expect(pending.first?.fingerprint == Dedupe.fingerprint(
+        text: request.text, sender: request.sender, accountID: store.accounts[0].id, receivedAt: request.receivedAt
+    ))
+
+    parser.release()
+    let outcome = await capture.value
+
+    let transaction = try #require(try fetchTransactions(store.context).first)
+    #expect(outcome == .transaction(transaction.id))
+    let messages = try fetchMessages(store.context)
+    #expect(messages.count == 1)
+    #expect(messages.first?.status == .parsed)
+    #expect(messages.first?.transaction?.id == transaction.id)
+}
+
+@Test @MainActor func aSecondCaptureOfTheSameMessageDuringAParseIsADuplicate() async throws {
+    let store = try makeStore()
+    let parser = GatedParser(result: .transaction(sampleDraft(balanceAfter: cents(50_000))))
+    let service = store.service(parser: parser, refresher: SpySnapshotRefresher())
+    let request = sampleRequest()
+
+    let first = Task { @MainActor in await service.ingest(request) }
+    await parser.waitUntilEntered()
+    let second = await service.ingest(request)
+    parser.release()
+    let firstOutcome = await first.value
+
+    #expect(second == .duplicate)
+    if case .transaction = firstOutcome {} else { Issue.record("expected the first capture to be a transaction") }
+    #expect(try store.context.fetchCount(FetchDescriptor<Transaction>()) == 1)
+    #expect(try store.context.fetchCount(FetchDescriptor<BalanceCheckpoint>()) == 1)
+    let statuses = try fetchMessages(store.context).map(\.status).sorted { $0.rawValue < $1.rawValue }
+    #expect(statuses == [.duplicate, .parsed])
+}
+
+@Test @MainActor func retryPendingSkipsAMessageStillBeingIngested() async throws {
+    let store = try makeStore()
+    let parser = GatedParser(result: .transaction(sampleDraft()))
+    let capturing = store.service(parser: parser, refresher: SpySnapshotRefresher())
+    let retrying = store.service(parser: StubParser(result: .transaction(sampleDraft())), refresher: SpySnapshotRefresher())
+
+    let capture = Task { @MainActor in await capturing.ingest(sampleRequest()) }
+    await parser.waitUntilEntered()
+    let retried = await retrying.retryPending()
+    parser.release()
+    _ = await capture.value
+
+    #expect(retried.isEmpty)
+    #expect(try store.context.fetchCount(FetchDescriptor<Transaction>()) == 1)
+    #expect(try fetchMessages(store.context).map(\.status) == [.parsed])
+}
+
+@Test @MainActor func ingestMarksTheStoredMessageFailedWhenTheTransactionCannotBeSaved() async throws {
+    let store = try makeStore()
+    let refresher = SpySnapshotRefresher()
+    let service = store.service(
+        parser: StubParser(result: .transaction(sampleDraft(balanceAfter: cents(123_450)))),
+        refresher: refresher
+    )
+    // Save 1 stores the processing row; save 2 is the transaction, which fails.
+    let script = FailingSaveScript(failingSaves: [2])
+    service.saveHandler = { context in try script.save(context) }
+    let request = sampleRequest(accountID: store.accounts[0].id)
+
+    let outcome = await service.ingest(request)
+
+    #expect(outcome == .failed([IngestionDiagnostics.storage]))
+    let messages = try fetchMessages(store.context)
+    #expect(messages.count == 1)
+    #expect(messages.first?.status == .failed)
+    #expect(messages.first?.errorDescription == IngestionDiagnostics.storage.message)
+    #expect(messages.first?.transaction == nil)
+    #expect(try fetchTransactions(store.context).isEmpty)
+    #expect(try fetchCheckpoints(store.context).isEmpty)
+    #expect(await refresher.refreshCount == 1)
+}
+
+// MARK: - Retry timing and account (I6)
+
+@Test @MainActor func retryPendingRecordsTheTransactionWhenTheMessageArrived() async throws {
+    let arrivedAt = ingestNow.addingTimeInterval(-3_600)
+    let store = try makeStore()
+    let message = try insertProcessingMessage(
+        in: store.context,
+        receivedAt: arrivedAt,
+        ingestedAt: arrivedAt,
+        accountID: store.accounts[0].id
+    )
+    let service = store.service(
+        parser: StubParser(result: .transaction(sampleDraft(balanceAfter: cents(90_000)))),
+        refresher: SpySnapshotRefresher()
+    )
+
+    _ = await service.retryPending()
+
+    let transaction = try #require(try fetchTransactions(store.context).first)
+    #expect(transaction.recordedAt == message.ingestedAt)
+    let checkpoint = try #require(try fetchCheckpoints(store.context).first)
+    #expect(checkpoint.recordedAt == message.ingestedAt)
+}
+
+@Test @MainActor func retryPendingFilesAModelAnswerUnderTheAccountTheCaptureChose() async throws {
+    let store = try makeStore(accountNames: ["Everyday", "Savings"])
+    let savings = store.accounts[1]
+    try insertProcessingMessage(in: store.context, accountID: savings.id)
+    let service = store.service(
+        parser: StubParser(result: .transaction(sampleDraft(matchedRuleID: nil))),
+        refresher: SpySnapshotRefresher()
+    )
+
+    let outcomes = await service.retryPending()
+
+    let transaction = try #require(try fetchTransactions(store.context).first)
+    #expect(outcomes == [.transaction(transaction.id)])
+    #expect(transaction.account.id == savings.id)
 }

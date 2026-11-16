@@ -65,6 +65,12 @@ public final class IngestionService {
     /// unsaved message, which no real store can be made to do on demand. It is internal, so only
     /// the test target can replace it; the public initializer stays the only way to build a service.
     internal var saveHandler: @MainActor (ModelContext) throws -> Void = { try $0.save() }
+    /// The archive rows a capture or retry in this process is parsing right now.
+    ///
+    /// Process-wide because a capture and the foreground retry each build their own service over the
+    /// same context: a row stored `processing` by a capture that is still parsing must not be picked
+    /// up and parsed a second time by a retry.
+    private static var inFlightMessageIDs: Set<UUID> = []
 
     /// Creates the service.
     ///
@@ -115,7 +121,7 @@ public final class IngestionService {
     /// - Returns: One outcome per retried message, in `receivedAt` order.
     public func retryPending() async -> [IngestionOutcome] {
         let pending = ((try? context.fetch(FetchDescriptor<RawMessage>())) ?? [])
-            .filter { $0.status == .processing }
+            .filter { $0.status == .processing && !Self.inFlightMessageIDs.contains($0.id) }
             .sorted { lhs, rhs in
                 if lhs.receivedAt != rhs.receivedAt {
                     return lhs.receivedAt < rhs.receivedAt
@@ -180,6 +186,21 @@ public final class IngestionService {
             return archiveDuplicate(request, ingestedAt: ingestedAt, fingerprint: fingerprint)
         }
 
+        // The message is archived before parsing, so a process killed mid-parse (or a parse that
+        // never returns) leaves a `processing` row the next launch retries, and a second capture of
+        // the same text arriving while this one is parsing sees it and stops as a duplicate.
+        let message = makeMessage(
+            for: request,
+            ingestedAt: ingestedAt,
+            status: .processing,
+            fingerprint: fingerprint
+        )
+        guard persist(message) else {
+            return recordStorageFailure(for: request, ingestedAt: ingestedAt, fingerprint: fingerprint)
+        }
+        Self.inFlightMessageIDs.insert(message.id)
+        defer { Self.inFlightMessageIDs.remove(message.id) }
+
         let result = await parse(request, accountID: account?.id)
 
         switch ParseDisposition(classifying: result) {
@@ -191,14 +212,7 @@ public final class IngestionService {
                 guard let ruleAccount = store.ruleAccount(for: draft) else {
                     // No stored rule produced the answer, so nothing says which account it belongs to.
                     let diagnostic = IngestionDiagnostics.chooseAccount
-                    let message = makeMessage(
-                        for: request,
-                        ingestedAt: ingestedAt,
-                        status: .failed,
-                        errorDescription: diagnostic.message,
-                        fingerprint: fingerprint
-                    )
-                    return persist(message)
+                    return finish(message, as: .failed, errorDescription: diagnostic.message)
                         ? .failed([diagnostic])
                         : .failed([diagnostic, IngestionDiagnostics.storage])
                 }
@@ -212,55 +226,63 @@ public final class IngestionService {
                     fingerprint: resolvedFingerprint,
                     request: request,
                     accountID: ruleAccount.id,
-                    excluding: nil
+                    excluding: message.id
                 ) {
-                    return archiveDuplicate(request, ingestedAt: ingestedAt, fingerprint: fingerprint)
+                    return finish(message, as: .duplicate) ? .duplicate : .failed([IngestionDiagnostics.storage])
                 }
                 target = ruleAccount
             }
-            let message = makeMessage(
-                for: request,
-                ingestedAt: ingestedAt,
-                status: .parsed,
-                fingerprint: fingerprint
-            )
-            context.insert(message)
-            return persist(
-                draft: draft,
-                account: target,
-                message: message,
-                request: request,
-                ingestedAt: ingestedAt,
-                fingerprint: fingerprint
-            )
+            return persist(draft: draft, account: target, message: message, recordedAt: ingestedAt)
         case .notTransaction:
-            let message = makeMessage(
-                for: request,
-                ingestedAt: ingestedAt,
-                status: .ignored,
-                fingerprint: fingerprint
-            )
-            return persist(message) ? .notTransaction : .failed([IngestionDiagnostics.storage])
+            return finish(message, as: .ignored) ? .notTransaction : .failed([IngestionDiagnostics.storage])
         case .failed(let diagnostics):
-            let message = makeMessage(
-                for: request,
-                ingestedAt: ingestedAt,
-                status: .failed,
-                errorDescription: IngestionDiagnostics.errorDescription(of: diagnostics),
-                fingerprint: fingerprint
-            )
-            return persist(message) ? .failed(diagnostics) : .failed(diagnostics + [IngestionDiagnostics.storage])
+            return finish(
+                message,
+                as: .failed,
+                errorDescription: IngestionDiagnostics.errorDescription(of: diagnostics)
+            ) ? .failed(diagnostics) : .failed(diagnostics + [IngestionDiagnostics.storage])
         case .cancelled(let diagnostics):
-            // Cancelled work is retryable, never archived as a verdict on the message.
-            let message = makeMessage(
-                for: request,
-                ingestedAt: ingestedAt,
-                status: .processing,
-                fingerprint: fingerprint
-            )
-            let surfaced = diagnostics.isEmpty ? [IngestionDiagnostics.cancelled] : diagnostics
-            return persist(message) ? .failed(surfaced) : .failed(surfaced + [IngestionDiagnostics.storage])
+            // Cancelled work is retryable, never archived as a verdict on the message: the row is
+            // already stored as `processing`, so it is left as it is.
+            return .failed(diagnostics.isEmpty ? [IngestionDiagnostics.cancelled] : diagnostics)
         }
+    }
+
+    /// Archives a message without parsing it, as `processing`, so a later retry reads it.
+    ///
+    /// For a capture that arrives while the settings cannot be read: the accounts and rules are
+    /// still there, but the parser mode is unknown, so the message is kept for the retry that runs
+    /// once the settings are readable again rather than dropped. A repeat of a stored message is
+    /// archived as a duplicate, as ingestion would.
+    ///
+    /// - Returns: ``IngestionOutcome/duplicate`` for a repeat; otherwise a failure carrying
+    ///   `diagnostic`, plus the storage diagnostic when the row could not be saved.
+    public func archiveForRetry(_ request: IngestionRequest, reporting diagnostic: ParseDiagnostic) async -> IngestionOutcome {
+        let outcome = archiveUnparsed(request, reporting: diagnostic)
+        await snapshotRefresher.refresh()
+        return outcome
+    }
+
+    private func archiveUnparsed(_ request: IngestionRequest, reporting diagnostic: ParseDiagnostic) -> IngestionOutcome {
+        let ingestedAt = now()
+        let accountID: UUID?
+        switch resolvedAccount(for: request) {
+        case .resolved(let account):
+            accountID = account.id
+        case .byMatchedRule, .failed:
+            accountID = nil
+        }
+        let fingerprint = Dedupe.fingerprint(
+            text: request.text,
+            sender: request.sender,
+            accountID: accountID,
+            receivedAt: request.receivedAt
+        )
+        if isDuplicate(fingerprint: fingerprint, request: request, accountID: accountID, excluding: nil) {
+            return archiveDuplicate(request, ingestedAt: ingestedAt, fingerprint: fingerprint)
+        }
+        let message = makeMessage(for: request, ingestedAt: ingestedAt, status: .processing, fingerprint: fingerprint)
+        return persist(message) ? .failed([diagnostic]) : .failed([diagnostic, IngestionDiagnostics.storage])
     }
 
     /// Archives a repeat of a stored message, with no transaction and no balance change.
@@ -279,8 +301,10 @@ public final class IngestionService {
     }
 
     /// The retry pipeline for one existing archive row.
+    ///
+    /// The transaction is recorded at the message's `ingestedAt`, as the reprocessor does: recording
+    /// it at the retry instant would place an older bank balance after newer ones.
     private func retry(_ message: RawMessage) async -> IngestionOutcome {
-        let ingestedAt = now()
         let request = IngestionRequest(
             text: message.text,
             sender: message.sender,
@@ -290,9 +314,22 @@ public final class IngestionService {
         // A cancelled retry changes nothing, so the row is still `processing` for the next launch.
         guard !Task.isCancelled else { return .failed([IngestionDiagnostics.cancelled]) }
 
+        Self.inFlightMessageIDs.insert(message.id)
+        defer { Self.inFlightMessageIDs.remove(message.id) }
+
         let fingerprint = message.fingerprint
         let accounts = activeAccounts()
-        let hintedAccount = accounts.count == 1 ? accounts[0] : nil
+        // The capture's account, when it had one, is part of the row's fingerprint; recovering it
+        // keeps the retry on the account the Shortcut chose rather than guessing among several.
+        let capturedAccount = accounts.first { account in
+            Dedupe.fingerprint(
+                text: message.text,
+                sender: message.sender,
+                accountID: account.id,
+                receivedAt: message.receivedAt
+            ) == fingerprint
+        }
+        let hintedAccount = capturedAccount ?? (accounts.count == 1 ? accounts[0] : nil)
 
         if isDuplicate(
             fingerprint: fingerprint,
@@ -300,45 +337,42 @@ public final class IngestionService {
             accountID: hintedAccount?.id,
             excluding: message.id
         ) {
-            message.status = .duplicate
-            message.engine = nil
-            message.matchedRuleID = nil
-            message.errorDescription = nil
-            return save() ? .duplicate : .failed([IngestionDiagnostics.storage])
+            return finish(message, as: .duplicate) ? .duplicate : .failed([IngestionDiagnostics.storage])
         }
 
-        // A row has no account yet, so every rule runs; the matched rule or the single active
-        // account decides where the transaction lands.
-        let result = await parse(request, accountID: nil)
+        // Without a recovered account every rule runs; the matched rule or the single active account
+        // decides where the transaction lands.
+        let result = await parse(request, accountID: capturedAccount?.id)
 
         switch ParseDisposition(classifying: result) {
         case .transaction(let draft):
-            guard let account = retryAccount(for: draft, among: accounts) else {
+            guard let account = capturedAccount ?? retryAccount(for: draft, among: accounts) else {
                 // Nothing identifies an account, so the row stays retryable rather than guessed at.
                 return .failed([IngestionDiagnostics.retryAccount])
             }
-            return persist(
-                draft: draft,
-                account: account,
-                message: message,
-                request: request,
-                ingestedAt: ingestedAt,
-                fingerprint: fingerprint
-            )
+            return persist(draft: draft, account: account, message: message, recordedAt: message.ingestedAt)
         case .notTransaction:
-            message.status = .ignored
-            message.engine = nil
-            message.matchedRuleID = nil
-            message.errorDescription = nil
-            return save() ? .notTransaction : .failed([IngestionDiagnostics.storage])
+            return finish(message, as: .ignored) ? .notTransaction : .failed([IngestionDiagnostics.storage])
         case .failed(let diagnostics):
-            message.status = .failed
-            message.errorDescription = IngestionDiagnostics.errorDescription(of: diagnostics)
-            return save() ? .failed(diagnostics) : .failed(diagnostics + [IngestionDiagnostics.storage])
+            return finish(
+                message,
+                as: .failed,
+                errorDescription: IngestionDiagnostics.errorDescription(of: diagnostics)
+            ) ? .failed(diagnostics) : .failed(diagnostics + [IngestionDiagnostics.storage])
         case .cancelled(let diagnostics):
             // Left `processing`: the message is retried on the next launch.
             return .failed(diagnostics.isEmpty ? [IngestionDiagnostics.cancelled] : diagnostics)
         }
+    }
+
+    /// Records a verdict on a stored row and saves it. A failed save rolls back, leaving the row as
+    /// it was last saved — `processing` — so the next retry reads it again.
+    private func finish(_ message: RawMessage, as status: ParseStatus, errorDescription: String? = nil) -> Bool {
+        message.status = status
+        message.engine = nil
+        message.matchedRuleID = nil
+        message.errorDescription = errorDescription
+        return save()
     }
 
     /// Parses one message with the parser the current settings ask for.
@@ -356,11 +390,11 @@ public final class IngestionService {
 
     // MARK: - Persistence
 
-    /// Writes the parsed transaction, its message, and an optional checkpoint in one save.
+    /// Writes the parsed transaction and an optional checkpoint, linked to the stored message, in
+    /// one save.
     ///
-    /// The message is passed in because ingestion either creates it here or reuses the row a retry
-    /// is reprocessing. A save failure rolls everything back and stores the message on its own as
-    /// `failed`, so no transaction is ever left half-written.
+    /// A save failure rolls the transaction and checkpoint back and marks the message `failed` on
+    /// its own, so no transaction is ever left half-written and the text is never lost.
     ///
     /// The draft is not validated again: every engine runs ``TransactionValidator`` before it
     /// returns a ``ParseResult/transaction(_:)``, and a second pass here would only be a weaker copy
@@ -369,20 +403,21 @@ public final class IngestionService {
         draft: TransactionDraft,
         account: Account,
         message: RawMessage,
-        request: IngestionRequest,
-        ingestedAt: Date,
-        fingerprint: String
+        recordedAt: Date
     ) -> IngestionOutcome {
         let transaction = store.insertTransaction(
             from: draft,
             account: account,
             message: message,
-            recordedAt: ingestedAt
+            recordedAt: recordedAt
         )
         let transactionID = transaction.id
 
         guard save() else {
-            return recordStorageFailure(for: request, ingestedAt: ingestedAt, fingerprint: fingerprint)
+            // The rollback restored the message to its saved `processing` state; if even this save
+            // fails it stays `processing` and is retried.
+            _ = finish(message, as: .failed, errorDescription: IngestionDiagnostics.storage.message)
+            return .failed([IngestionDiagnostics.storage])
         }
         return .transaction(transactionID)
     }
@@ -396,9 +431,8 @@ public final class IngestionService {
 
     /// Stores the message on its own after a failed save, so the text is never lost.
     ///
-    /// The failed attempt has already been rolled back, which discards the message, transaction, and
-    /// checkpoint it inserted, so the row built here is the only pending insert: the archive ends up
-    /// with one `failed` row and nothing else.
+    /// The failed attempt has already been rolled back, which discarded the row it inserted, so the
+    /// row built here is the only pending insert: the archive ends up with one `failed` row.
     private func recordStorageFailure(
         for request: IngestionRequest,
         ingestedAt: Date,
