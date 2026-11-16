@@ -75,18 +75,40 @@ private struct StubParser: TransactionParsing {
     #expect(await engine.parse(hybridInput()) == .notTransaction)
 }
 
-@Test func hybridReportsNotATransactionWhenOneEngineFailsAndTheOtherFindsNone() async {
+/// A positive answer from the model that the message is not a transaction is enough, even when a
+/// rule matched and failed validation.
+@Test func hybridReportsNotATransactionWhenTheModelSaysSoAfterARuleFailed() async {
     let rulesFailModelNone = HybridParsingEngine(
         rules: StubParser(result: .failure([hybridDiagnostic(.invalidAmount)])),
         model: StubParser(result: .notTransaction)
     )
-    let rulesNoneModelFail = HybridParsingEngine(
-        rules: StubParser(result: .notTransaction),
-        model: StubParser(result: .failure([hybridDiagnostic(.modelFailed, field: "model")]))
-    )
 
     #expect(await rulesFailModelNone.parse(hybridInput()) == .notTransaction)
-    #expect(await rulesNoneModelFail.parse(hybridInput()) == .notTransaction)
+}
+
+/// "No rule matched" is not evidence that the message is not a transaction, so a model that could
+/// not answer leaves the message failed — retryable — rather than ignored.
+@Test func hybridReportsTheModelsFailureWhenNoRuleMatched() async {
+    for code in [ParseDiagnostic.Code.modelTimedOut, .modelFailed, .cancelled, .invalidAmount] {
+        let modelDiagnostic = hybridDiagnostic(code, field: "model")
+        let engine = HybridParsingEngine(
+            rules: StubParser(result: .notTransaction),
+            model: StubParser(result: .failure([modelDiagnostic]))
+        )
+
+        #expect(await engine.parse(hybridInput()) == .failure([modelDiagnostic]), "\(code)")
+    }
+}
+
+/// With the model unavailable hybrid falls back to the rules (spec §10.3, §18), so the rules'
+/// "not a transaction" stands.
+@Test func hybridFallsBackToTheRulesWhenTheModelIsUnavailable() async {
+    let engine = HybridParsingEngine(
+        rules: StubParser(result: .notTransaction),
+        model: StubParser(result: .failure([hybridDiagnostic(.modelUnavailable, field: "model")]))
+    )
+
+    #expect(await engine.parse(hybridInput()) == .notTransaction)
 }
 
 @Test func hybridCombinesFailuresWhenNeitherEngineFindsATransaction() async {

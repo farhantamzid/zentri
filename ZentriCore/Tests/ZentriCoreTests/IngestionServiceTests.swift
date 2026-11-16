@@ -1381,3 +1381,22 @@ private func makeTwoAccountStoreWithSavingsRule() throws -> (store: TestStore, s
     #expect(message.status == .processing)
     #expect(try fetchTransactions(store.context).isEmpty)
 }
+
+// MARK: - Hybrid model failure (I5)
+
+@Test @MainActor func aHybridModelTimeoutWithNoRuleMatchIsArchivedAsFailed() async throws {
+    let store = try makeStore()
+    let timeout = ParseDiagnostic(code: .modelTimedOut, field: "model", message: "The on-device model took too long to answer.")
+    let hybrid = HybridParsingEngine(
+        rules: StubParser(result: .notTransaction),
+        model: StubParser(result: .failure([timeout]))
+    )
+    let service = store.service(parser: hybrid, refresher: SpySnapshotRefresher())
+
+    let outcome = await service.ingest(sampleRequest())
+
+    #expect(outcome == .failed([timeout]))
+    let message = try #require(try fetchMessages(store.context).first)
+    #expect(message.status == .failed)
+    #expect(message.errorDescription == timeout.message)
+}

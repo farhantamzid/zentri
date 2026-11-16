@@ -2,10 +2,16 @@
 ///
 /// A validated rule transaction wins outright, so the model is never asked when the user's own
 /// rules already explain the message. When the rules cannot produce a transaction the model
-/// gets its turn, which is what makes hybrid mode useful for new bank formats. A
-/// ``ParseResult/notTransaction`` is reported only when no engine found a transaction and at
-/// least one engine said the message is not one; otherwise both failure lists are combined so
-/// the UI can explain every problem.
+/// gets its turn, which is what makes hybrid mode useful for new bank formats.
+///
+/// When neither finds a transaction:
+/// - the model saying the message is not a transaction is reported as
+///   ``ParseResult/notTransaction``;
+/// - the rules finding nothing while the model fails (a timeout, an error, a cancellation, or an
+///   answer that fails validation) is reported as the model's failure, because "no rule matched"
+///   is not evidence that the message is not a transaction: the message stays retryable;
+/// - an unavailable model falls back to the rules' answer;
+/// - both failing combines both failure lists so the UI can explain every problem.
 public struct HybridParsingEngine: TransactionParsing, Sendable {
     private let rules: any TransactionParsing
     private let model: any TransactionParsing
@@ -22,11 +28,13 @@ public struct HybridParsingEngine: TransactionParsing, Sendable {
         let modelResult = await model.parse(input)
         if case .transaction = modelResult { return modelResult }
 
-        // Neither engine found a transaction. One engine calling the message not-a-transaction
-        // is enough to agree with it; only when both failed are their diagnostics combined.
         switch (rulesResult, modelResult) {
         case (.failure(let rulesDiagnostics), .failure(let modelDiagnostics)):
             return .failure(combinedDiagnostics(rulesDiagnostics, modelDiagnostics))
+        case (.notTransaction, .failure(let modelDiagnostics)):
+            // An unavailable model means hybrid runs on the rules alone, so their answer stands.
+            let modelIsUnavailable = modelDiagnostics.allSatisfy { $0.code == .modelUnavailable }
+            return modelIsUnavailable ? .notTransaction : .failure(modelDiagnostics)
         default:
             return .notTransaction
         }
