@@ -24,9 +24,20 @@ struct OverviewSummary: Sendable, Equatable {
     let recentTransactions: [OverviewTransaction]
     /// How message ingestion has been going.
     let health: IngestionHealth
+    /// The combined balance at the end of each of the last thirty days, oldest first, ending with
+    /// the current balance. The hero's sparkline draws and scrubs it.
+    var balanceHistory: [BalancePoint] = []
 
     /// What this month took in less what it paid out.
     var monthNet: Decimal {
         monthIncome - monthSpend
     }
+}
+
+/// The combined balance at the end of one day.
+struct BalancePoint: Sendable, Equatable {
+    /// The day's first instant.
+    let day: Date
+    /// The combined balance once the day's movements had happened.
+    let balance: Decimal
 }

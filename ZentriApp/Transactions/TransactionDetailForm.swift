@@ -13,20 +13,28 @@ struct TransactionDetailForm: View {
             Color.clear
         } else {
             Form {
-                TransactionDetailHeader(transaction: model.transaction)
-                TransactionDetailFieldsSection(model: model, categories: categories)
-                Section {
-                    Toggle("Transfer", isOn: $model.isTransfer)
-                        .accessibilityIdentifier("transactions.detail.transfer")
-                } footer: {
-                    Text("Transfers move money between your own accounts, so spending and income totals leave them out.")
+                Group {
+                    TransactionDetailHeader(transaction: model.transaction)
+                    TransactionDetailFieldsSection(model: model, categories: categories)
+                    Section {
+                        Toggle("Transfer", isOn: $model.isTransfer)
+                            .tint(Theme.accent)
+                            .accessibilityIdentifier("transactions.detail.transfer")
+                    } footer: {
+                        Text("Transfers move money between your own accounts, so spending and income totals leave them out.")
+                    }
+                    TransactionDetailSourceSection(transaction: model.transaction, matchedRuleName: matchedRuleName)
+                    TransactionDetailActions(
+                        canReprocess: model.canReprocess,
+                        isReprocessing: model.isReprocessing,
+                        onReprocess: reprocess,
+                        onDelete: onDelete
+                    )
                 }
-                TransactionDetailSourceSection(transaction: model.transaction, matchedRuleName: matchedRuleName)
-                if model.canReprocess {
-                    TransactionReprocessSection(isReprocessing: model.isReprocessing, onReprocess: reprocess)
-                }
-                TransactionDeleteSection(onDelete: onDelete)
+                .listRowBackground(Theme.glass)
             }
+            .scrollContentBackground(.hidden)
+            .listSectionSpacing(Theme.Spacing.lg)
         }
     }
 

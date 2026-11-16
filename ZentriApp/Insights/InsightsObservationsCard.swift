@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// What stands out about the month, one sentence per observation.
+/// What stands out about the month, one sentence per observation, each beside an accent tile.
 ///
 /// The screen leaves the card out when there is nothing to say, which only happens for a month with
 /// income and no spending.
@@ -8,13 +8,14 @@ struct InsightsObservationsCard: View {
     let observations: [InsightsObservation]
 
     var body: some View {
-        SectionCard("Observations") {
-            VStack(alignment: .leading, spacing: Theme.Spacing.md) {
-                ForEach(observations, id: \.self) { observation in
-                    InsightsObservationRow(observation: observation)
-                }
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            ForEach(observations, id: \.self) { observation in
+                InsightsObservationRow(observation: observation)
             }
         }
+        .glassCard()
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text("Observations"))
     }
 }
 
@@ -27,5 +28,5 @@ struct InsightsObservationsCard: View {
         ]
     )
     .padding()
-    .background(Theme.canvas)
+    .ambientBackground()
 }

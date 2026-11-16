@@ -10,20 +10,16 @@ struct PrivacyCoverActions: View {
         VStack(spacing: Theme.Spacing.sm) {
             if lock.status == .unavailable {
                 Button("Try Again", action: unlock)
-                    .prominentButtonStyle()
-                    .controlSize(.large)
-                    .frame(minHeight: Theme.Layout.minimumTapTarget)
+                    .buttonStyle(AccentCapsuleButtonStyle())
                     .accessibilityIdentifier("lock.unlock")
                 Button("Turn Off Lock", action: onTurnOff)
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Theme.accent)
                     .frame(minHeight: Theme.Layout.minimumTapTarget)
                     .accessibilityIdentifier("lock.turnOff")
             } else {
                 Button(lock.status == .failed ? "Try Again" : "Unlock", systemImage: "faceid", action: unlock)
-                    .prominentButtonStyle()
-                    .controlSize(.large)
-                    .frame(minHeight: Theme.Layout.minimumTapTarget)
+                    .buttonStyle(AccentCapsuleButtonStyle())
                     .disabled(lock.status == .authenticating)
                     .accessibilityIdentifier("lock.unlock")
             }

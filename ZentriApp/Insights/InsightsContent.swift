@@ -44,7 +44,7 @@ struct InsightsContent: View {
             InsightsFailureState(onRetry: model.refresh)
         case .loaded:
             ScrollView {
-                VStack(spacing: Theme.Spacing.lg) {
+                VStack(spacing: 14) {
                     InsightsMonthSelector(
                         month: model.selectedMonth,
                         isShowingThisMonth: model.isShowingThisMonth,
@@ -69,7 +69,8 @@ struct InsightsContent: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(Theme.Spacing.lg)
+                .padding(.horizontal, Theme.Spacing.lg)
+                .padding(.bottom, Theme.Spacing.xl)
             }
             .scrollBounceBehavior(.basedOnSize)
         }

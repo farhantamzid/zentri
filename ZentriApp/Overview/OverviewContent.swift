@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import ZentriCore
 
 /// The dashboard itself: the balance hero over the data cards, or the empty state that points to
 /// setup, or the failure state that offers another read.
@@ -9,13 +10,26 @@ import SwiftUI
 /// the store, so it can never ask for the next refresh through that same revision.
 struct OverviewContent: View {
     @State private var model: OverviewModel
+    /// How far the title bar has faded in, from the scroll position: 0 at rest, 1 once the large
+    /// header has scrolled away.
+    @State private var barProgress: CGFloat = 0
     private let dataRevision: Int
     private let onFinishSetup: @MainActor () -> Void
+    private let onSelectCategory: (@MainActor (CategoryTotal) -> Void)?
+    private let onSeeAllTransactions: (@MainActor () -> Void)?
 
-    init(context: ModelContext, dataRevision: Int, onFinishSetup: @escaping @MainActor () -> Void) {
+    init(
+        context: ModelContext,
+        dataRevision: Int,
+        onFinishSetup: @escaping @MainActor () -> Void,
+        onSelectCategory: (@MainActor (CategoryTotal) -> Void)? = nil,
+        onSeeAllTransactions: (@MainActor () -> Void)? = nil
+    ) {
         _model = State(initialValue: OverviewModel(context: context))
         self.dataRevision = dataRevision
         self.onFinishSetup = onFinishSetup
+        self.onSelectCategory = onSelectCategory
+        self.onSeeAllTransactions = onSeeAllTransactions
     }
 
     var body: some View {
@@ -49,18 +63,75 @@ struct OverviewContent: View {
 
     private func cards(for summary: OverviewSummary) -> some View {
         ScrollView {
-            VStack(spacing: Theme.Spacing.lg) {
+            VStack(spacing: 14) {
+                header
+                    // The inline bar is empty until the page scrolls, so the date sits up under it
+                    // where the design places it.
+                    .padding(.top, -36)
+                    .riseIn()
                 BalanceHero(
                     balance: summary.balance,
                     asOf: summary.asOf,
-                    todaySpend: summary.todaySpend
+                    todaySpend: summary.todaySpend,
+                    monthNet: summary.monthNet,
+                    history: summary.balanceHistory
                 )
-                OverviewCards(summary: summary)
+                .riseIn(delay: 0.05)
+                OverviewCards(
+                    summary: summary,
+                    onSelectCategory: onSelectCategory,
+                    onSeeAllTransactions: onSeeAllTransactions
+                )
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(Theme.Spacing.lg)
+            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.bottom, Theme.Spacing.xl)
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .onScrollGeometryChange(for: CGFloat.self) { geometry in
+            // Fades the bar in over the 30 points after the date line has scrolled under it. The
+            // value is clamped, so scrolling further down the page never re-renders the screen.
+            let offset = geometry.contentOffset.y + geometry.contentInsets.top
+            return min(1, max(0, (offset - 30) / 30))
+        } action: { _, progress in
+            barProgress = progress
+        }
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Overview")
+                    .font(.headline)
+                    .opacity(barProgress)
+                    .accessibilityHidden(barProgress < 0.5)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                MoneyText(summary.balance)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.onAccent)
+                    .padding(.horizontal, 11)
+                    .padding(.vertical, 5)
+                    .background(Theme.accent, in: .capsule)
+                    .scaleEffect(0.8 + barProgress * 0.2)
+                    .opacity(barProgress)
+                    .accessibilityHidden(true)
+            }
+            .sharedBackgroundVisibility(.hidden)
+        }
+    }
+
+    /// Today's date over the large title, as the design's header sets them.
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(Date.now, format: .dateTime.weekday(.wide).day().month(.wide))
+                .font(.footnote.weight(.semibold))
+                .kerning(0.5)
+                .textCase(.uppercase)
+                .foregroundStyle(Theme.secondaryInk)
+            Text("Overview")
+                .font(.largeTitle.bold())
+                .kerning(-0.6)
+                .foregroundStyle(Theme.ink)
+                .accessibilityAddTraits(.isHeader)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// Shown when the store holds no active account, which is the one case the dashboard cannot

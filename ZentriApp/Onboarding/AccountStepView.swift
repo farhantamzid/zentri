@@ -117,5 +117,5 @@ struct AccountStepView: View {
     ScrollView {
         AccountStepView(model: OnboardingModel())
     }
-    .background { Theme.canvas.ignoresSafeArea() }
+    .ambientBackground()
 }

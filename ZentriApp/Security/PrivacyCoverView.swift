@@ -15,22 +15,47 @@ struct PrivacyCoverView: View {
     var body: some View {
         ScrollView {
             if lock.isLocked {
-                ContentUnavailableView {
-                    Label("Zentri is locked", systemImage: "lock.fill")
-                } description: {
+                VStack(spacing: Theme.Spacing.md) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 32, weight: .medium))
+                        .foregroundStyle(Theme.accent)
+                        .frame(width: 76, height: 76)
+                        .glassSurface(cornerRadius: 38)
+                        .accessibilityHidden(true)
+                    Text("Zentri is locked")
+                        .font(.title2.bold())
+                        .foregroundStyle(Theme.ink)
+                        .accessibilityAddTraits(.isHeader)
                     Text(message)
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.secondaryInk)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(2)
+                        .frame(maxWidth: 280)
                         .accessibilityIdentifier("lock.message")
-                } actions: {
                     PrivacyCoverActions(lock: lock, onTurnOff: onTurnOff)
+                        .padding(.top, Theme.Spacing.sm)
                 }
+                .padding(40)
+                .frame(maxWidth: .infinity)
+                .riseIn()
             } else {
-                ContentUnavailableView("Zentri", systemImage: "lock.fill")
+                VStack(spacing: 10) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 40))
+                        .foregroundStyle(Theme.secondaryInk)
+                    Text("Zentri")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(Theme.ink)
+                }
+                .frame(maxWidth: .infinity)
+                .accessibilityElement(children: .combine)
             }
         }
         .scrollBounceBehavior(.basedOnSize)
         .defaultScrollAnchor(.center, for: .alignment)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background { Theme.canvas.ignoresSafeArea() }
+        .ambientBackground()
         .tint(Theme.accent)
         .accessibilityIdentifier("lock.cover")
     }

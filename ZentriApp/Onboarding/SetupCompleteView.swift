@@ -71,7 +71,7 @@ struct SetupCompleteView: View {
             .padding(Theme.Spacing.xl)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background { Theme.canvas.ignoresSafeArea() }
+        .ambientBackground()
     }
 
     /// Adopts the saved settings, which lets the root show the tabs.

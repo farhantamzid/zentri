@@ -11,13 +11,10 @@ struct TransactionDetailFieldsSection: View {
 
     var body: some View {
         Section {
-            LabeledContent("Direction") {
-                Text(model.transaction.direction.displayName)
-            }
-            LabeledContent("Account") {
-                Text(model.transaction.account.name)
-            }
             TransactionCategoryPicker(categoryID: $model.categoryID, categories: categories)
+                .padding(.vertical, Theme.Spacing.xs)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 0, leading: Theme.Spacing.xs, bottom: 0, trailing: Theme.Spacing.xs))
             if model.offersCategoryRule, let category = model.transaction.category {
                 TransactionCategoryRuleRow(
                     merchant: model.transaction.merchantDisplay,
@@ -25,6 +22,18 @@ struct TransactionDetailFieldsSection: View {
                     hasCreatedRule: model.hasCreatedRule,
                     onCreate: createRule
                 )
+            }
+        } header: {
+            GroupHeading("Category")
+        }
+        .riseIn(delay: 0.24)
+
+        Section {
+            LabeledContent("Direction") {
+                Text(model.transaction.direction.displayName)
+            }
+            LabeledContent("Account") {
+                Text(model.transaction.account.name)
             }
             LabeledContent("Note") {
                 Text(model.transaction.note ?? String(localized: "None"))

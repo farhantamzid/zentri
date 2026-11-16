@@ -28,19 +28,22 @@ struct OnboardingFooter: View {
     }
 
     var body: some View {
-        let backButton = Button("Back", action: onBack)
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-            .frame(minHeight: Theme.Layout.minimumTapTarget)
-            .accessibilityIdentifier("onboarding.back")
+        let backButton = Button(action: onBack) {
+            Text("Back")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Theme.accent)
+                .padding(.horizontal, 22)
+                .frame(minHeight: 50)
+                .background(Theme.fill, in: .capsule)
+        }
+        .buttonStyle(PressableStyle(scale: 0.95))
+        .accessibilityIdentifier("onboarding.back")
 
         let continueButton = Button(action: onContinue) {
             Text("Continue")
                 .frame(maxWidth: .infinity)
         }
-        .prominentButtonStyle()
-        .controlSize(.large)
-        .frame(maxWidth: .infinity, minHeight: Theme.Layout.minimumTapTarget)
+        .buttonStyle(AccentCapsuleButtonStyle())
         .disabled(!canContinue)
         .accessibilityIdentifier("onboarding.continue")
 
@@ -69,9 +72,8 @@ struct OnboardingFooter: View {
             }
         }
         .padding(.horizontal, Theme.Spacing.lg)
-        .padding(.vertical, Theme.Spacing.md)
-        .background(.bar)
-        .overlay(alignment: .top) { Divider() }
+        .padding(.top, 14)
+        .padding(.bottom, Theme.Spacing.sm)
     }
 }
 

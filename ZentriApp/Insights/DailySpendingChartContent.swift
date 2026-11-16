@@ -14,6 +14,12 @@ struct DailySpendingChartContent: View {
     @State private var touchedDate: Date?
     @State private var selectedDay: Date?
 
+    /// The month's average day, which the dashed line marks.
+    private var average: Decimal {
+        guard !data.points.isEmpty else { return 0 }
+        return data.points.reduce(Decimal.zero) { $0 + $1.amount } / Decimal(data.points.count)
+    }
+
     var body: some View {
         let selected = selectedDay.flatMap(data.point(containing:))
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
@@ -21,17 +27,21 @@ struct DailySpendingChartContent: View {
                 ForEach(data.points) { point in
                     BarMark(
                         x: .value("Day", point.date, unit: .day),
-                        y: .value("Spent", point.amount)
+                        y: .value("Spent", point.amount),
+                        width: .ratio(0.78)
                     )
-                    .foregroundStyle(Theme.spending)
-                    .opacity(selected == nil || selected?.date == point.date ? 1 : 0.35)
-                    .cornerRadius(Theme.Spacing.xs / 2)
+                    .foregroundStyle(barStyle(for: point, selected: selected))
+                    .cornerRadius(4)
                     .accessibilityLabel(Text(point.dayText))
                     .accessibilityValue(Text(point.amountText))
                 }
+                RuleMark(y: .value("Average", average))
+                    .foregroundStyle(Theme.accent.opacity(0.55))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                    .accessibilityHidden(true)
                 if let selected {
                     RuleMark(x: .value("Day", selected.date, unit: .day))
-                        .foregroundStyle(Theme.secondaryInk.opacity(0.4))
+                        .foregroundStyle(Theme.ink.opacity(0.35))
                         .annotation(
                             position: .top,
                             spacing: Theme.Spacing.xs,
@@ -46,13 +56,11 @@ struct DailySpendingChartContent: View {
             .chartXAxis {
                 AxisMarks(values: .stride(by: .day, count: 7)) { _ in
                     AxisValueLabel(format: .dateTime.day())
+                        .foregroundStyle(Theme.tertiaryInk)
                 }
             }
-            .chartYAxis {
-                AxisMarks(position: .leading) { _ in
-                    AxisGridLine()
-                }
-            }
+            .chartYAxis(.hidden)
+            .animation(Theme.Motion.snap, value: selectedDay)
             .frame(height: chartHeight)
             .chartReveal()
             .accessibilityElement(children: .contain)
@@ -67,6 +75,11 @@ struct DailySpendingChartContent: View {
                 .foregroundStyle(Theme.secondaryInk)
                 .accessibilityIdentifier("insights.dailyChart.summary")
         }
+    }
+
+    private func barStyle(for point: DailySpendingChartData.Point, selected: DailySpendingChartData.Point?) -> Color {
+        guard let selected else { return Theme.accent.opacity(0.67) }
+        return selected.date == point.date ? Theme.accent : Theme.accentSoft
     }
 
     private func updateSelection() {

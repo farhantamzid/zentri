@@ -21,27 +21,25 @@ struct OnboardingCurrencyTile: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: Theme.Spacing.xs) {
+            VStack(spacing: 2) {
                 Text(CurrencyCatalog.symbol(for: code))
-                    .font(.title3)
-                    .foregroundStyle(Theme.ink)
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(isSelected ? Theme.accent : Theme.ink)
                 Text(code)
-                    .font(.footnote)
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(Theme.secondaryInk)
             }
-            .frame(maxWidth: .infinity, minHeight: Theme.Layout.minimumTapTarget)
-            .padding(.vertical, Theme.Spacing.xs)
+            .frame(maxWidth: .infinity, minHeight: 70)
             .background(
-                isSelected ? Theme.accent.opacity(0.14) : Color.clear,
-                in: .rect(cornerRadius: Theme.Radius.card)
+                isSelected ? Theme.accentSoft : Theme.glass,
+                in: .rect(cornerRadius: 18, style: .continuous)
             )
             .overlay {
-                RoundedRectangle(cornerRadius: Theme.Radius.card)
-                    .strokeBorder(
-                        isSelected ? Theme.accent : Theme.secondaryInk.opacity(0.35),
-                        lineWidth: isSelected ? 2 : 1
-                    )
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(isSelected ? Theme.accent : Theme.glassBorder, lineWidth: 1.5)
             }
+            .scaleEffect(isSelected ? 1.03 : 1)
+            .animation(Theme.Motion.snap, value: isSelected)
             .overlay(alignment: .topTrailing) {
                 if isSelected {
                     // A tick as well as the tint and border, so selection does not rely on color.

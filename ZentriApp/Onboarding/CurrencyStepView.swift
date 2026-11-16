@@ -68,5 +68,5 @@ struct CurrencyStepView: View {
     ScrollView {
         CurrencyStepView(model: OnboardingModel())
     }
-    .background { Theme.canvas.ignoresSafeArea() }
+    .ambientBackground()
 }

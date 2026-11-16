@@ -18,12 +18,13 @@ struct OnboardingFeatureRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Spacing.md) {
             Image(systemName: symbolName)
-                .font(.title3)
+                .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(Theme.accent)
-                .frame(minWidth: 24)
+                .frame(width: 34, height: 34)
+                .background(Theme.accentSoft, in: .rect(cornerRadius: 10, style: .continuous))
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.subheadline.bold())
                     .foregroundStyle(Theme.ink)

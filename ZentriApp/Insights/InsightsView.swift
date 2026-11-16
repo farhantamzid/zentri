@@ -16,7 +16,7 @@ struct InsightsView: View {
             dataRevision: appState.dataRevision,
             onShowTransactions: showTransactions
         )
-        .background { Theme.canvas.ignoresSafeArea() }
+        .ambientBackground()
         .navigationTitle("Insights")
     }
 

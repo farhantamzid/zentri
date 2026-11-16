@@ -52,5 +52,5 @@ struct ShortcutsStepView: View {
     ScrollView {
         ShortcutsStepView()
     }
-    .background { Theme.canvas.ignoresSafeArea() }
+    .ambientBackground()
 }
