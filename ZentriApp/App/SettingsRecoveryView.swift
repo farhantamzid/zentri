@@ -2,32 +2,29 @@ import SwiftUI
 
 /// The screen shown when saved settings exist but cannot be read.
 ///
-/// Using defaults deletes the damaged settings file and returns to onboarding; accounts and
-/// transactions live in the SwiftData store, not in settings, so they are untouched. "Restore Backup"
+/// Using defaults replaces the damaged settings with the defaults and opens the app; accounts and
+/// transactions live in the SwiftData store, not in settings, so they are untouched. Only a store
+/// with no account returns to setup, so setup never adds a second account. "Restore Backup"
 /// opens the restore browser — the backup folder's snapshots or any backup file — and a replace
 /// restore saves the backup's settings, which clears the failure and opens the app.
 ///
 /// Everything scrolls: with the largest accessibility text the explanation and both buttons need
 /// more room than one screen, and nothing may be clipped away from the person who needs it most.
 struct SettingsRecoveryView: View {
-    private let store: SettingsStore
+    @Environment(AppState.self) private var appState
 
     @State private var resetFailed = false
     @State private var isRestoring = false
-
-    init(store: SettingsStore) {
-        self.store = store
-    }
 
     var body: some View {
         ScrollView {
             ContentUnavailableView {
                 Label("Settings need a reset", systemImage: "exclamationmark.triangle")
             } description: {
-                Text("Zentri could not read its saved settings. Using defaults returns to setup and keeps your accounts and transactions.")
+                Text("Zentri could not read its saved settings. Using defaults resets preferences such as the currency and keeps your accounts and transactions.")
             } actions: {
                 VStack(spacing: Theme.Spacing.sm) {
-                    Button("Use Defaults", action: useDefaults)
+                    Button("Use Defaults", action: startUsingDefaults)
                         .prominentButtonStyle()
                         .controlSize(.large)
                         .frame(minHeight: Theme.Layout.minimumTapTarget)
@@ -65,10 +62,15 @@ struct SettingsRecoveryView: View {
         }
     }
 
-    /// Deletes the damaged settings file so the app returns to onboarding.
-    private func useDefaults() {
+    /// Starts replacing the damaged settings with the defaults.
+    private func startUsingDefaults() {
+        Task { await useDefaults() }
+    }
+
+    /// Saves default settings — or, with no account stored, returns to setup.
+    private func useDefaults() async {
         do {
-            try store.reset()
+            try await appState.useDefaultSettings()
             resetFailed = false
         } catch {
             resetFailed = true

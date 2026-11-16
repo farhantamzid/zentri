@@ -128,3 +128,50 @@ private func makeAppState() throws -> (AppState, SettingsStore) {
     #expect(appState.transactionFilter == TransactionFilter())
     #expect(appState.dataRevision == 1)
 }
+
+// MARK: - Settings recovery (I9)
+
+@MainActor
+private func makeRecoveringAppState(accountNames: [String]) throws -> (AppState, SettingsStore) {
+    let container = try ZentriContainer.make(inMemory: true)
+    for (index, name) in accountNames.enumerated() {
+        container.mainContext.insert(Account(name: name, sortOrder: index, createdAt: .now))
+    }
+    try container.mainContext.save()
+    let settingsStore = SettingsStore(repository: UnreadableSettingsRepository())
+    try? settingsStore.load()
+    let appState = AppState(
+        container: container,
+        settingsStore: settingsStore,
+        parserBuilder: UnusedParserBuilder(),
+        modelClient: UnavailableModelClient(),
+        snapshotStore: FileWidgetSnapshotStore(fileURL: nil),
+        timelineReloader: InertTimelineReloader()
+    )
+    return (appState, settingsStore)
+}
+
+/// With accounts already stored, "Use Defaults" saves default settings and opens the app: running
+/// onboarding again would add a second account and opening balance beside the existing ones.
+@MainActor
+@Test func useDefaultSettingsKeepsTheStoredAccountsAndOpensTheApp() async throws {
+    let (appState, settingsStore) = try makeRecoveringAppState(accountNames: ["Everyday"])
+    #expect(settingsStore.loadFailure != nil)
+
+    try await appState.useDefaultSettings()
+
+    #expect(settingsStore.loadFailure == nil)
+    #expect(settingsStore.settings == .defaultValue)
+    #expect(try appState.container.mainContext.fetchCount(FetchDescriptor<Account>()) == 1)
+}
+
+/// With no account stored there is nothing to keep, so setup runs as on a fresh install.
+@MainActor
+@Test func useDefaultSettingsWithoutAccountsReturnsToSetup() async throws {
+    let (appState, settingsStore) = try makeRecoveringAppState(accountNames: [])
+
+    try await appState.useDefaultSettings()
+
+    #expect(settingsStore.loadFailure == nil)
+    #expect(settingsStore.settings == nil)
+}

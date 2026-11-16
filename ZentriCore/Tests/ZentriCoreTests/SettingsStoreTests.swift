@@ -45,3 +45,50 @@ import Testing
     try store.save(settings)
     #expect(try store.load() == settings)
 }
+
+// MARK: - Forward compatibility (I9)
+
+/// A document written by another version — missing a field this one has, carrying one it does not
+/// know, or naming an option it cannot read — still loads, with defaults for what it cannot use.
+@Test func settingsWithMissingOrUnknownFieldsStillLoad() throws {
+    let url = FileManager.default.temporaryDirectory.appending(path: "settings-\(UUID()).json")
+    defer { try? FileManager.default.removeItem(at: url) }
+    let json = """
+    {
+      "currencyCode": "BDT",
+      "numberGrouping": "indian",
+      "parserMode": "someFutureMode",
+      "aFieldFromANewerVersion": { "nested": true },
+      "schemaVersion": 2
+    }
+    """
+    try Data(json.utf8).write(to: url)
+
+    let loaded = try #require(try FileSettingsStore(fileURL: url).load())
+
+    #expect(loaded.currencyCode == "BDT")
+    #expect(loaded.numberGrouping == .indian)
+    #expect(loaded.parserMode == AppSettings.defaultValue.parserMode)
+    #expect(loaded.faceIDEnabled == false)
+    #expect(loaded.iCloudBackupEnabled == false)
+    #expect(loaded.lastBackupAt == nil)
+    #expect(loaded.schemaVersion == 2)
+}
+
+@Test func anEmptySettingsObjectLoadsAsTheDefaults() throws {
+    let decoded = try JSONDecoder().decode(AppSettings.self, from: Data("{}".utf8))
+    #expect(decoded == .defaultValue)
+}
+
+/// The written document keeps the same keys, so older builds still read it.
+@Test func settingsEncodeEveryFieldUnderItsName() throws {
+    var settings = AppSettings.defaultValue
+    settings.lastBackupAt = Date(timeIntervalSince1970: 1_795_000_000)
+    let object = try #require(
+        try JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any]
+    )
+    #expect(Set(object.keys) == [
+        "currencyCode", "numberGrouping", "parserMode", "faceIDEnabled",
+        "iCloudBackupEnabled", "lastBackupAt", "schemaVersion",
+    ])
+}

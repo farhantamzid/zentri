@@ -920,13 +920,13 @@
         }
       }
     },
-    "Zentri could not read its saved settings. Using defaults returns to setup and keeps your accounts and transactions.": {
+    "Zentri could not read its saved settings. Using defaults resets preferences such as the currency and keeps your accounts and transactions.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zentri could not read its saved settings. Using defaults returns to setup and keeps your accounts and transactions."
+            "value": "Zentri could not read its saved settings. Using defaults resets preferences such as the currency and keeps your accounts and transactions."
           }
         }
       }

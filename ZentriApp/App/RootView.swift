@@ -18,7 +18,7 @@ struct RootView: View {
         let isCovered = appLock.isCovering(sceneIsActive: scenePhase == .active)
         Group {
             if appState.settingsStore.loadFailure != nil {
-                SettingsRecoveryView(store: appState.settingsStore)
+                SettingsRecoveryView()
             } else if appState.settingsStore.settings == nil {
                 OnboardingFlow(biometric: appLock.biometric)
             } else {

@@ -260,6 +260,24 @@ final class AppState {
         await snapshotRefresher.refresh()
     }
 
+    /// Replaces settings that could not be read with the defaults.
+    ///
+    /// The accounts, transactions, and rules live in the store, not in settings. When the store
+    /// already holds an account the default settings are saved and the app opens on them; running
+    /// setup again would add a second account and opening balance beside the existing ones. Only a
+    /// store with no account returns to setup, as a fresh install does. A store that cannot be read
+    /// is treated as holding accounts, so nothing is added to it.
+    func useDefaultSettings() async throws {
+        let accountCount = (try? container.mainContext.fetchCount(FetchDescriptor<Account>())) ?? 1
+        guard accountCount > 0 else {
+            try settingsStore.reset()
+            return
+        }
+        try settingsStore.save(.defaultValue)
+        await snapshotRefresher.refresh()
+        mutate()
+    }
+
     /// Deletes everything Zentri keeps on this device and returns the app to setup.
     ///
     /// The store goes first, in one save: if that fails nothing has changed. Then the widget
