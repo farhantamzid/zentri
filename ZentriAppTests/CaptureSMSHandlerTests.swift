@@ -290,6 +290,20 @@ struct CaptureSMSHandlerTests {
         #expect(recorder.modes == [.rules, .hybrid])
     }
 
+    /// A pasted message is read with the engine the person chose, without changing the saved mode.
+    @Test func chosenParserModeOverridesTheSavedOneForThatMessage() async throws {
+        let store = try ParsingTestStore()
+        let settings = try completedSettings(mode: .rules)
+        let recorder = CaptureModeRecorder()
+        let handler = makeHandler(store, settings: settings, result: .notTransaction, recorder: recorder)
+
+        _ = await handler.handle(captureRequest(text: "First"), parserMode: .foundationModels)
+        _ = await handler.handle(captureRequest(text: "Second"))
+
+        #expect(recorder.modes == [.foundationModels, .rules])
+        #expect(settings.settings?.parserMode == .rules)
+    }
+
     // MARK: - Hybrid model failure (I5)
 
     /// A model that timed out on a message no rule covers leaves it failed and retryable, and the
