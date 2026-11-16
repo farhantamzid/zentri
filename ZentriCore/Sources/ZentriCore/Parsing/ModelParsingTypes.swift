@@ -66,4 +66,8 @@ public protocol TransactionModelClient: Sendable {
 public enum ModelClientError: Error, Sendable, Equatable {
     /// The model did not answer within the client's time limit.
     case timedOut
+    /// The model cannot read text in the message's language.
+    case unsupportedLanguage
+    /// The model answered, but not in a form the client could read.
+    case unreadableAnswer
 }

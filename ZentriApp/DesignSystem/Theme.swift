@@ -68,17 +68,22 @@ enum Theme {
     // MARK: Glass surface tokens
 
     /// The faintest text: axis labels, chevrons, decimals.
-    static let tertiaryInk = Color(light: 0xA89F94, dark: 0x6E675F)
+    static let tertiaryInk = Color(light: 0xA89F94, dark: 0x8C847A)
     /// A data card's translucent fill.
-    static let glass = Color(light: .white.withAlphaComponent(0.55), dark: .white.withAlphaComponent(0.06))
+    static let glass = Color(
+        light: .white.withAlphaComponent(0.55),
+        // Dark mode keeps the card nearly opaque: a faint white wash lets the background lights
+        // show through behind the text, which costs legibility on a dark canvas.
+        dark: UIColor(red: 30 / 255, green: 28 / 255, blue: 26 / 255, alpha: 0.94)
+    )
     /// The balance hero's thinner fill, which lets its glow show through.
-    static let heroGlass = Color(light: .white.withAlphaComponent(0.38), dark: .white.withAlphaComponent(0.07))
+    static let heroGlass = Color(light: .white.withAlphaComponent(0.38), dark: UIColor(red: 28 / 255, green: 26 / 255, blue: 24 / 255, alpha: 0.82))
     /// A glass edge.
-    static let glassBorder = Color(light: .white.withAlphaComponent(0.85), dark: .white.withAlphaComponent(0.10))
+    static let glassBorder = Color(light: .white.withAlphaComponent(0.85), dark: .white.withAlphaComponent(0.08))
     /// The bright top edge of a glass card, the design's inset highlight.
-    static let glassHighlight = Color(light: .white.withAlphaComponent(0.95), dark: .white.withAlphaComponent(0.14))
+    static let glassHighlight = Color(light: .white.withAlphaComponent(0.95), dark: .white.withAlphaComponent(0.12))
     /// The light sheen across the top of the hero.
-    static let sheen = Color(light: .white.withAlphaComponent(0.6), dark: .white.withAlphaComponent(0.1))
+    static let sheen = Color(light: .white.withAlphaComponent(0.6), dark: .white.withAlphaComponent(0.05))
     /// A card's soft drop shadow.
     static let cardShadow = Color(
         light: UIColor(red: 60 / 255, green: 48 / 255, blue: 30 / 255, alpha: 0.13),
@@ -92,7 +97,7 @@ enum Theme {
     /// A quiet filled tile, such as the ingestion figures.
     static let fill = Color(
         light: UIColor(red: 118 / 255, green: 110 / 255, blue: 100 / 255, alpha: 0.10),
-        dark: .white.withAlphaComponent(0.07)
+        dark: .white.withAlphaComponent(0.08)
     )
     /// The empty part of a progress bar or donut.
     static let track = Color(
@@ -100,7 +105,7 @@ enum Theme {
         dark: .white.withAlphaComponent(0.08)
     )
     /// A chip's resting fill.
-    static let chip = Color(light: .white.withAlphaComponent(0.6), dark: .white.withAlphaComponent(0.08))
+    static let chip = Color(light: .white.withAlphaComponent(0.6), dark: UIColor(red: 44 / 255, green: 41 / 255, blue: 38 / 255, alpha: 1))
     /// The accent at low strength, behind accent text and symbols.
     static let accentSoft = Color(
         light: UIColor(red: 14 / 255, green: 95 / 255, blue: 90 / 255, alpha: 0.12),
@@ -116,6 +121,16 @@ enum Theme {
         light: UIColor(red: 14 / 255, green: 95 / 255, blue: 90 / 255, alpha: 0.45),
         dark: UIColor(red: 95 / 255, green: 208 / 255, blue: 196 / 255, alpha: 0.35)
     )
+    /// How strongly the ambient lights and the hero's glow show, per appearance. Dark mode keeps
+    /// them to a tint: bright light behind light text on a dark canvas reads as haze.
+    static func lightStrength(_ scheme: ColorScheme) -> Double {
+        scheme == .dark ? 0.28 : 0.5
+    }
+
+    static func glowStrength(_ scheme: ColorScheme) -> Double {
+        scheme == .dark ? 0.32 : 0.8
+    }
+
     /// The two soft ambient lights behind every screen.
     static let ambientTeal = Color(light: 0x9ED9CF, dark: 0x0F6B66)
     static let ambientPeach = Color(light: 0xF3C9A0, dark: 0x6B4222)

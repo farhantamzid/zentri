@@ -45,6 +45,20 @@ public struct FoundationModelsClient: TransactionModelClient {
     }
 
     public func parse(text: String) async throws -> ModelTransactionOutput {
+        do {
+            return try await guidedParse(text: text)
+        } catch where Self.isContentRejection(error) {
+            // Guided generation always runs the strictest content checks, and a bank message's
+            // card numbers, balances, and amounts can trip them. A plain-text answer may relax
+            // them; the engine still validates every value it reads, so nothing is trusted more.
+            return try await plainTextParse(text: text)
+        } catch where Self.isUnsupportedLanguage(error) {
+            throw ModelClientError.unsupportedLanguage
+        }
+    }
+
+    /// The structured request: the model fills ``GeneratedTransaction`` field by field.
+    private func guidedParse(text: String) async throws -> ModelTransactionOutput {
         let session = LanguageModelSession(instructions: Self.instructions)
         let prompt = Self.prompt(for: text)
         let generated = try await TimeoutRace.run(timeout: Self.responseTimeout) {
@@ -59,6 +73,67 @@ public struct FoundationModelsClient: TransactionModelClient {
             date: generated.date,
             category: generated.category
         )
+    }
+
+    /// The fallback: the same task answered as `field: value` lines with the content checks
+    /// relaxed for text, read back by ``ModelLineAnswer``.
+    private func plainTextParse(text: String) async throws -> ModelTransactionOutput {
+        let model = SystemLanguageModel(guardrails: .permissiveContentTransformations)
+        let session = LanguageModelSession(model: model, instructions: Self.instructions + "\n" + Self.lineFormat)
+        let prompt = Self.prompt(for: text)
+        let answer: String
+        do {
+            answer = try await TimeoutRace.run(timeout: Self.responseTimeout) {
+                try await session.respond(to: prompt).content
+            }
+        } catch where Self.isUnsupportedLanguage(error) {
+            throw ModelClientError.unsupportedLanguage
+        }
+        guard let output = ModelLineAnswer.parse(answer) else {
+            throw ModelClientError.unreadableAnswer
+        }
+        return output
+    }
+
+    /// How the plain-text answer must be laid out.
+    private static let lineFormat = """
+    Answer with exactly these seven lines and nothing else, writing none for a value the message does not state:
+    isTransaction: yes or no
+    direction: debit or credit
+    amount: the amount
+    merchant: the merchant or payee
+    balance: the balance after the transaction
+    date: the ISO-8601 date
+    category: a short spending category
+    """
+
+    /// Whether the model declined the request on content grounds, or produced an answer that did
+    /// not fit the requested shape.
+    private static func isContentRejection(_ error: any Error) -> Bool {
+        if let error = error as? LanguageModelError {
+            switch error {
+            case .guardrailViolation, .refusal: return true
+            default: return false
+            }
+        }
+        if let error = error as? LanguageModelSession.GenerationError {
+            switch error {
+            case .guardrailViolation, .refusal, .decodingFailure: return true
+            default: return false
+            }
+        }
+        return false
+    }
+
+    /// Whether the model cannot read the message's language.
+    private static func isUnsupportedLanguage(_ error: any Error) -> Bool {
+        if let error = error as? LanguageModelError, case .unsupportedLanguageOrLocale = error {
+            return true
+        }
+        if let error = error as? LanguageModelSession.GenerationError, case .unsupportedLanguageOrLocale = error {
+            return true
+        }
+        return false
     }
 
     /// The prompt: the message goes between markers as data, with any marker it contains

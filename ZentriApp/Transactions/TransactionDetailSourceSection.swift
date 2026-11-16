@@ -4,10 +4,19 @@ import ZentriCore
 /// Where the transaction came from: the bank message as a chat bubble with the amount and merchant
 /// it was read from picked out, then the engine, the matched rule, and the category's source.
 struct TransactionDetailSourceSection: View {
-    let transaction: ZentriCore.Transaction
+    let model: TransactionDetailModel
+
+    private var transaction: ZentriCore.Transaction { model.transaction }
     let matchedRuleName: String?
 
     var body: some View {
+        // The section reads the stored transaction, which must never happen once it is deleted.
+        if !model.isDeleted {
+            content
+        }
+    }
+
+    private var content: some View {
         Section {
             if let message = transaction.rawMessage {
                 Text(highlighted(message.text))

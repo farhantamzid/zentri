@@ -58,15 +58,34 @@ final class AppearanceSettingsModel {
         }
     }
 
-    /// The saved appearance mode. Picking a different one saves it straight away, and the root view
-    /// redraws every window in it.
+    /// The mode the picker shows: the one just picked while it is being applied, otherwise the
+    /// saved one.
+    ///
+    /// The picker follows the choice at once, so its glass selection slides without waiting for
+    /// the save. The save — which redraws every window in the new mode — starts once that slide has
+    /// finished, so the two never compete for the same frames.
     var appearanceMode: AppearanceMode {
-        get { settings.appearanceMode }
+        get { pendingAppearanceMode ?? settings.appearanceMode }
         set {
-            guard newValue != settings.appearanceMode else { return }
-            Task { await setAppearanceMode(newValue) }
+            guard newValue != appearanceMode else { return }
+            pendingAppearanceMode = newValue
+            appearanceTask?.cancel()
+            appearanceTask = Task { [weak self] in
+                try? await Task.sleep(for: Self.appearanceSettleDelay)
+                guard !Task.isCancelled, let self else { return }
+                await self.setAppearanceMode(newValue)
+                if self.pendingAppearanceMode == newValue {
+                    self.pendingAppearanceMode = nil
+                }
+            }
         }
     }
+
+    /// How long the picker's selection takes to slide, which the redraw waits out.
+    private static let appearanceSettleDelay = Duration.milliseconds(380)
+    /// A mode picked and not yet saved.
+    private var pendingAppearanceMode: AppearanceMode?
+    @ObservationIgnored private var appearanceTask: Task<Void, Never>?
 
     /// Saves a new appearance mode.
     func setAppearanceMode(_ mode: AppearanceMode) async {

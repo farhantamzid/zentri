@@ -65,7 +65,7 @@ struct AmbientBackground: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        let strength = colorScheme == .dark ? 0.55 : 0.5
+        let strength = Theme.lightStrength(colorScheme)
         GeometryReader { proxy in
             let size = proxy.size
             ZStack {

@@ -261,7 +261,13 @@ final class AppState {
     /// Every money label re-renders on its own: the root reads ``moneyFormat(locale:)`` from the
     /// observed settings. Changing the currency never converts a stored amount.
     func updateSettings(_ settings: AppSettings) async throws {
+        let previous = settingsStore.settings
         try settingsStore.save(settings)
+        // The widgets draw in the system's own appearance, so a change of only the app's light or
+        // dark mode leaves their snapshot as it is, and skips rebuilding it from every transaction.
+        var withPreviousMode = settings
+        withPreviousMode.appearanceMode = previous?.appearanceMode ?? settings.appearanceMode
+        guard withPreviousMode != previous else { return }
         await snapshotRefresher.refresh()
     }
 
