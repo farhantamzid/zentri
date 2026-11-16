@@ -109,21 +109,17 @@ public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
                 message: "The message does not state an amount."
             )])
         }
-        guard let amount = AmountNormalizer.decimal(from: amountText) else {
-            return .failure([ParseDiagnostic(
-                code: .invalidAmount,
-                field: "amount",
-                message: "The extracted amount is not a number."
-            )])
-        }
-
+        let stated = Self.messageAmounts(from: text)
         // The model may only report a value the message itself states: a hallucinated or
         // injected number would otherwise become a transaction.
-        guard Self.messageAmounts(from: text).contains(amount) else {
+        guard let amount = Self.statedAmount(amountText, in: stated) else {
+            let readable = AmountNormalizer.decimal(from: amountText) != nil
             return .failure([ParseDiagnostic(
                 code: .invalidAmount,
                 field: "amount",
-                message: "The extracted amount does not appear in the message."
+                message: readable
+                    ? "The extracted amount does not appear in the message."
+                    : "The extracted amount is not a number."
             )])
         }
 
@@ -131,7 +127,9 @@ public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
             direction: direction,
             amount: amount,
             merchant: Self.truncated(Self.trimmed(output.merchant) ?? "", to: Self.maximumMerchantLength),
-            balanceAfter: AmountNormalizer.decimal(from: output.balance),
+            // The balance sets the account's balance, so it is held to the same rule as the
+            // amount; one the message does not state is dropped rather than trusted.
+            balanceAfter: Self.trimmed(output.balance).flatMap { Self.statedAmount($0, in: stated) },
             occurredAt: occurredAt(from: output.date, receivedAt: receivedAt),
             categorySuggestion: Self.trimmed(output.category)
         )
@@ -159,19 +157,38 @@ public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
         return receivedAt
     }
 
-    /// Every amount the message itself states, read the way the rule engine reads one.
+    /// The model's value as the message states it, or `nil` when the message states no such
+    /// amount.
+    ///
+    /// A value is accepted when it reads as an amount the message contains. When it does not, the
+    /// model may have dropped or swapped the separators — writing `7794171` or `77.941,71` for the
+    /// message's `77,941.71` — so its digits are compared with the digits of each stated amount,
+    /// and a single match is read the way the message writes it. Without this the dropped
+    /// separator would make the balance a hundred times larger.
+    static func statedAmount(_ raw: String, in stated: [String: Decimal]) -> Decimal? {
+        if let value = AmountNormalizer.decimal(from: raw), stated.values.contains(value) {
+            return value
+        }
+        let digits = raw.filter(isASCIIDigit)
+        guard !digits.isEmpty else { return nil }
+        let matches = Set(stated.compactMap { text, value in text == digits ? value : nil })
+        return matches.count == 1 ? matches.first : nil
+    }
+
+    /// Every amount the message itself states, keyed by its digits alone, read the way the rule
+    /// engine reads one.
     ///
     /// A candidate is a run of digits and separators between other characters, and also each
     /// whitespace-separated piece of such a run, so `1,234.50` and a space-grouped `1 234.50`
     /// are both read. Values are compared as parsed `Decimal`s, never as text: a digit-substring
     /// test would let `100` match `1,000`.
-    private static func messageAmounts(from text: String) -> Set<Decimal> {
-        var amounts: Set<Decimal> = []
+    private static func messageAmounts(from text: String) -> [String: Decimal] {
+        var amounts: [String: Decimal] = [:]
         for chunk in text.split(whereSeparator: { !isAmountCharacter($0) }) {
             for candidate in [chunk[...]] + chunk.split(whereSeparator: \.isWhitespace) {
-                guard let digits = digitSpan(of: candidate),
-                      let amount = AmountNormalizer.decimal(from: String(digits)) else { continue }
-                amounts.insert(amount)
+                guard let span = digitSpan(of: candidate),
+                      let amount = AmountNormalizer.decimal(from: String(span)) else { continue }
+                amounts[String(span.filter(isASCIIDigit))] = amount
             }
         }
         return amounts
