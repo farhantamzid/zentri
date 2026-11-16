@@ -5371,14 +5371,14 @@
         }
       }
     },
-    "Choose your bank's sender. Add one automation per bank, or choose several senders in one.": {
+    "Choose your bank as the sender. If it sends from a name such as MYBANK that you can't save as a contact, leave the sender empty and choose Message Contains with a word every bank message includes, such as the bank's name.": {
       "comment": "Shortcuts setup step 2.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose your bank's sender. Add one automation per bank, or choose several senders in one."
+            "value": "Choose your bank as the sender. If it sends from a name such as MYBANK that you can't save as a contact, leave the sender empty and choose Message Contains with a word every bank message includes, such as the bank's name."
           }
         }
       }

@@ -14,7 +14,7 @@ struct TransactionDetailForm: View {
         } else {
             Form {
                 Group {
-                    TransactionDetailHeader(transaction: model.transaction)
+                    TransactionDetailHeader(model: model)
                     TransactionDetailFieldsSection(model: model, categories: categories)
                     Section {
                         Toggle("Transfer", isOn: $model.isTransfer)
@@ -23,7 +23,7 @@ struct TransactionDetailForm: View {
                     } footer: {
                         Text("Transfers move money between your own accounts, so spending and income totals leave them out.")
                     }
-                    TransactionDetailSourceSection(transaction: model.transaction, matchedRuleName: matchedRuleName)
+                    TransactionDetailSourceSection(model: model, matchedRuleName: matchedRuleName)
                     TransactionDetailActions(
                         canReprocess: model.canReprocess,
                         isReprocessing: model.isReprocessing,

@@ -10,6 +10,13 @@ struct TransactionDetailFieldsSection: View {
     let categories: [TransactionCategoryOption]
 
     var body: some View {
+        if !model.isDeleted {
+            sections
+        }
+    }
+
+    @ViewBuilder
+    private var sections: some View {
         Section {
             TransactionCategoryPicker(categoryID: $model.categoryID, categories: categories)
                 .padding(.vertical, Theme.Spacing.xs)

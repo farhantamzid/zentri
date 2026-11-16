@@ -4,11 +4,20 @@ import ZentriCore
 /// The detail's headline: the category's tile, the signed amount, the merchant, and when it
 /// happened, centered over the sheet.
 struct TransactionDetailHeader: View {
-    let transaction: ZentriCore.Transaction
+    let model: TransactionDetailModel
+
+    private var transaction: ZentriCore.Transaction { model.transaction }
 
     @Environment(\.moneyFormat) private var moneyFormat
 
     var body: some View {
+        // The section reads the stored transaction, which must never happen once it is deleted.
+        if !model.isDeleted {
+            content
+        }
+    }
+
+    private var content: some View {
         Section {
             VStack(spacing: Theme.Spacing.xs) {
                 IconTile(

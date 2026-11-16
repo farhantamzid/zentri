@@ -20,7 +20,10 @@ final class TransactionDetailModel {
     /// Whether this merchant's rule was created, so the offer turns into a confirmation.
     private(set) var hasCreatedRule = false
     /// Whether the transaction is being or has been deleted. A deleted model must not be read, so
-    /// the screen stops drawing it before the delete starts.
+    /// the screen stops drawing it before the delete starts, and every value below that reads the
+    /// transaction answers a neutral default once this is set. SwiftUI can refresh a section of
+    /// the detail on its own, before the parent that hides the sheet's content does, so the guard
+    /// has to hold at every read, not only at the top of the screen.
     private(set) var isDeleted = false
 
     /// What the last reprocess said, for the screen's alert.
@@ -46,7 +49,7 @@ final class TransactionDetailModel {
 
     /// Whether the transaction came from a message that can be read again.
     var canReprocess: Bool {
-        onReprocess != nil && transaction.rawMessage != nil
+        !isDeleted && onReprocess != nil && transaction.rawMessage != nil
     }
 
     /// Reads the transaction's message again with the current rules.
@@ -66,25 +69,25 @@ final class TransactionDetailModel {
 
     /// The transfer flag, as a toggle sets it.
     var isTransfer: Bool {
-        get { transaction.isTransfer }
+        get { isDeleted ? false : transaction.isTransfer }
         set {
-            guard newValue != transaction.isTransfer else { return }
+            guard !isDeleted, newValue != transaction.isTransfer else { return }
             Task { await setTransfer(newValue) }
         }
     }
 
     /// The category, as the picker sets it; a change is marked as the person's choice.
     var categoryID: UUID? {
-        get { transaction.category?.id }
+        get { isDeleted ? nil : transaction.category?.id }
         set {
-            guard newValue != transaction.category?.id else { return }
+            guard !isDeleted, newValue != transaction.category?.id else { return }
             Task { await setCategory(newValue) }
         }
     }
 
     /// Whether the person chose the category, which is when "Always categorize…" is offered.
     var offersCategoryRule: Bool {
-        transaction.categorySource == .manual && transaction.category != nil
+        !isDeleted && transaction.categorySource == .manual && transaction.category != nil
     }
 
     /// The edit the editor starts from.

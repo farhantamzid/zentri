@@ -150,6 +150,90 @@ final class TransactionsUITests: XCTestCase {
         )
     }
 
+    // MARK: - Deleting
+
+    /// Deleting the transaction a pasted message became, from its detail, leaves the app running
+    /// and the row gone.
+    func testDeletingAPastedTransactionFromItsDetail() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed", "-UITestSeedParsing"]
+        app.launch()
+        app.tab("Transactions").tap()
+
+        let add = app.buttons["transactions.add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 10), "The add menu is missing")
+        add.tap()
+        app.buttons["transactions.add.paste"].tap()
+        let text = app.textFields["pasteSMS.text"]
+        XCTAssertTrue(text.waitForExistence(timeout: 5), "The paste sheet did not open")
+        text.tap()
+        text.typeText("MYBANK: RM18.20 spent at Paste Bakery. Thank you.")
+        app.segmentedControls["pasteSMS.parser"].buttons["Rules"].tap()
+        app.buttons["pasteSMS.add"].tap()
+
+        XCTAssertTrue(app.descendants(matching: .any)["transactions.detail.amount"].waitForExistence(timeout: 10),
+                      "The pasted transaction did not open")
+        deleteFromDetail(in: app)
+        XCTAssertTrue(waitForDisappearance(of: row("Paste Bakery", in: app)), "The deleted row is still listed")
+        XCTAssertEqual(app.state, .runningForeground, "The app stopped after the delete")
+        XCTAssertTrue(row("Starbucks", in: app).exists, "The list did not survive the delete")
+    }
+
+    /// Deleting a manual transaction from its detail.
+    func testDeletingAManualTransactionFromItsDetail() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed"]
+        app.launch()
+        app.tab("Transactions").tap()
+
+        let add = app.buttons["transactions.add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 10), "The add button is missing")
+        add.tap()
+        app.buttons["transactions.add.manual"].tap()
+        let merchant = app.textFields["transactions.editor.merchant"]
+        XCTAssertTrue(merchant.waitForExistence(timeout: 5), "The editor did not open")
+        merchant.tap()
+        merchant.typeText("Corner shop")
+        let amount = app.textFields["transactions.editor.amount"]
+        amount.tap()
+        amount.typeText("42")
+        app.buttons["transactions.editor.save"].tap()
+
+        let saved = row("Corner shop", in: app)
+        XCTAssertTrue(saved.waitForExistence(timeout: 5), "The new transaction was not saved")
+        saved.tap()
+        deleteFromDetail(in: app)
+        XCTAssertTrue(waitForDisappearance(of: saved), "The deleted row is still listed")
+        XCTAssertEqual(app.state, .runningForeground, "The app stopped after the delete")
+    }
+
+    /// Swiping a row away deletes it.
+    func testSwipingARowDeletesIt() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed"]
+        app.launch()
+        app.tab("Transactions").tap()
+
+        let starbucks = row("Starbucks", in: app)
+        XCTAssertTrue(starbucks.waitForExistence(timeout: 10), "The Starbucks row is missing")
+        starbucks.swipeLeft()
+        app.buttons["Delete"].firstMatch.tap()
+        XCTAssertTrue(waitForDisappearance(of: starbucks), "The swiped row is still listed")
+        XCTAssertEqual(app.state, .runningForeground, "The app stopped after the delete")
+    }
+
+    private func deleteFromDetail(in app: XCUIApplication) {
+        let delete = app.scrolledTo(app.buttons["transactions.detail.delete"])
+        XCTAssertTrue(delete.waitForExistence(timeout: 5), "The detail has no Delete button")
+        delete.tap()
+        // The sheet's own Delete button carries the same label, so match the dialog's by excluding it.
+        let confirm = app.buttons
+            .matching(NSPredicate(format: "label == %@ AND identifier != %@", "Delete Transaction", "transactions.detail.delete"))
+            .firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Delete asked for no confirmation")
+        confirm.tap()
+    }
+
     // MARK: - Helpers
 
     /// The list row whose spoken summary starts with the merchant.

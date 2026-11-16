@@ -26,8 +26,8 @@ enum ShortcutsSetupStep: Int, CaseIterable, Identifiable, Sendable {
             )
         case .sender:
             LocalizedStringResource(
-                "Choose your bank's sender. Add one automation per bank, or choose several senders in one.",
-                comment: "Shortcuts setup step 2."
+                "Choose your bank as the sender. If it sends from a name such as MYBANK that you can't save as a contact, leave the sender empty and choose Message Contains with a word every bank message includes, such as the bank's name.",
+                comment: "Shortcuts setup step 2. Message Contains is a Shortcuts app option."
             )
         case .runImmediately:
             LocalizedStringResource(

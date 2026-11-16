@@ -74,7 +74,12 @@ iOS does not let apps read SMS. Zentri instead offers a **Capture Bank SMS** act
 
 1. Open Zentri › Settings › Shortcuts (also offered during setup) and follow the guide.
 2. In the Shortcuts app, create a personal automation: **Message**, sender is your bank, **Run
-   Immediately** on.
+   Immediately** on. Many banks send from an alphanumeric name (such as `BRAC-BANK`) that has no
+   number and cannot be saved as a contact. For those, leave **Sender** empty and set **Message
+   Contains** to a word every one of the bank's messages includes, copied exactly as the bank writes
+   it. A broad word is safe: Zentri records a message only when it reads as a transaction, and keeps
+   one-time codes and promotions in the Message Inbox as "not a transaction". Add a second
+   automation if one word does not catch every message.
 3. Add Zentri's **Capture Bank SMS** action and pass the message's **Content** as **SMS Text**.
    Optionally choose an account; otherwise the matching parsing rule's account is used.
 
@@ -113,8 +118,9 @@ Shortcuts app. Check it by hand on a simulator or a device after any change to c
 
 #### Device: real message automation
 
-1. Follow Settings › Shortcuts in Zentri to create a **Message** automation for your bank's sender, with
-   **Run Immediately** on, passing the message's **Content** as **SMS Text**.
+1. Follow Settings › Shortcuts in Zentri to create a **Message** automation for your bank's sender (or
+   **Message Contains** for a bank that sends from a name), with **Run Immediately** on, passing the
+   message's **Content** as **SMS Text**.
 2. With Zentri closed (swiped away), have the bank send a transaction message, or send yourself one from
    another phone using a sender the automation matches.
 3. Expect the transaction to appear without opening Zentri: the Home Screen widgets update, and opening

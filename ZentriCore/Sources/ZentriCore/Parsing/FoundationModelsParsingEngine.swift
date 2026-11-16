@@ -212,6 +212,8 @@ public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
             cancelledDiagnostic
         case ModelClientError.timedOut:
             timedOutDiagnostic
+        case ModelClientError.unsupportedLanguage:
+            unsupportedLanguageDiagnostic
         default:
             // A client can surface cancellation with its own error type; a cancelled task still
             // means "try again", not "the model failed".
@@ -231,6 +233,14 @@ public struct FoundationModelsParsingEngine: TransactionParsing, Sendable {
         code: .modelTimedOut,
         field: "model",
         message: "The on-device model did not answer in time."
+    )
+
+    /// The diagnostic for a message in a language the model cannot read. It shares the failure
+    /// code; the field tells the app to explain the language rather than a generic failure.
+    private static let unsupportedLanguageDiagnostic = ParseDiagnostic(
+        code: .modelFailed,
+        field: "language",
+        message: "The on-device model cannot read this message's language."
     )
 
     /// The diagnostic for a generation that failed for any other reason.

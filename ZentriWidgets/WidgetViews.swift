@@ -1,4 +1,5 @@
 import Charts
+import UIKit
 import SwiftUI
 import WidgetKit
 import ZentriCore
@@ -15,6 +16,23 @@ enum WidgetPalette {
     static let accent = Color("AccentColor")
     static let income = Color("Income")
     static let spending = Color("Spending")
+    /// The faintest text, as the app's `Theme.tertiaryInk`.
+    static let tertiaryInk = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0x8C / 255, green: 0x84 / 255, blue: 0x7A / 255, alpha: 1)
+            : UIColor(red: 0xA8 / 255, green: 0x9F / 255, blue: 0x94 / 255, alpha: 1)
+    })
+    /// The two ambient lights behind the widget, as the app's background draws them.
+    static let ambientTeal = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0x0F / 255, green: 0x6B / 255, blue: 0x66 / 255, alpha: 1)
+            : UIColor(red: 0x9E / 255, green: 0xD9 / 255, blue: 0xCF / 255, alpha: 1)
+    })
+    static let ambientPeach = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0x6B / 255, green: 0x42 / 255, blue: 0x22 / 255, alpha: 1)
+            : UIColor(red: 0xF3 / 255, green: 0xC9 / 255, blue: 0xA0 / 255, alpha: 1)
+    })
 
     /// The color for a category's token, falling back to slate as the app does.
     static func category(_ token: String) -> Color {
@@ -57,9 +75,41 @@ struct WidgetFrame<Content: View>: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .containerBackground(for: .widget) {
-            WidgetPalette.canvas
+            WidgetBackground()
         }
         .widgetURL(model.isPlaceholder ? DeepLink.overview.url : link.url)
+    }
+}
+
+/// The app's warm canvas with its two soft lights — teal at the top leading corner, peach at the
+/// bottom trailing one — so a widget reads as part of the app. In the tinted and clear Home Screen
+/// modes the system replaces the container background, so the lights only show in full color.
+struct WidgetBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let strength = colorScheme == .dark ? 0.32 : 0.55
+        GeometryReader { proxy in
+            let size = proxy.size
+            ZStack {
+                WidgetPalette.canvas
+                light(WidgetPalette.ambientTeal, strength: strength, radius: max(size.width, size.height) * 0.75)
+                    .position(x: 0, y: 0)
+                light(WidgetPalette.ambientPeach, strength: strength, radius: max(size.width, size.height) * 0.7)
+                    .position(x: size.width, y: size.height)
+            }
+        }
+    }
+
+    private func light(_ color: Color, strength: Double, radius: CGFloat) -> some View {
+        Circle()
+            .fill(RadialGradient(
+                colors: [color.opacity(strength), color.opacity(strength * 0.4), color.opacity(0)],
+                center: .center,
+                startRadius: 0,
+                endRadius: radius
+            ))
+            .frame(width: radius * 2, height: radius * 2)
     }
 }
 
@@ -125,7 +175,7 @@ struct WidgetFigure: View {
     var body: some View {
         VStack(alignment: alignment, spacing: 2) {
             Text(title)
-                .font(.footnote)
+                .font(.caption)
                 .foregroundStyle(WidgetPalette.secondaryInk)
                 .lineLimit(1)
             WidgetAmountText(amount)
@@ -162,13 +212,17 @@ enum WidgetStrings {
     }
 }
 
-/// A category's symbol in its palette color.
+/// A category's filled symbol on a soft square of its color, as the app's rows draw it.
+///
+/// In the tinted and clear Home Screen modes the system draws the tile in a single tint, so the
+/// category's name beside it carries the meaning.
 struct WidgetCategoryIcon: View {
     private let symbolName: String
     private let colorToken: String
 
-    /// A fixed width keeps names aligned however wide each symbol is; it grows with Dynamic Type.
-    @ScaledMetric(relativeTo: .footnote) private var width = 20.0
+    /// The tile grows with Dynamic Type so the symbol never crowds its square.
+    @ScaledMetric(relativeTo: .footnote) private var side = 26.0
+    @Environment(\.colorScheme) private var colorScheme
 
     init(symbolName: String, colorToken: String) {
         self.symbolName = symbolName
@@ -176,10 +230,16 @@ struct WidgetCategoryIcon: View {
     }
 
     var body: some View {
+        let color = WidgetPalette.category(colorToken)
         Image(systemName: symbolName)
-            .font(.footnote)
-            .foregroundStyle(WidgetPalette.category(colorToken))
-            .frame(width: width)
+            .symbolVariant(.fill)
+            .font(.system(size: side * 0.52, weight: .medium))
+            .foregroundStyle(color)
+            .frame(width: side, height: side)
+            .background(
+                color.opacity(colorScheme == .dark ? 0.2 : 0.14),
+                in: .rect(cornerRadius: side * 0.3, style: .continuous)
+            )
             .widgetAccentable()
             .accessibilityHidden(true)
     }
@@ -202,25 +262,29 @@ struct WidgetEmptyMessage: View {
     }
 }
 
-/// The daily spend bars. Bar heights are kept when amounts are hidden; only the figures are hidden.
+/// The daily spend bars, newest on the right and picked out in the accent; the others are quiet.
+/// Bar heights are kept when amounts are hidden; only the figures are hidden.
+///
+/// Plain shapes rather than a chart: a widget renders once per timeline entry, and rounded bars
+/// are all the design draws.
 struct TrendChart: View {
     let bars: [WidgetDisplayModel.TrendBar]
 
     var body: some View {
-        Chart(bars, id: \.date) { bar in
-            BarMark(
-                x: .value("Day", bar.date, unit: .day),
-                y: .value("Spent", bar.spend),
-                width: .ratio(0.6)
-            )
-            .foregroundStyle(WidgetPalette.accent)
-            .cornerRadius(2)
-        }
-        .chartXAxis(.hidden)
-        .chartYAxis {
-            AxisMarks(position: .leading, values: .automatic(desiredCount: 2)) { _ in
-                AxisGridLine()
+        let highest = bars.map(\.spend).max() ?? 0
+        let spacing: CGFloat = bars.count > 14 ? 2 : 5
+        GeometryReader { proxy in
+            HStack(alignment: .bottom, spacing: spacing) {
+                ForEach(Array(bars.enumerated()), id: \.element.date) { index, bar in
+                    let isNewest = index == bars.count - 1
+                    let fraction = highest > 0 ? CGFloat(bar.spend / highest) : 0
+                    RoundedRectangle(cornerRadius: bars.count > 14 ? 2 : 4, style: .continuous)
+                        .fill(isNewest ? WidgetPalette.accent : WidgetPalette.tertiaryInk.opacity(0.35))
+                        .frame(height: max(4, fraction * proxy.size.height))
+                        .frame(maxWidth: .infinity)
+                }
             }
+            .frame(maxHeight: .infinity, alignment: .bottom)
         }
         .widgetAccentable()
     }
@@ -239,11 +303,11 @@ struct RecentTransactionWidgetRow: View {
     @Environment(\.redactionReasons) private var redactionReasons
 
     var body: some View {
-        HStack {
+        HStack(spacing: 10) {
             WidgetCategoryIcon(symbolName: row.symbolName, colorToken: row.colorToken)
             VStack(alignment: .leading, spacing: 0) {
                 Text(verbatim: row.merchant)
-                    .font(.subheadline)
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(WidgetPalette.ink)
                     .lineLimit(1)
                 if showsCategory {
@@ -255,7 +319,7 @@ struct RecentTransactionWidgetRow: View {
             }
             Spacer(minLength: 4)
             WidgetAmountText(row.amount)
-                .font(.subheadline)
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(row.isCredit ? WidgetPalette.income : WidgetPalette.ink)
                 .layoutPriority(1)
         }
@@ -301,10 +365,10 @@ struct CategoryShareBar: View {
         .chartYAxis(.hidden)
         .chartPlotStyle { plot in
             plot
-                .background(.quaternary)
+                .background(WidgetPalette.tertiaryInk.opacity(0.18))
                 .clipShape(.capsule)
         }
-        .frame(height: 10)
+        .frame(height: 8)
         .widgetAccentable()
         .accessibilityHidden(true)
     }
@@ -320,7 +384,7 @@ struct CategoryWidgetRow: View {
     @Environment(\.redactionReasons) private var redactionReasons
 
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
             WidgetCategoryIcon(symbolName: row.symbolName, colorToken: row.colorToken)
             Text(verbatim: row.name)
                 .font(.subheadline)

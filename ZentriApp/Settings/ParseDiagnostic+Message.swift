@@ -18,7 +18,10 @@ extension ParseDiagnostic {
         case .missingMerchant: "The merchant is missing."
         case .matchFailed: "The rule's pattern couldn't be run on this message."
         case .modelUnavailable: "Apple Intelligence isn't available right now."
-        case .modelFailed: "Apple Intelligence couldn't read this message."
+        case .modelFailed:
+            field == "language"
+                ? "Apple Intelligence can't read messages in this language yet."
+                : "Apple Intelligence couldn't read this message."
         case .modelTimedOut: "Apple Intelligence took too long and was stopped."
         case .cancelled: "Reading the message was cancelled."
         }

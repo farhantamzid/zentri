@@ -196,6 +196,9 @@ struct BalanceHero: View {
         }
         .font(.footnote)
         .foregroundStyle(Theme.secondaryInk)
+        // One line, so a tight row falls back to the stacked layout instead of wrapping the chip.
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
         .padding(.horizontal, 11)
         .padding(.vertical, 7)
         .background(Theme.chip, in: .capsule)
@@ -311,7 +314,7 @@ private struct HeroGlow: View {
     ]
 
     var body: some View {
-        let base = colorScheme == .dark ? 0.6 : 0.8
+        let base = Theme.glowStrength(colorScheme)
         GeometryReader { proxy in
             ZStack {
                 ForEach(spots.indices, id: \.self) { index in

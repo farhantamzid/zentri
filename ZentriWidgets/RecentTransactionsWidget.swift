@@ -34,10 +34,10 @@ struct RecentTransactionsWidgetView: View {
 
     var body: some View {
         WidgetFrame(model: model, link: .transactions) {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Recent", comment: "The recent transactions widget's heading.")
-                    .font(.headline)
-                    .foregroundStyle(WidgetPalette.ink)
+                    .font(.caption)
+                    .foregroundStyle(WidgetPalette.secondaryInk)
                     .accessibilityAddTraits(.isHeader)
 
                 if model.recentRows.isEmpty {

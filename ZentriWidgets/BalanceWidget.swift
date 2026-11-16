@@ -36,17 +36,18 @@ struct BalanceWidgetView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     WidgetFigure("Balance", amount: model.balance, isHidden: model.amountsHidden)
                         .font(.title2.bold())
+                        .kerning(-0.4)
                         .foregroundStyle(model.isBalanceNegative ? WidgetPalette.spending : WidgetPalette.ink)
                         .widgetAccentable()
                     if let asOf = model.balanceAsOf {
                         Text("As of \(asOf, format: .dateTime.month(.abbreviated).day())")
-                            .font(.caption)
+                            .font(.caption2)
                             .foregroundStyle(WidgetPalette.secondaryInk)
                             .lineLimit(1)
                     }
                     Spacer(minLength: 0)
                     WidgetFigure("Spent today", amount: model.todaySpend, isHidden: model.amountsHidden)
-                        .font(.headline)
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(WidgetPalette.ink)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

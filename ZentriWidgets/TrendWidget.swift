@@ -39,7 +39,7 @@ struct TrendWidgetView: View {
             VStack(alignment: .leading) {
                 HStack(alignment: .firstTextBaseline) {
                     WidgetFigure(periodTitle, amount: trend.total, isHidden: model.amountsHidden)
-                        .font(.headline)
+                        .font(.headline.bold())
                         .foregroundStyle(WidgetPalette.ink)
                     Spacer()
                     WidgetFigure("This month", amount: model.monthSpend, isHidden: model.amountsHidden, alignment: .trailing)
