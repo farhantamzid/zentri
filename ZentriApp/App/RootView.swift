@@ -2,7 +2,7 @@ import SwiftUI
 import ZentriCore
 
 /// The app's root: onboarding, settings recovery, or the tab shell, depending on stored settings,
-/// under the Face ID lock's privacy cover.
+/// under the Face ID lock's privacy cover, drawn in the appearance mode the settings choose.
 ///
 /// With the lock on, the cover hides the app while it is locked and whenever the scene is not
 /// active, so the app-switcher snapshot is taken of the cover. The cover is drawn twice: an opaque
@@ -16,6 +16,7 @@ struct RootView: View {
 
     var body: some View {
         let isCovered = appLock.isCovering(sceneIsActive: scenePhase == .active)
+        let colorScheme = appState.settingsStore.settings?.appearanceMode.colorScheme
         Group {
             if appState.settingsStore.loadFailure != nil {
                 SettingsRecoveryView()
@@ -35,9 +36,15 @@ struct RootView: View {
         }
         .background {
             PrivacyCoverWindowHost(isPresented: isCovered) {
+                // The cover lives in a window of its own, which the root's scheme does not reach.
                 PrivacyCoverView(lock: appLock, onTurnOff: turnOffLock)
+                    .preferredColorScheme(colorScheme)
             }
         }
+        // Applied at the root so the window, and every sheet and alert presented in it, follows the
+        // chosen mode; nil follows the device. Onboarding and recovery have no settings yet, so they
+        // follow the device.
+        .preferredColorScheme(colorScheme)
         .sensoryFeedback(.success, trigger: appState.settingsStore.loadFailure) { oldValue, newValue in
             // A successful reset clears the failure; confirming it is the one meaningful haptic
             // this shell has, so it stays silent when onboarding starts or a load fails.

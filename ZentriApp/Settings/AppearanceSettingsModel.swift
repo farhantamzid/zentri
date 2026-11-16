@@ -2,9 +2,10 @@ import Foundation
 import Observation
 import ZentriCore
 
-/// Currency, number grouping, and the Face ID lock, as Settings › Appearance changes them.
+/// Light or dark mode, currency, number grouping, and the Face ID lock, as Settings › Appearance
+/// changes them.
 ///
-/// Grouping applies the moment it is picked. A new currency is only staged: the screen asks for
+/// The appearance mode and grouping apply the moment it is picked. A new currency is only staged: the screen asks for
 /// confirmation first, because the stored amounts stay as they are — only the symbol changes. Saving
 /// goes through `apply`, which the app wires to `AppState.updateSettings(_:)` so the widget snapshot
 /// follows; every money label re-renders from the observed settings.
@@ -55,6 +56,23 @@ final class AppearanceSettingsModel {
             guard newValue != settings.currencyCode else { return }
             pendingCurrencyCode = newValue
         }
+    }
+
+    /// The saved appearance mode. Picking a different one saves it straight away, and the root view
+    /// redraws every window in it.
+    var appearanceMode: AppearanceMode {
+        get { settings.appearanceMode }
+        set {
+            guard newValue != settings.appearanceMode else { return }
+            Task { await setAppearanceMode(newValue) }
+        }
+    }
+
+    /// Saves a new appearance mode.
+    func setAppearanceMode(_ mode: AppearanceMode) async {
+        var updated = settings
+        updated.appearanceMode = mode
+        await save(updated)
     }
 
     /// The saved grouping. Picking a different one saves it straight away.

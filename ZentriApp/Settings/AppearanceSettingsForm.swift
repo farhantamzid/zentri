@@ -1,7 +1,7 @@
 import SwiftUI
 import ZentriCore
 
-/// The Appearance form: currency with its confirmation, grouping with its preview, and Face ID.
+/// The Appearance form: light or dark mode, currency with its confirmation, grouping with its preview, and Face ID.
 struct AppearanceSettingsForm: View {
     @State private var model: AppearanceSettingsModel
 
@@ -11,6 +11,21 @@ struct AppearanceSettingsForm: View {
 
     var body: some View {
         Form {
+            Section {
+                Picker("Appearance", selection: $model.appearanceMode) {
+                    ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                        Text(mode.title)
+                            .tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .accessibilityIdentifier("appearance.mode")
+            } header: {
+                Text("Theme")
+            } footer: {
+                Text("System follows the device's Light or Dark setting.")
+            }
+
             Section {
                 Picker("Currency", selection: $model.currencyCode) {
                     ForEach(model.currencyCodes, id: \.self) { code in
