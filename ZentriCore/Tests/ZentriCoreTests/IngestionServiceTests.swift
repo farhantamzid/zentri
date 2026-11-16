@@ -1310,3 +1310,74 @@ private func makeTwoAccountStoreWithSavingsRule() throws -> (store: TestStore, s
     #expect(outcomes == [.transaction(transaction.id)])
     #expect(transaction.account.id == savings.id)
 }
+
+// MARK: - Archived accounts' rules (I7)
+
+@Test @MainActor func storedRuleSpecsLeaveOutRulesOfArchivedAccounts() throws {
+    let (store, savings, rule) = try makeTwoAccountStoreWithSavingsRule()
+    let everydayRule = ParsingRule(
+        account: store.accounts[0], name: "Everyday debit", direction: .debit, pattern: "spent", priority: 1,
+        isEnabled: true, createdAt: ingestNow, updatedAt: ingestNow
+    )
+    store.context.insert(everydayRule)
+    savings.archivedAt = ingestNow
+    try store.context.save()
+
+    let specs = try StoredParsingRules.specs(in: store.context)
+
+    #expect(specs.map(\.id) == [everydayRule.id])
+    #expect(!specs.map(\.id).contains(rule.id))
+}
+
+@Test @MainActor func ingestDoesNotRunTheRulesOfAnArchivedAccount() async throws {
+    let (store, savings, rule) = try makeTwoAccountStoreWithSavingsRule()
+    store.context.insert(Account(name: "Travel", institutionName: "Bank", sortOrder: 2, createdAt: ingestNow))
+    savings.archivedAt = ingestNow
+    try store.context.save()
+    let recorder = ParseRecorder()
+    let service = store.service(
+        parser: StubParser(result: .notTransaction),
+        refresher: SpySnapshotRefresher(),
+        recorder: recorder
+    )
+
+    _ = await service.ingest(sampleRequest())
+
+    #expect(recorder.ruleIDs == [[]])
+    #expect(!(recorder.ruleIDs.first ?? []).contains(rule.id))
+}
+
+@Test @MainActor func aRuleOfAnArchivedAccountNeverFilesATransaction() async throws {
+    let (store, savings, rule) = try makeTwoAccountStoreWithSavingsRule()
+    store.context.insert(Account(name: "Travel", institutionName: "Bank", sortOrder: 2, createdAt: ingestNow))
+    savings.archivedAt = ingestNow
+    try store.context.save()
+    // A parser that still answers with the archived account's rule, as a stale spec list would.
+    let service = store.service(
+        parser: StubParser(result: .transaction(sampleDraft(matchedRuleID: rule.id))),
+        refresher: SpySnapshotRefresher()
+    )
+
+    let outcome = await service.ingest(sampleRequest())
+
+    #expect(outcome == .failed([IngestionDiagnostics.chooseAccount]))
+    #expect(try fetchTransactions(store.context).isEmpty)
+}
+
+@Test @MainActor func retryPendingNeverFilesUnderAnArchivedRulesAccount() async throws {
+    let (store, savings, rule) = try makeTwoAccountStoreWithSavingsRule()
+    store.context.insert(Account(name: "Travel", institutionName: "Bank", sortOrder: 2, createdAt: ingestNow))
+    savings.archivedAt = ingestNow
+    try store.context.save()
+    let message = try insertProcessingMessage(in: store.context)
+    let service = store.service(
+        parser: StubParser(result: .transaction(sampleDraft(matchedRuleID: rule.id))),
+        refresher: SpySnapshotRefresher()
+    )
+
+    let outcomes = await service.retryPending()
+
+    #expect(outcomes == [.failed([IngestionDiagnostics.retryAccount])])
+    #expect(message.status == .processing)
+    #expect(try fetchTransactions(store.context).isEmpty)
+}

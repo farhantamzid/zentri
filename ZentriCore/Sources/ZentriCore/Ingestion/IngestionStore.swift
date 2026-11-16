@@ -21,12 +21,16 @@ struct IngestionStore {
     ///
     /// A message parsed without an account — a launch retry, or a reprocess with several accounts and
     /// no choice — lands on its matched rule's account, because rules are per account. A draft no
-    /// rule produced, such as the model's, names no account.
+    /// rule produced, such as the model's, names no account. An archived account is never
+    /// returned: it takes no new transactions, and one filed there would be missing from every
+    /// balance the app shows.
     func ruleAccount(for draft: TransactionDraft) -> Account? {
         guard let ruleID = draft.matchedRuleID else { return nil }
-        return ((try? context.fetch(FetchDescriptor<ParsingRule>())) ?? [])
-            .first { $0.id == ruleID }?
-            .account
+        let account = ((try? context.fetch(FetchDescriptor<ParsingRule>(
+            predicate: #Predicate { $0.id == ruleID }
+        ))) ?? []).first?.account
+        guard let account, account.archivedAt == nil else { return nil }
+        return account
     }
 
     // MARK: - Writing a parse

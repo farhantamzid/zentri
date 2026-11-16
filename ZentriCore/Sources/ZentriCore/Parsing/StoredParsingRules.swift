@@ -21,8 +21,14 @@ public enum StoredParsingRules {
         }
     }
 
-    /// Every stored rule as a parser spec, in evaluation order.
+    /// The rules that may parse a message, as parser specs, in evaluation order.
+    ///
+    /// Rules of an archived account are left out: an archived account takes no new transactions,
+    /// so its patterns must not compete for a message that ingestion, a retry, or a reprocess
+    /// parses without a chosen account.
     public static func specs(in context: ModelContext) throws -> [ParsingRuleSpec] {
-        ordered(try context.fetch(FetchDescriptor<ParsingRule>())).map(\.spec)
+        ordered(try context.fetch(FetchDescriptor<ParsingRule>()))
+            .filter { $0.account.archivedAt == nil }
+            .map(\.spec)
     }
 }
