@@ -70,12 +70,13 @@ install on.
 
 ### 2.3 Get the IPA onto the phone
 
-Send `DerivedData/ipa/Zentri-1.0-unsigned.ipa` from the Mac to the iPhone: AirDrop it and choose
+Send `DerivedData/ipa/Zentri-1.0-flarestore-unsigned.ipa` (the build made for your FlareStore
+certificate, see 2.5) from the Mac to the iPhone: AirDrop it and choose
 **Save to Files**, or put it in iCloud Drive.
 
 ### 2.4 Sign and install Zentri
 
-1. FlareStore home page › **+ Import** › choose `Zentri-1.0-unsigned.ipa`.
+1. FlareStore home page › **+ Import** › choose `Zentri-1.0-flarestore-unsigned.ipa`.
 2. **Library** tab › select Zentri › **Sign**.
 3. Before signing, tap **Edit** only if you must. **Leave the Bundle ID as
    `com.farhantamzid.zentri`** — FlareStore's FAQ says an update only keeps your data when it is
@@ -90,8 +91,7 @@ Send `DerivedData/ipa/Zentri-1.0-unsigned.ipa` from the Mac to the iPhone: AirDr
 
 Zentri's widgets read the app's data through the App Group `group.com.farhantamzid.zentri`, which is
 compiled into the app. A FlareStore certificate belongs to someone else's Apple developer team, so
-that exact group is almost certainly **not** in its provisioning profile, even though FlareStore's
-FAQ lists app groups among its entitlements.
+that exact group is not in its provisioning profile.
 
 What to expect if the group is not granted:
 
@@ -100,8 +100,31 @@ What to expect if the group is not granted:
 - **Widgets show only their placeholder**, because the widget extension cannot see that storage.
 - Section E of the test cases will fail; everything else is unaffected.
 
-To find out, and to get widgets working, check which groups the profile really contains. On the Mac,
-with the `.mobileprovision` file from FlareStore:
+**Checked on 16 Nov 2026 for your certificate.** Its profile does not contain Zentri's own group
+but does contain five of its own: `group.a1a3126d75ee90bd.1` to `.5`. Its app identifier is the
+explicit `AXSTP35NFJ.app.amethyst4184.corn1816`, and it expires on 27 Sep 2027.
+
+`DerivedData/ipa/Zentri-1.0-flarestore-unsigned.ipa` is therefore built with
+**`group.a1a3126d75ee90bd.5`** in place of `group.com.farhantamzid.zentri`. The repository itself
+still uses the original group; to rebuild this variant, replace the group ID in
+`ZentriApp/ZentriApp.entitlements`, `ZentriWidgets/ZentriWidgets.entitlements` and
+`AppGroup.identifier` in `ZentriCore/Sources/ZentriCore/AppGroup.swift`, then repeat Part 1 (do it
+in a copy of the repo, and do not commit it).
+
+Still to confirm on the phone:
+
+- **That FlareStore's signer keeps the App Group entitlement on both the app and the widget
+  extension.** Test cases E1 and E2 answer this: real data in a widget means it worked; a
+  placeholder means the entitlement was dropped.
+- **The bundle ID.** The profile names one explicit app ID rather than a wildcard. Leave Zentri's
+  bundle ID alone first; if installation fails, set the Bundle ID in FlareStore's **Edit** screen to
+  `app.amethyst4184.corn1816` and sign again. Pick one and keep it: a different bundle ID installs
+  as a separate app with separate data.
+- **Other apps signed with this certificate.** Every app you sign with it can be given the same
+  five groups, so another sideloaded app could read Zentri's shared container — which holds the
+  database with your bank messages. Only sign apps you trust with this certificate.
+
+To re-check a profile (for a renewed or different certificate):
 
 ```bash
 security cms -D -i ~/Downloads/YOUR.mobileprovision > /tmp/profile.plist
@@ -109,14 +132,8 @@ security cms -D -i ~/Downloads/YOUR.mobileprovision > /tmp/profile.plist
 /usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' /tmp/profile.plist
 ```
 
-- **The first command lists one or more `group.…` IDs:** rebuild Zentri with one of them. Replace
-  `group.com.farhantamzid.zentri` in three files — `ZentriApp/ZentriApp.entitlements`,
-  `ZentriWidgets/ZentriWidgets.entitlements`, and `AppGroup.identifier` in
-  `ZentriCore/Sources/ZentriCore/AppGroup.swift` — then repeat Part 1 and sign the new IPA. Do this
-  **before** you start using the app for real: changing the group later moves where data is stored,
-  so export a backup first and restore it afterwards.
-- **It prints "Does Not Exist" or an empty list:** this certificate cannot give Zentri a shared
-  container. Use the app without widgets, or sign with your own paid Apple Developer team.
+A renewed certificate may come with different group IDs. If so, export a backup, rebuild with the
+new group, install, and restore.
 
 Other consequences of signing this way:
 
@@ -180,7 +197,7 @@ your bank, create the automation for a second phone's number as sender.
 
 | # | Steps | Expected |
 |---|---|---|
-| A0 | Run the profile check in 2.5 | You know whether the App Group is available before testing widgets |
+| A0 | Confirm you are installing `Zentri-1.0-flarestore-unsigned.ipa` | It is the build that uses your certificate's App Group |
 | A1 | Sign and install with FlareStore (Part 2), open Zentri | Onboarding appears; no crash; no "untrusted developer" block after trusting the certificate |
 | A2 | Complete onboarding with BDT, Indian grouping, opening balance 1000000 | Overview shows `10,00,000.00` with the BDT symbol/code and an "as of" time |
 | A3 | In onboarding, turn Face ID on and cancel the Face ID prompt | Toggle stays off with a short message |
