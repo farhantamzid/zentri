@@ -2980,17 +2980,6 @@
         }
       }
     },
-    "Delete all data?": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete all data?"
-          }
-        }
-      }
-    },
     "Delete this category?": {
       "extractionState": "manual",
       "localizations": {
@@ -6494,6 +6483,66 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zentri saved this message. Open Zentri to fix its settings, and the message will be read then."
+          }
+        }
+      }
+    },
+    "DELETE": {
+      "comment": "The word a person types to confirm deleting all of Zentri's data. Keep it short and in capitals.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DELETE"
+          }
+        }
+      }
+    },
+    "Confirmation word": {
+      "comment": "Accessibility label of the field where a person types the word that confirms deleting all data.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmation word"
+          }
+        }
+      }
+    },
+    "Type %@ to confirm": {
+      "comment": "Header above the field that confirms deleting all data. %@ is the confirmation word, such as DELETE.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type %@ to confirm"
+          }
+        }
+      }
+    },
+    "Type %@ to turn on Delete All Data.": {
+      "comment": "VoiceOver hint for the confirmation field. %@ is the confirmation word, such as DELETE.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type %@ to turn on Delete All Data."
+          }
+        }
+      }
+    },
+    "Delete All Data?": {
+      "comment": "Title of the sheet that asks for the typed confirmation before deleting all data.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete All Data?"
           }
         }
       }

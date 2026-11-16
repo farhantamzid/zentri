@@ -140,6 +140,35 @@ final class SettingsUITests: XCTestCase {
 
     // MARK: - Helpers
 
+    /// Deleting everything needs the confirmation word typed (spec §15): the delete button stays off
+    /// until it is, and then the app returns to setup.
+    func testDeleteAllDataNeedsTheConfirmationWordTyped() {
+        let app = launchedInSettings()
+        app.scrolledTo(app.buttons["settings.about"]).tap()
+
+        let deleteAll = app.scrolledTo(app.buttons["about.deleteAllData"])
+        XCTAssertTrue(deleteAll.waitForExistence(timeout: 5), "About has no Delete All Data button")
+        deleteAll.tap()
+
+        let field = app.textFields["about.deleteConfirmation.field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "Deleting did not ask for the confirmation word")
+        let confirm = app.scrolledTo(app.buttons["about.deleteConfirmation.delete"])
+        XCTAssertTrue(confirm.exists, "The confirmation has no delete button")
+        XCTAssertFalse(confirm.isEnabled, "Delete must stay off until the word is typed")
+
+        field.tap()
+        field.typeText("DELET")
+        XCTAssertFalse(confirm.isEnabled, "A partly typed word must not turn delete on")
+        field.typeText("E")
+        XCTAssertTrue(confirm.isEnabled, "Typing the word must turn delete on")
+        app.scrolledTo(confirm).tap()
+
+        XCTAssertTrue(
+            app.buttons["onboarding.continue"].waitForExistence(timeout: 10),
+            "Deleting all data did not return to setup"
+        )
+    }
+
     private func launchedInSettings() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode", "-UITestSkipOnboarding", "-UITestSeed"]

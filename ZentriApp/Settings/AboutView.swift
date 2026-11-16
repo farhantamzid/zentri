@@ -3,7 +3,8 @@ import SwiftUI
 /// Settings › About: the version, the privacy statement, and deleting everything Zentri keeps.
 ///
 /// "Delete All Data" removes every row in the store, the widget snapshot, the backup-folder bookmark,
-/// and the settings document, after an explicit confirmation; the app then returns to setup.
+/// and the settings document once the person types the confirmation word (spec §15); the app then
+/// returns to setup.
 struct AboutView: View {
     @Environment(AppState.self) private var appState
 
@@ -44,15 +45,6 @@ struct AboutView: View {
             Section {
                 Button("Delete All Data", systemImage: "trash", role: .destructive, action: confirmDeletion)
                     .accessibilityIdentifier("about.deleteAllData")
-                    .confirmationDialog(
-                        "Delete all data?",
-                        isPresented: $isConfirmingDeletion,
-                        titleVisibility: .visible
-                    ) {
-                        Button("Delete All Data", role: .destructive, action: deleteAllData)
-                    } message: {
-                        Text("Every account, balance, transaction, saved message, rule, and category on this iPhone is deleted, along with your settings and the widget data, and automatic backups stop. Backups you exported or saved to your backup folder are not touched. This can't be undone.")
-                    }
             } header: {
                 Text("Your data")
             } footer: {
@@ -62,11 +54,14 @@ struct AboutView: View {
         .scrollContentBackground(.hidden)
         .background { Theme.canvas.ignoresSafeArea() }
         .navigationTitle("About")
+        .sheet(isPresented: $isConfirmingDeletion) {
+            DeleteAllDataSheet(onDelete: deleteAllData)
+        }
         .alert("Couldn't delete your data", item: $failureMessage) { _ in
         } message: { message in
             Text(message)
         }
-        // The warning plays as the destructive confirmation appears; after a deletion this screen is
+        // The warning plays as the typed confirmation appears; after a deletion this screen is
         // gone, because the root returns to setup.
         .sensoryFeedback(.warning, trigger: isConfirmingDeletion) { _, isConfirming in
             isConfirming
