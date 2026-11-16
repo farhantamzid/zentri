@@ -36,32 +36,102 @@ What is inside:
 
 There are no embedded frameworks; the Swift package is linked statically.
 
-## Part 2 — Sign and install
+## Part 2 — Sign and install with FlareStore
 
-An unsigned build carries **no entitlements**, so your signing step must add them. Three things
-matter:
+FlareStore's steps below come from its own guide and FAQ (flarestore.app/guide/ios, flarestore.app/faq,
+flarestore.vip) as of November 2026. None of this has been tried with Zentri yet.
 
-1. **Sign both bundles**: the widget extension first, then the app.
-2. **Give both the App Group entitlement** `group.com.farhantamzid.zentri` (the two
-   `.entitlements` files above contain exactly that and nothing else).
-3. **Keep the App Group ID unchanged.** It is compiled into the app
-   (`ZentriCore/Sources/ZentriCore/AppGroup.swift`). Your provisioning profiles must include that
-   exact group for both bundle IDs.
+### 2.1 What to buy
 
-If your signer rewrites bundle IDs or strips/renames App Groups (most free-Apple-ID sideloading
-tools do), the app still launches and works on its own, using app-local storage, but **the widgets
-only show their placeholder**, because they cannot reach the app's data. App Groups on a device need
-a paid Apple Developer Program team.
+Zentri needs no JIT, so a **distribution** certificate is enough. FlareStore's plans are one device,
+one-time payment, valid one year, with no revoke protection:
 
-If you must use a different group or bundle prefix, change it before building: `bundleIdPrefix` and
-both `PRODUCT_BUNDLE_IDENTIFIER` values in `project.yml`, both `.entitlements` files, and
-`AppGroup.identifier` in `AppGroup.swift`; then rebuild.
+| Plan | Certificate | Fits Zentri? |
+|---|---|---|
+| Basic | Distribution | Yes — cheapest option that works |
+| Standard | Development (JIT) | Works, but needs Developer Mode on the phone; JIT is not needed |
+| Pro | Distribution | Yes |
+| Premium | Distribution + Development | Yes; more than Zentri needs |
 
-Alternative without an IPA: open `Zentri.xcodeproj`, pick your paid team under Signing &
-Capabilities for `ZentriApp` and `ZentriWidgets`, and Run on the phone.
+After paying you are sent to a redemption page that asks for the phone's **UDID** (FlareStore points
+to udid.website to read it). The UDID cannot be changed afterwards, so enter the iPhone you will
+install on.
 
-**Upgrading later:** install a new build over the old one with the same bundle ID and group and
-your data stays. Deleting the app deletes its data; restore from a backup (Part 3, step 6).
+### 2.2 Install the FlareStore app and certificate
+
+1. Sign and install the FlareStore app with the **FlareStore Web Signer** (linked from your
+   redemption page / flarestore.app).
+2. Open FlareStore. A certificate used by the Web Signer is imported automatically. If it is not
+   there: **Settings › Certificates › Add Certificate**, pick the **P12** and the **Mobile
+   Provision**, and enter the P12 password if it has one.
+3. If iOS says the developer is untrusted when you open an installed app: Settings › General › VPN &
+   Device Management › trust the certificate. With a development certificate also turn on Settings ›
+   Privacy & Security › Developer Mode.
+
+### 2.3 Get the IPA onto the phone
+
+Send `DerivedData/ipa/Zentri-1.0-unsigned.ipa` from the Mac to the iPhone: AirDrop it and choose
+**Save to Files**, or put it in iCloud Drive.
+
+### 2.4 Sign and install Zentri
+
+1. FlareStore home page › **+ Import** › choose `Zentri-1.0-unsigned.ipa`.
+2. **Library** tab › select Zentri › **Sign**.
+3. Before signing, tap **Edit** only if you must. **Leave the Bundle ID as
+   `com.farhantamzid.zentri`** — FlareStore's FAQ says an update only keeps your data when it is
+   signed with the same certificate and the same bundle ID as the installed copy. If there is an
+   option to remove extensions/plug-ins, leave it off, or the widgets are stripped.
+4. When signing finishes tap **Install** and accept the prompt ("Open this Page in iTunes" or
+   "localhost.flarestore.vip would like to install…").
+5. If no prompt appears or you get a domain lookup error, FlareStore's guide says to make sure an ad
+   blocker, VPN or ISP is not blocking `*.flarestore.vip`, or to use the 1.1.1.1 DNS app.
+
+### 2.5 The App Group: check this before relying on widgets
+
+Zentri's widgets read the app's data through the App Group `group.com.farhantamzid.zentri`, which is
+compiled into the app. A FlareStore certificate belongs to someone else's Apple developer team, so
+that exact group is almost certainly **not** in its provisioning profile, even though FlareStore's
+FAQ lists app groups among its entitlements.
+
+What to expect if the group is not granted:
+
+- **The app itself should work fully**, including the Shortcuts capture action: the app and the
+  action run in the same process and fall back to app-local storage.
+- **Widgets show only their placeholder**, because the widget extension cannot see that storage.
+- Section E of the test cases will fail; everything else is unaffected.
+
+To find out, and to get widgets working, check which groups the profile really contains. On the Mac,
+with the `.mobileprovision` file from FlareStore:
+
+```bash
+security cms -D -i ~/Downloads/YOUR.mobileprovision > /tmp/profile.plist
+/usr/libexec/PlistBuddy -c 'Print :Entitlements:com.apple.security.application-groups' /tmp/profile.plist
+/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' /tmp/profile.plist
+```
+
+- **The first command lists one or more `group.…` IDs:** rebuild Zentri with one of them. Replace
+  `group.com.farhantamzid.zentri` in three files — `ZentriApp/ZentriApp.entitlements`,
+  `ZentriWidgets/ZentriWidgets.entitlements`, and `AppGroup.identifier` in
+  `ZentriCore/Sources/ZentriCore/AppGroup.swift` — then repeat Part 1 and sign the new IPA. Do this
+  **before** you start using the app for real: changing the group later moves where data is stored,
+  so export a backup first and restore it afterwards.
+- **It prints "Does Not Exist" or an empty list:** this certificate cannot give Zentri a shared
+  container. Use the app without widgets, or sign with your own paid Apple Developer team.
+
+Other consequences of signing this way:
+
+- **One certificate, one year.** Re-sign and reinstall over the top with the same certificate and
+  bundle ID before it expires; data is kept.
+- **Revokes.** If Apple revokes the certificate the app stops opening. FlareStore offers no revoke
+  protection. Your data stays on the phone only as long as the app is not deleted, and a different
+  certificate may not be able to install over it. **Turn on automatic backups to iCloud Drive
+  (Part 3, step 5) on day one** so a revoke costs you nothing but a reinstall and a restore.
+- **Trust.** The signer and the certificate's owner are third parties. Zentri makes no network
+  requests and FlareStore signs on the device, but you are relying on their tooling with an app that
+  holds your bank messages.
+
+**Upgrading later:** install a new build over the old one with the same certificate, bundle ID and
+group and your data stays. Deleting the app deletes its data; restore from a backup (Part 3, step 6).
 
 ## Part 3 — First-time setup on the phone
 
@@ -110,7 +180,8 @@ your bank, create the automation for a second phone's number as sender.
 
 | # | Steps | Expected |
 |---|---|---|
-| A1 | Install the signed IPA, open it | Onboarding appears; no crash |
+| A0 | Run the profile check in 2.5 | You know whether the App Group is available before testing widgets |
+| A1 | Sign and install with FlareStore (Part 2), open Zentri | Onboarding appears; no crash; no "untrusted developer" block after trusting the certificate |
 | A2 | Complete onboarding with BDT, Indian grouping, opening balance 1000000 | Overview shows `10,00,000.00` with the BDT symbol/code and an "as of" time |
 | A3 | In onboarding, turn Face ID on and cancel the Face ID prompt | Toggle stays off with a short message |
 | A4 | Force-quit and reopen | Goes straight to Overview; data intact |
@@ -158,7 +229,7 @@ your bank, create the automation for a second phone's number as sender.
 | D9 | Settings › Accounts › set balance | Overview balance and "as of" time update |
 | D10 | Settings › Categories: add, rename, drag to reorder | Order persists after relaunch; "Other" cannot be renamed or deleted |
 
-### E. Widgets (need the App Group)
+### E. Widgets (need the App Group — see 2.5)
 
 | # | Steps | Expected |
 |---|---|---|
