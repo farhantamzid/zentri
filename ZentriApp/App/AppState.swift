@@ -349,6 +349,15 @@ final class AppState {
         return outcome
     }
 
+    /// Reads a bank message the person pasted into the app, with the engine they chose, then tells
+    /// every screen. It runs the same pipeline as a Shortcuts capture: the message is archived,
+    /// checked for duplicates, parsed, categorized, and recorded.
+    func capturePasted(_ request: IngestionRequest, parserMode: ParserMode) async -> IngestionOutcome {
+        let outcome = await makeCaptureSMSHandler().handle(request, parserMode: parserMode)
+        mutate()
+        return outcome
+    }
+
     /// A capture handler over this state's container, settings, parser, and widget refresher.
     func makeCaptureSMSHandler() -> CaptureSMSHandler {
         CaptureSMSHandler(

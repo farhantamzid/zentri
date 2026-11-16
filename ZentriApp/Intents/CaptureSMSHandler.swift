@@ -37,7 +37,10 @@ final class CaptureSMSHandler {
     /// remembered for the life of the process. If they are still unreadable the message is archived
     /// unparsed, as `processing`: the accounts and rules are intact, and the retry that runs once the
     /// settings are fixed reads it. A real message is never dropped.
-    func handle(_ request: IngestionRequest) async -> IngestionOutcome {
+    ///
+    /// - Parameter parserMode: The engine to read this one message with, when the person chose one
+    ///   for a pasted message; `nil` uses the saved parser mode.
+    func handle(_ request: IngestionRequest, parserMode: ParserMode? = nil) async -> IngestionOutcome {
         if settingsStore.settings == nil, settingsStore.loadFailure != nil {
             try? settingsStore.load()
         }
@@ -51,7 +54,13 @@ final class CaptureSMSHandler {
         let service = IngestionService(
             context: container.mainContext,
             // Read per message, so a parser-mode change applies without rebuilding the handler.
-            settings: { [settingsStore] in settingsStore.settings ?? .defaultValue },
+            settings: { [settingsStore] in
+                var settings = settingsStore.settings ?? .defaultValue
+                if let parserMode {
+                    settings.parserMode = parserMode
+                }
+                return settings
+            },
             parserBuilder: parserBuilder,
             snapshotRefresher: snapshotRefresher,
             now: { .now }

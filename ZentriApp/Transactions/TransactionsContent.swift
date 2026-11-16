@@ -12,6 +12,9 @@ struct TransactionsContent: View {
     @State private var model: TransactionsModel
     @State private var selection: TransactionSelection?
     @State private var isAddingTransaction = false
+    @State private var isPastingSMS = false
+    /// The transaction a pasted message just became, opened once the paste sheet has closed.
+    @State private var pastedTransactionID: UUID?
     @State private var isShowingFilters = false
     @State private var addedCount = 0
 
@@ -41,8 +44,13 @@ struct TransactionsContent: View {
                     .accessibilityIdentifier("transactions.filters")
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("Add Transaction", systemImage: "plus", action: startAdding)
-                    .accessibilityIdentifier("transactions.add")
+                Menu("Add Transaction", systemImage: "plus") {
+                    Button("Paste Bank SMS", systemImage: "doc.on.clipboard", action: startPasting)
+                        .accessibilityIdentifier("transactions.add.paste")
+                    Button("Enter Manually", systemImage: "square.and.pencil", action: startAdding)
+                        .accessibilityIdentifier("transactions.add.manual")
+                }
+                .accessibilityIdentifier("transactions.add")
             }
         }
         .onAppear(perform: refresh)
@@ -69,6 +77,16 @@ struct TransactionsContent: View {
                 accounts: model.accounts,
                 categories: model.categories,
                 onSave: add
+            )
+        }
+        .sheet(isPresented: $isPastingSMS, onDismiss: openPastedTransaction) {
+            PasteSMSView(
+                accounts: model.accounts,
+                parserMode: appState.parserMode,
+                onAdded: { id in
+                    pastedTransactionID = id
+                    addedCount += 1
+                }
             )
         }
         .sheet(isPresented: $isShowingFilters) {
@@ -103,6 +121,25 @@ struct TransactionsContent: View {
 
     private func startAdding() {
         isAddingTransaction = true
+    }
+
+    private func startPasting() {
+        isPastingSMS = true
+    }
+
+    /// Opens the transaction a pasted message became, so the person can check what was read.
+    private func openPastedTransaction() {
+        guard let id = pastedTransactionID else { return }
+        pastedTransactionID = nil
+        if model.transaction(id: id) == nil {
+            refresh()
+        }
+        guard let transaction = model.transaction(id: id) else { return }
+        selection = TransactionSelection(
+            id: id,
+            transaction: transaction,
+            matchedRuleName: model.ruleName(id: transaction.matchedRuleID)
+        )
     }
 
     private func showFilters() {

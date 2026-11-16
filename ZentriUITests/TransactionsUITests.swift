@@ -77,6 +77,7 @@ final class TransactionsUITests: XCTestCase {
         // Leaving search gives the navigation bar back its actions.
         app.navigationBars.buttons["Close"].tap()
         app.buttons["transactions.add"].tap()
+        app.buttons["transactions.add.manual"].tap()
         let amount = app.textFields["transactions.editor.amount"]
         XCTAssertTrue(amount.waitForExistence(timeout: 5), "The manual editor did not open")
         amount.tap()
@@ -122,6 +123,7 @@ final class TransactionsUITests: XCTestCase {
         let add = app.buttons["transactions.add"]
         XCTAssertTrue(add.waitForExistence(timeout: 10), "The add button is missing")
         add.tap()
+        app.buttons["transactions.add.manual"].tap()
         let merchant = app.textFields["transactions.editor.merchant"]
         XCTAssertTrue(merchant.waitForExistence(timeout: 5), "The editor did not open")
         merchant.tap()
